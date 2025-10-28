@@ -1,7 +1,7 @@
 // app/page.tsx - Enhanced Main Layout with All New Pages and Features
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Building2,
   Activity,
@@ -29,12 +29,15 @@ import {
   Database,
   Globe,
   PanelRightClose,
-  PanelRightOpen
+  PanelRightOpen,
+  Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { bmsApi } from "@/lib/services/bmsApi"
+import type { Company, Department, Project, Property, BmsDevice, AccessLog, IotMetric } from "@/types/bms"
 
 // Import all page components
 import ZAiPage from "./z-ai/page"
@@ -54,16 +57,44 @@ export default function HavenzHubDashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [todosPanelCollapsed, setTodosPanelCollapsed] = useState(false)
 
-  // Enhanced sample data with NEW STAKEHOLDER COMPANIES
-  const companies = [
-    { id: 1, name: "Agritech Haven Limited Partnership", revenue: "$15.8M", projects: 12, status: "active", logo: "/logos/agritech-haven-lp.png" },
-    { id: 2, name: "Agritech Haven International Inc.", revenue: "$8.9M", projects: 8, status: "active", logo: "/logos/agritech-haven-intl.png" },
-    { id: 3, name: "Energy Haven Limited Partnership", revenue: "$22.4M", projects: 15, status: "active", logo: "/logos/energy-haven-lp.png" },
-    { id: 4, name: "Energy Haven General Partnership Inc.", revenue: "$3.2M", projects: 4, status: "active", logo: "/logos/energy-haven-gp.png" },
-    { id: 5, name: "Havenz Smart Communities", revenue: "$12.6M", projects: 9, status: "active", logo: "/logos/havenz-smart-communities.png" },
-    { id: 6, name: "AHI Management", revenue: "$5.8M", projects: 6, status: "active", logo: "/logos/ahi-management.png" },
-    { id: 7, name: "Havenz Tech", revenue: "$18.2M", projects: 18, status: "active", logo: "/logos/havenz-tech.png" }
-  ]
+  // Backend data state
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
+  const [properties, setProperties] = useState<Property[]>([])
+  const [bmsDevices, setBmsDevices] = useState<BmsDevice[]>([])
+  const [accessLogs, setAccessLogs] = useState<AccessLog[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Load all dashboard data from backend
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+      const [companiesData, departmentsData, projectsData, propertiesData, devicesData, logsData] = await Promise.all([
+        bmsApi.companies.getAll(),
+        bmsApi.departments.getAll(),
+        bmsApi.projects.getAll(),
+        bmsApi.properties.getAll(),
+        bmsApi.bmsDevices.getAll(),
+        bmsApi.accessLogs.getAll()
+      ])
+
+      setCompanies(companiesData as Company[])
+      setDepartments(departmentsData as Department[])
+      setProjects(projectsData as Project[])
+      setProperties(propertiesData as Property[])
+      setBmsDevices(devicesData as BmsDevice[])
+      setAccessLogs(logsData as AccessLog[])
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const recentTodos = [
     { id: 1, task: "Review Q4 contracts for AHI Red Deer", due: "Today", priority: "high", linkedTo: { type: "company", name: "AHI Red Deer" } },
@@ -96,17 +127,26 @@ export default function HavenzHubDashboard() {
     { id: "settings", icon: Settings, label: "Settings" }
   ]
 
-  const renderGlobalDashboard = () => (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Welcome to Havenz Hub</h1>
-        <p className="text-blue-100">Your secure operating system for organizational intelligence</p>
-        <div className="flex items-center gap-2 mt-3">
-          <Shield className="w-4 h-4" />
-          <span className="text-sm">Secured • On-Premise • Blockchain Audited</span>
+  const renderGlobalDashboard = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
-      </div>
+      )
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Welcome Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
+          <h1 className="text-2xl font-bold mb-2">Welcome to Havenz Hub</h1>
+          <p className="text-blue-100">Your secure operating system for organizational intelligence</p>
+          <div className="flex items-center gap-2 mt-3">
+            <Shield className="w-4 h-4" />
+            <span className="text-sm">Secured • On-Premise • Blockchain Audited</span>
+          </div>
+        </div>
 
       {/* Enhanced Key Metrics - NOW INCLUDING ALL CATEGORIES */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
@@ -131,7 +171,7 @@ export default function HavenzHubDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">24</div>
+            <div className="text-2xl font-bold text-gray-900">{departments.length}</div>
             <div className="text-xs text-blue-600">Across all companies</div>
           </CardContent>
         </Card>
@@ -144,9 +184,7 @@ export default function HavenzHubDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {companies.reduce((sum, company) => sum + company.projects, 0)}
-            </div>
+            <div className="text-2xl font-bold text-gray-900">{projects.length}</div>
             <div className="text-xs text-purple-600">Portfolio-wide</div>
           </CardContent>
         </Card>
@@ -159,7 +197,7 @@ export default function HavenzHubDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">3</div>
+            <div className="text-2xl font-bold text-gray-900">{properties.length}</div>
             <div className="text-xs text-orange-600">Physical assets</div>
           </CardContent>
         </Card>
@@ -168,12 +206,14 @@ export default function HavenzHubDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
               <DollarSign className="w-4 h-4" />
-              Combined Revenue
+              Total Budget
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">$87.9M</div>
-            <div className="text-xs text-green-600">+18.7% growth</div>
+            <div className="text-2xl font-bold text-gray-900">
+              ${(departments.reduce((sum, dept) => sum + (dept.budgetAllocated || 0), 0) / 1000000).toFixed(1)}M
+            </div>
+            <div className="text-xs text-green-600">Department budgets</div>
           </CardContent>
         </Card>
       </div>
@@ -188,11 +228,11 @@ export default function HavenzHubDashboard() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Virtual Chatbots</h3>
-                <p className="text-sm text-gray-600">4 active, 2.8K conversations</p>
+                <p className="text-sm text-gray-600">AI-powered assistance</p>
               </div>
             </div>
-            <Button 
-              className="w-full" 
+            <Button
+              className="w-full"
               onClick={() => setActiveSection("virtual-chatbots")}
             >
               Manage Chatbots
@@ -208,11 +248,11 @@ export default function HavenzHubDashboard() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Data Center</h3>
-                <p className="text-sm text-gray-600">87% utilization, $225K/month</p>
+                <p className="text-sm text-gray-600">{accessLogs.length} access logs</p>
               </div>
             </div>
-            <Button 
-              className="w-full" 
+            <Button
+              className="w-full"
               variant="outline"
               onClick={() => setActiveSection("secure-datacenter")}
             >
@@ -229,11 +269,11 @@ export default function HavenzHubDashboard() {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">BMS Hardware</h3>
-                <p className="text-sm text-gray-600">47 devices, 99.8% uptime</p>
+                <p className="text-sm text-gray-600">{bmsDevices.length} devices online</p>
               </div>
             </div>
-            <Button 
-              className="w-full" 
+            <Button
+              className="w-full"
               variant="outline"
               onClick={() => setActiveSection("bms-hardware")}
             >
@@ -243,34 +283,30 @@ export default function HavenzHubDashboard() {
         </Card>
       </div>
 
-      {/* Enhanced Company Overview - WITH LOGOS */}
+      {/* Enhanced Company Overview */}
       <Card className="bg-white border border-gray-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5" />
-            Havenz Ecosystem Overview
+            Companies Overview
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {companies.map((company) => (
-              <div key={company.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div key={company.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100" onClick={() => setActiveSection("companies")}>
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  {company.logo ? (
-                    <img src={company.logo} alt={company.name} className="w-6 h-6 object-contain" />
-                  ) : (
-                    <Building2 className="w-5 h-5 text-blue-600" />
-                  )}
+                  <Building2 className="w-5 h-5 text-blue-600" />
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900 text-sm">{company.name}</h4>
                   <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <span>{company.revenue}</span>
-                    <span>•</span>
-                    <span>{company.projects} projects</span>
+                    <span>{company.status}</span>
                   </div>
                 </div>
-                <Badge className="bg-green-100 text-green-800 text-xs">{company.status}</Badge>
+                <Badge className={`text-xs ${company.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                  {company.status}
+                </Badge>
               </div>
             ))}
           </div>
@@ -318,31 +354,32 @@ export default function HavenzHubDashboard() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Data Center Uptime</span>
-                <Badge className="bg-green-100 text-green-800">99.97%</Badge>
+                <span className="text-sm text-gray-600">Total Companies</span>
+                <Badge className="bg-blue-100 text-blue-800">{companies.length}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Active Integrations</span>
-                <Badge className="bg-blue-100 text-blue-800">47</Badge>
+                <span className="text-sm text-gray-600">Total Departments</span>
+                <Badge className="bg-purple-100 text-purple-800">{departments.length}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Security Status</span>
-                <Badge className="bg-green-100 text-green-800">SECURE</Badge>
+                <span className="text-sm text-gray-600">Active Projects</span>
+                <Badge className="bg-green-100 text-green-800">{projects.length}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Chatbot Conversations</span>
-                <Badge className="bg-purple-100 text-purple-800">2.8K</Badge>
+                <span className="text-sm text-gray-600">Properties</span>
+                <Badge className="bg-orange-100 text-orange-800">{properties.length}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">BMS Devices Online</span>
-                <Badge className="bg-orange-100 text-orange-800">47/47</Badge>
+                <Badge className="bg-green-100 text-green-800">{bmsDevices.length}</Badge>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+    )
+  }
 
   return (
     <div className="h-screen flex bg-gray-50">
