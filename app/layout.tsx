@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter, Geist_Mono as GeistMono } from "next/font/google"
+import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 // Use Inter for better readability and modern look
@@ -44,24 +45,15 @@ export default function RootLayout({
         <meta name="color-scheme" content="light" />
         <meta name="theme-color" content="#00C49A" />
       </head>
-      <body className={`
-        ${inter.variable}
-        ${geistMono.variable}
-        font-sans
-        antialiased
-        min-h-full
-        bg-background
-        text-foreground
-        selection:bg-primary/20
-        selection:text-primary
-      `}>
+      <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased min-h-full bg-background text-foreground selection:bg-primary/20 selection:text-primary`}>
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/10">
           {children}
         </div>
-        
+        <Toaster position="top-right" richColors closeButton />
+
         {/* Optional: Add a global loading indicator or other global components */}
         <div id="toast-container" className="fixed top-4 right-4 z-50 space-y-2" />
-        
+
         {/* Optional: Add a backdrop for modals */}
         <div id="modal-backdrop" className="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
       </body>

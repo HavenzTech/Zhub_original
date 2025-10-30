@@ -2,6 +2,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { authService } from "@/lib/services/auth"
 import {
   Building2,
   Activity,
@@ -37,6 +39,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { UserProfile } from "@/components/UserProfile"
 import type { Company, Department, Project, Property, BmsDevice, AccessLog, IotMetric } from "@/types/bms"
 
 // Import all page components
@@ -53,6 +56,9 @@ import BMSHardwarePage from "./bms-hardware/page" // NEW
 import SettingsPage from "./settings/page"
 
 export default function HavenzHubDashboard() {
+  const router = useRouter()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const [activeSection, setActiveSection] = useState("dashboard")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [todosPanelCollapsed, setTodosPanelCollapsed] = useState(false)
@@ -66,10 +72,37 @@ export default function HavenzHubDashboard() {
   const [accessLogs, setAccessLogs] = useState<AccessLog[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Check authentication on mount
+  useEffect(() => {
+    const auth = authService.getAuth()
+
+    if (!auth) {
+      router.push('/login')
+      return
+    }
+
+    // Set auth token and company ID for API calls
+    const token = authService.getToken()
+    const companyId = authService.getCurrentCompanyId()
+
+    if (token) {
+      bmsApi.setToken(token)
+    }
+
+    if (companyId) {
+      bmsApi.setCompanyId(companyId)
+    }
+
+    setIsAuthenticated(true)
+    setAuthLoading(false)
+  }, [router])
+
   // Load all dashboard data from backend
   useEffect(() => {
-    loadDashboardData()
-  }, [])
+    if (isAuthenticated) {
+      loadDashboardData()
+    }
+  }, [isAuthenticated])
 
   const loadDashboardData = async () => {
     try {
@@ -381,6 +414,23 @@ export default function HavenzHubDashboard() {
     )
   }
 
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render dashboard if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null
+  }
+
   return (
     <div className="h-screen flex bg-gray-50">
       {/* Enhanced Sidebar */}
@@ -506,14 +556,12 @@ export default function HavenzHubDashboard() {
                 <Bot className="w-4 h-4 mr-2" />
                 Ask Z
               </Button>
-              
+
               <Button variant="ghost" size="icon">
                 <Bell className="w-4 h-4" />
               </Button>
-              
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <Users className="w-4 h-4 text-gray-600" />
-              </div>
+
+              <UserProfile />
             </div>
           </div>
 

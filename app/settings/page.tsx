@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { PermissionMatrixDemo } from "@/components/PermissionMatrixDemo"
 import { 
   Settings, 
   Users, 
@@ -220,6 +221,7 @@ export default function SettingsPage() {
   }
 
   const tabs = [
+    { id: "permissions", label: "My Permissions", icon: Shield },
     { id: "general", label: "General", icon: Settings },
     { id: "users", label: "Users & Roles", icon: Users },
     { id: "security", label: "Security", icon: Shield },
@@ -227,6 +229,12 @@ export default function SettingsPage() {
     { id: "integrations", label: "Integrations", icon: Zap },
     { id: "backup", label: "Backup & Data", icon: Database }
   ]
+
+  const renderPermissionsTab = () => (
+    <div className="space-y-6">
+      <PermissionMatrixDemo />
+    </div>
+  )
 
   const renderGeneralSettings = () => (
     <div className="space-y-6">
@@ -812,6 +820,7 @@ export default function SettingsPage() {
 
       {/* Tab Content */}
       <div className="mt-6">
+        {activeTab === "permissions" && renderPermissionsTab()}
         {activeTab === "general" && renderGeneralSettings()}
         {activeTab === "users" && renderUsersRoles()}
         {activeTab === "security" && renderSecuritySettings()}

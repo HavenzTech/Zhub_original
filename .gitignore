@@ -51,3 +51,8 @@ coverage/
 *.bak
 *.tmp
 *.temp
+nul
+
+# Documentation build artifacts
+/docs/build/
+/docs/dist/

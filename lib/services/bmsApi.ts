@@ -26,6 +26,7 @@ interface RequestOptions extends RequestInit {
 class BmsApiService {
   private baseUrl: string;
   private token: string | null = null;
+  private companyId: string | null = null;
 
   constructor(baseUrl: string = BASE_URL) {
     this.baseUrl = baseUrl;
@@ -35,8 +36,13 @@ class BmsApiService {
     this.token = token;
   }
 
+  setCompanyId(companyId: string) {
+    this.companyId = companyId;
+  }
+
   clearToken() {
     this.token = null;
+    this.companyId = null;
   }
 
   private async request<T>(
@@ -54,6 +60,10 @@ class BmsApiService {
 
     if (!skipAuth && this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    if (!skipAuth && this.companyId) {
+      headers['X-Company-Id'] = this.companyId;
     }
 
     const controller = new AbortController();
