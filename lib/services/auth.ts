@@ -110,6 +110,47 @@ class AuthService {
   }
 
   /**
+   * Get user's role for the current company
+   */
+  getCurrentRole(): 'admin' | 'member' | 'viewer' | null {
+    const auth = this.getAuth()
+    if (!auth || !auth.currentCompanyId) return null
+
+    const company = auth.companies.find(c => c.companyId === auth.currentCompanyId)
+    return company?.role || null
+  }
+
+  /**
+   * Check if user has permission for an action
+   */
+  hasPermission(action: 'create' | 'update' | 'delete', entity: string): boolean {
+    const role = this.getCurrentRole()
+    if (!role) return false
+
+    // Admin has all permissions
+    if (role === 'admin') return true
+
+    // Viewer has no write permissions
+    if (role === 'viewer') return false
+
+    // Member permissions based on entity
+    if (role === 'member') {
+      if (action === 'create') {
+        // Members can create projects and documents
+        return entity === 'project' || entity === 'document'
+      }
+      if (action === 'update') {
+        // Members can update projects and documents
+        return entity === 'project' || entity === 'document'
+      }
+      // Members cannot delete
+      return false
+    }
+
+    return false
+  }
+
+  /**
    * Handle API errors
    */
   private async handleError(response: Response): Promise<ApiError> {

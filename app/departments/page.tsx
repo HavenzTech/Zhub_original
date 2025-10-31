@@ -2,11 +2,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi"
+import { authService } from "@/lib/services/auth"
 import { Department } from "@/types/bms"
 import { toast } from "sonner"
 import {
@@ -24,17 +26,52 @@ import {
   RefreshCw,
   Building2
 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function DepartmentsPage() {
+  const router = useRouter()
   const [departments, setDepartments] = useState<Department[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    headName: "",
+    headEmail: "",
+    headPhone: "",
+    budgetAllocated: "",
+    budgetSpent: ""
+  })
 
+  // Initialize auth on mount
   useEffect(() => {
+    const auth = authService.getAuth()
+    if (!auth) {
+      router.push('/login')
+      return
+    }
+
+    const token = authService.getToken()
+    const companyId = authService.getCurrentCompanyId()
+
+    if (token) bmsApi.setToken(token)
+    if (companyId) bmsApi.setCompanyId(companyId)
+
     loadDepartments()
-  }, [])
+  }, [router])
 
   const loadDepartments = async () => {
     try {
@@ -52,6 +89,63 @@ export default function DepartmentsPage() {
       console.error('Error loading departments:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.name.trim()) {
+      toast.error("Department name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const payload: any = {
+        name: formData.name
+      }
+
+      // Only add optional fields if they have values
+      if (formData.description?.trim()) payload.description = formData.description
+      if (formData.headName?.trim()) payload.headName = formData.headName
+      if (formData.headEmail?.trim()) payload.headEmail = formData.headEmail
+      if (formData.headPhone?.trim()) payload.headPhone = formData.headPhone
+      if (formData.budgetAllocated && !isNaN(parseFloat(formData.budgetAllocated))) {
+        payload.budgetAllocated = parseFloat(formData.budgetAllocated)
+      }
+      if (formData.budgetSpent && !isNaN(parseFloat(formData.budgetSpent))) {
+        payload.budgetSpent = parseFloat(formData.budgetSpent)
+      }
+
+      console.log('Creating department with payload:', payload)
+      const newDepartment = await bmsApi.departments.create(payload)
+
+      setDepartments(prev => [...prev, newDepartment as Department])
+      toast.success("Department created successfully!")
+      setShowAddForm(false)
+      setFormData({
+        name: "",
+        description: "",
+        headName: "",
+        headEmail: "",
+        headPhone: "",
+        budgetAllocated: "",
+        budgetSpent: ""
+      })
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to create department'
+      toast.error(errorMessage)
+      console.error('Error creating department:', err)
+      if (err instanceof BmsApiError) {
+        console.error('Error details:', {
+          status: err.status,
+          code: err.code,
+          details: err.details,
+          message: err.message
+        })
+      }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -372,10 +466,12 @@ export default function DepartmentsPage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Department
-              </Button>
+              {authService.hasPermission('create', 'department') && (
+                <Button onClick={() => setShowAddForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Department
+                </Button>
+              )}
             </div>
           </div>
 
@@ -478,7 +574,7 @@ export default function DepartmentsPage() {
               <p className="text-gray-600 mb-4">
                 {searchTerm ? 'Try adjusting your search criteria' : 'Get started by adding your first department'}
               </p>
-              <Button>
+              <Button onClick={() => setShowAddForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add First Department
               </Button>
@@ -488,6 +584,123 @@ export default function DepartmentsPage() {
       ) : (
         <DepartmentDetails department={selectedDepartment} />
       )}
+
+      {/* Add Department Modal */}
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Department</DialogTitle>
+            <DialogDescription>
+              Create a new department. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Department Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter department name"
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Department description"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="headName">Department Head Name</Label>
+                <Input
+                  id="headName"
+                  value={formData.headName}
+                  onChange={(e) => setFormData({ ...formData, headName: e.target.value })}
+                  placeholder="Full name"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="headEmail">Head Email</Label>
+                  <Input
+                    id="headEmail"
+                    type="email"
+                    value={formData.headEmail}
+                    onChange={(e) => setFormData({ ...formData, headEmail: e.target.value })}
+                    placeholder="email@example.com"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="headPhone">Head Phone</Label>
+                  <Input
+                    id="headPhone"
+                    value={formData.headPhone}
+                    onChange={(e) => setFormData({ ...formData, headPhone: e.target.value })}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="budgetAllocated">Budget Allocated (CAD)</Label>
+                  <Input
+                    id="budgetAllocated"
+                    type="number"
+                    value={formData.budgetAllocated}
+                    onChange={(e) => setFormData({ ...formData, budgetAllocated: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="budgetSpent">Budget Spent (CAD)</Label>
+                  <Input
+                    id="budgetSpent"
+                    type="number"
+                    value={formData.budgetSpent}
+                    onChange={(e) => setFormData({ ...formData, budgetSpent: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Department
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

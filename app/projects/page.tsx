@@ -2,13 +2,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi"
-import { Project } from "@/types/bms"
+import { authService } from "@/lib/services/auth"
+import { Project, ProjectStatus, ProjectPriority } from "@/types/bms"
 import { toast } from "sonner"
 import {
   FolderOpen,
@@ -27,17 +29,62 @@ import {
   RefreshCw,
   Target
 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function ProjectsPage() {
+  const router = useRouter()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    status: "planning" as ProjectStatus,
+    priority: "medium" as ProjectPriority,
+    progress: 0,
+    startDate: "",
+    endDate: "",
+    budgetAllocated: "",
+    budgetSpent: "",
+    teamLead: ""
+  })
 
+  // Initialize auth on mount
   useEffect(() => {
+    const auth = authService.getAuth()
+    if (!auth) {
+      router.push('/login')
+      return
+    }
+
+    const token = authService.getToken()
+    const companyId = authService.getCurrentCompanyId()
+
+    if (token) bmsApi.setToken(token)
+    if (companyId) bmsApi.setCompanyId(companyId)
+
     loadProjects()
-  }, [])
+  }, [router])
 
   const loadProjects = async () => {
     try {
@@ -55,6 +102,60 @@ export default function ProjectsPage() {
       console.error('Error loading projects:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.name.trim()) {
+      toast.error("Project name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const payload: any = {
+        name: formData.name,
+        status: formData.status,
+        priority: formData.priority,
+        progress: formData.progress
+      }
+
+      // Only add optional fields if they have values
+      if (formData.description?.trim()) payload.description = formData.description
+      if (formData.startDate?.trim()) payload.startDate = formData.startDate
+      if (formData.endDate?.trim()) payload.endDate = formData.endDate
+      if (formData.budgetAllocated && !isNaN(parseFloat(formData.budgetAllocated))) {
+        payload.budgetAllocated = parseFloat(formData.budgetAllocated)
+      }
+      if (formData.budgetSpent && !isNaN(parseFloat(formData.budgetSpent))) {
+        payload.budgetSpent = parseFloat(formData.budgetSpent)
+      }
+      if (formData.teamLead?.trim()) payload.teamLead = formData.teamLead
+
+      const newProject = await bmsApi.projects.create(payload)
+
+      setProjects(prev => [...prev, newProject as Project])
+      toast.success("Project created successfully!")
+      setShowAddForm(false)
+      setFormData({
+        name: "",
+        description: "",
+        status: "planning" as ProjectStatus,
+        priority: "medium" as ProjectPriority,
+        progress: 0,
+        startDate: "",
+        endDate: "",
+        budgetAllocated: "",
+        budgetSpent: "",
+        teamLead: ""
+      })
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to create project'
+      toast.error(errorMessage)
+      console.error('Error creating project:', err)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -387,10 +488,12 @@ export default function ProjectsPage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Project
-              </Button>
+              {authService.hasPermission('create', 'project') && (
+                <Button onClick={() => setShowAddForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Project
+                </Button>
+              )}
             </div>
           </div>
 
@@ -489,7 +592,7 @@ export default function ProjectsPage() {
               <p className="text-gray-600 mb-4">
                 {searchTerm ? 'Try adjusting your search criteria' : 'Get started by adding your first project'}
               </p>
-              <Button>
+              <Button onClick={() => setShowAddForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add First Project
               </Button>
@@ -499,6 +602,181 @@ export default function ProjectsPage() {
       ) : (
         <ProjectDetails project={selectedProject} />
       )}
+
+      {/* Add Project Modal */}
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Project</DialogTitle>
+            <DialogDescription>
+              Create a new project in the system. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              {/* Project Name */}
+              <div className="grid gap-2">
+                <Label htmlFor="name">Project Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter project name"
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Project description"
+                  rows={3}
+                />
+              </div>
+
+              {/* Status and Priority */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value as ProjectStatus })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="on-hold">On Hold</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="priority">Priority</Label>
+                  <Select
+                    value={formData.priority}
+                    onValueChange={(value) => setFormData({ ...formData, priority: value as ProjectPriority })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Progress */}
+              <div className="grid gap-2">
+                <Label htmlFor="progress">Progress (%)</Label>
+                <Input
+                  id="progress"
+                  type="number"
+                  value={formData.progress}
+                  onChange={(e) => setFormData({ ...formData, progress: parseInt(e.target.value) || 0 })}
+                  placeholder="0"
+                  min="0"
+                  max="100"
+                />
+              </div>
+
+              {/* Start and End Dates */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="endDate">End Date</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Budget Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="budgetAllocated">Budget Allocated (CAD)</Label>
+                  <Input
+                    id="budgetAllocated"
+                    type="number"
+                    value={formData.budgetAllocated}
+                    onChange={(e) => setFormData({ ...formData, budgetAllocated: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="budgetSpent">Budget Spent (CAD)</Label>
+                  <Input
+                    id="budgetSpent"
+                    type="number"
+                    value={formData.budgetSpent}
+                    onChange={(e) => setFormData({ ...formData, budgetSpent: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              {/* Team Lead */}
+              <div className="grid gap-2">
+                <Label htmlFor="teamLead">Team Lead</Label>
+                <Input
+                  id="teamLead"
+                  value={formData.teamLead}
+                  onChange={(e) => setFormData({ ...formData, teamLead: e.target.value })}
+                  placeholder="Team lead name"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Project
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

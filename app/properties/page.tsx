@@ -2,12 +2,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi"
-import { Property } from "@/types/bms"
+import { authService } from "@/lib/services/auth"
+import { Property, PropertyType, PropertyStatus } from "@/types/bms"
 import { toast } from "sonner"
 import {
   Home,
@@ -23,17 +25,68 @@ import {
   RefreshCw,
   Square
 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function PropertiesPage() {
+  const router = useRouter()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    type: "" as PropertyType | "",
+    status: "active" as PropertyStatus,
+    locationAddress: "",
+    locationCity: "",
+    locationProvince: "",
+    locationCountry: "",
+    locationPostalCode: "",
+    locationLatitude: "",
+    locationLongitude: "",
+    sizeTotalArea: "",
+    sizeUsableArea: "",
+    sizeFloors: "",
+    currentValue: "",
+    monthlyOperatingCosts: ""
+  })
 
+  // Initialize auth on mount
   useEffect(() => {
+    const auth = authService.getAuth()
+    if (!auth) {
+      router.push('/login')
+      return
+    }
+
+    const token = authService.getToken()
+    const companyId = authService.getCurrentCompanyId()
+
+    if (token) bmsApi.setToken(token)
+    if (companyId) bmsApi.setCompanyId(companyId)
+
     loadProperties()
-  }, [])
+  }, [router])
 
   const loadProperties = async () => {
     try {
@@ -51,6 +104,82 @@ export default function PropertiesPage() {
       console.error('Error loading properties:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.name.trim()) {
+      toast.error("Property name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const payload: any = {
+        name: formData.name,
+        status: formData.status
+      }
+
+      // Only add optional fields if they have values
+      if (formData.description?.trim()) payload.description = formData.description
+      if (formData.type) payload.type = formData.type
+      if (formData.locationAddress?.trim()) payload.locationAddress = formData.locationAddress
+      if (formData.locationCity?.trim()) payload.locationCity = formData.locationCity
+      if (formData.locationProvince?.trim()) payload.locationProvince = formData.locationProvince
+      if (formData.locationCountry?.trim()) payload.locationCountry = formData.locationCountry
+      if (formData.locationPostalCode?.trim()) payload.locationPostalCode = formData.locationPostalCode
+      if (formData.locationLatitude && !isNaN(parseFloat(formData.locationLatitude))) {
+        payload.locationLatitude = parseFloat(formData.locationLatitude)
+      }
+      if (formData.locationLongitude && !isNaN(parseFloat(formData.locationLongitude))) {
+        payload.locationLongitude = parseFloat(formData.locationLongitude)
+      }
+      if (formData.sizeTotalArea && !isNaN(parseFloat(formData.sizeTotalArea))) {
+        payload.sizeTotalArea = parseFloat(formData.sizeTotalArea)
+      }
+      if (formData.sizeUsableArea && !isNaN(parseFloat(formData.sizeUsableArea))) {
+        payload.sizeUsableArea = parseFloat(formData.sizeUsableArea)
+      }
+      if (formData.sizeFloors && !isNaN(parseInt(formData.sizeFloors))) {
+        payload.sizeFloors = parseInt(formData.sizeFloors)
+      }
+      if (formData.currentValue && !isNaN(parseFloat(formData.currentValue))) {
+        payload.currentValue = parseFloat(formData.currentValue)
+      }
+      if (formData.monthlyOperatingCosts && !isNaN(parseFloat(formData.monthlyOperatingCosts))) {
+        payload.monthlyOperatingCosts = parseFloat(formData.monthlyOperatingCosts)
+      }
+
+      const newProperty = await bmsApi.properties.create(payload)
+
+      setProperties(prev => [...prev, newProperty as Property])
+      toast.success("Property created successfully!")
+      setShowAddForm(false)
+      setFormData({
+        name: "",
+        description: "",
+        type: "" as PropertyType | "",
+        status: "active" as PropertyStatus,
+        locationAddress: "",
+        locationCity: "",
+        locationProvince: "",
+        locationCountry: "",
+        locationPostalCode: "",
+        locationLatitude: "",
+        locationLongitude: "",
+        sizeTotalArea: "",
+        sizeUsableArea: "",
+        sizeFloors: "",
+        currentValue: "",
+        monthlyOperatingCosts: ""
+      })
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to create property'
+      toast.error(errorMessage)
+      console.error('Error creating property:', err)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -398,10 +527,12 @@ export default function PropertiesPage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Property
-              </Button>
+              {authService.hasPermission('create', 'property') && (
+                <Button onClick={() => setShowAddForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Property
+                </Button>
+              )}
             </div>
           </div>
 
@@ -500,7 +631,7 @@ export default function PropertiesPage() {
               <p className="text-gray-600 mb-4">
                 {searchTerm ? 'Try adjusting your search criteria' : 'Get started by adding your first property'}
               </p>
-              <Button>
+              <Button onClick={() => setShowAddForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add First Property
               </Button>
@@ -510,6 +641,266 @@ export default function PropertiesPage() {
       ) : (
         <PropertyDetails property={selectedProperty} />
       )}
+
+      {/* Add Property Modal */}
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Property</DialogTitle>
+            <DialogDescription>
+              Create a new property in the system. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              {/* Basic Information */}
+              <div className="grid gap-2">
+                <Label htmlFor="name">Property Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter property name"
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Property description"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="type">Property Type</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value) => setFormData({ ...formData, type: value as PropertyType })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="office">Office</SelectItem>
+                      <SelectItem value="warehouse">Warehouse</SelectItem>
+                      <SelectItem value="datacenter">Data Center</SelectItem>
+                      <SelectItem value="residential">Residential</SelectItem>
+                      <SelectItem value="industrial">Industrial</SelectItem>
+                      <SelectItem value="retail">Retail</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value as PropertyStatus })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="under-construction">Under Construction</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Location Information */}
+              <div className="border-t pt-4 mt-2">
+                <h3 className="font-medium text-sm mb-3">Location Information</h3>
+
+                <div className="grid gap-2 mb-4">
+                  <Label htmlFor="locationAddress">Address</Label>
+                  <Input
+                    id="locationAddress"
+                    value={formData.locationAddress}
+                    onChange={(e) => setFormData({ ...formData, locationAddress: e.target.value })}
+                    placeholder="Street address"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="locationCity">City</Label>
+                    <Input
+                      id="locationCity"
+                      value={formData.locationCity}
+                      onChange={(e) => setFormData({ ...formData, locationCity: e.target.value })}
+                      placeholder="City"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="locationProvince">Province/State</Label>
+                    <Input
+                      id="locationProvince"
+                      value={formData.locationProvince}
+                      onChange={(e) => setFormData({ ...formData, locationProvince: e.target.value })}
+                      placeholder="Province or State"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="locationCountry">Country</Label>
+                    <Input
+                      id="locationCountry"
+                      value={formData.locationCountry}
+                      onChange={(e) => setFormData({ ...formData, locationCountry: e.target.value })}
+                      placeholder="Country"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="locationPostalCode">Postal Code</Label>
+                    <Input
+                      id="locationPostalCode"
+                      value={formData.locationPostalCode}
+                      onChange={(e) => setFormData({ ...formData, locationPostalCode: e.target.value })}
+                      placeholder="Postal Code"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="locationLatitude">Latitude</Label>
+                    <Input
+                      id="locationLatitude"
+                      type="number"
+                      step="any"
+                      value={formData.locationLatitude}
+                      onChange={(e) => setFormData({ ...formData, locationLatitude: e.target.value })}
+                      placeholder="e.g., 43.6532"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="locationLongitude">Longitude</Label>
+                    <Input
+                      id="locationLongitude"
+                      type="number"
+                      step="any"
+                      value={formData.locationLongitude}
+                      onChange={(e) => setFormData({ ...formData, locationLongitude: e.target.value })}
+                      placeholder="e.g., -79.3832"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Size Information */}
+              <div className="border-t pt-4 mt-2">
+                <h3 className="font-medium text-sm mb-3">Size Information</h3>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="sizeTotalArea">Total Area (sq ft)</Label>
+                    <Input
+                      id="sizeTotalArea"
+                      type="number"
+                      value={formData.sizeTotalArea}
+                      onChange={(e) => setFormData({ ...formData, sizeTotalArea: e.target.value })}
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="sizeUsableArea">Usable Area (sq ft)</Label>
+                    <Input
+                      id="sizeUsableArea"
+                      type="number"
+                      value={formData.sizeUsableArea}
+                      onChange={(e) => setFormData({ ...formData, sizeUsableArea: e.target.value })}
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="sizeFloors">Number of Floors</Label>
+                    <Input
+                      id="sizeFloors"
+                      type="number"
+                      value={formData.sizeFloors}
+                      onChange={(e) => setFormData({ ...formData, sizeFloors: e.target.value })}
+                      placeholder="0"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Information */}
+              <div className="border-t pt-4 mt-2">
+                <h3 className="font-medium text-sm mb-3">Financial Information</h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="currentValue">Current Value (CAD)</Label>
+                    <Input
+                      id="currentValue"
+                      type="number"
+                      value={formData.currentValue}
+                      onChange={(e) => setFormData({ ...formData, currentValue: e.target.value })}
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="monthlyOperatingCosts">Monthly Operating Costs (CAD)</Label>
+                    <Input
+                      id="monthlyOperatingCosts"
+                      type="number"
+                      value={formData.monthlyOperatingCosts}
+                      onChange={(e) => setFormData({ ...formData, monthlyOperatingCosts: e.target.value })}
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Property
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

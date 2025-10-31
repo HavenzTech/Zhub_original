@@ -2,12 +2,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi"
-import { Document } from "@/types/bms"
+import { authService } from "@/lib/services/auth"
+import { Document, DocumentStatus, DocumentAccessLevel, DocumentCategory } from "@/types/bms"
 import { toast } from "sonner"
 import {
   FileText,
@@ -30,19 +32,61 @@ import {
   Loader2,
   RefreshCw,
   File,
-  FolderOpen
+  FolderOpen,
+  X
 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function DocumentControlPage() {
+  const router = useRouter()
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null)
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [formData, setFormData] = useState({
+    name: "",
+    status: "draft" as DocumentStatus,
+    accessLevel: "private" as DocumentAccessLevel,
+    category: "" as DocumentCategory | "",
+    tags: ""
+  })
 
+  // Initialize auth on mount
   useEffect(() => {
+    const auth = authService.getAuth()
+    if (!auth) {
+      router.push('/login')
+      return
+    }
+
+    const token = authService.getToken()
+    const companyId = authService.getCurrentCompanyId()
+
+    if (token) bmsApi.setToken(token)
+    if (companyId) bmsApi.setCompanyId(companyId)
+
     loadDocuments()
-  }, [])
+  }, [router])
 
   const loadDocuments = async () => {
     try {
@@ -60,6 +104,84 @@ export default function DocumentControlPage() {
       console.error('Error loading documents:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+      // Auto-populate the document name from filename if not set
+      if (!formData.name) {
+        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "")
+        setFormData({ ...formData, name: nameWithoutExt })
+      }
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!selectedFile) {
+      toast.error("Please select a file to upload")
+      return
+    }
+
+    if (!formData.name.trim()) {
+      toast.error("Document name is required")
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      // Calculate file hash
+      const arrayBuffer = await selectedFile.arrayBuffer()
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const contentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+      // Build payload - companyId and uploadedByUserId are set automatically from headers
+      const payload: any = {
+        name: formData.name,
+        fileType: selectedFile.type || selectedFile.name.split('.').pop() || 'unknown',
+        fileSizeBytes: selectedFile.size,
+        contentHash,
+        storagePath: `/uploads/${selectedFile.name}`,
+        version: 1,
+        status: formData.status,
+        accessLevel: formData.accessLevel
+      }
+
+      // Only add optional fields if they have values
+      if (formData.category) payload.category = formData.category
+      if (formData.tags?.trim()) payload.tags = formData.tags.split(',').map(t => t.trim())
+
+      payload.metadata = {
+        originalFileName: selectedFile.name,
+        uploadDate: new Date().toISOString()
+      }
+
+      const newDocument = await bmsApi.documents.create(payload)
+
+      setDocuments(prev => [...prev, newDocument as Document])
+      toast.success("Document uploaded successfully!")
+      setShowUploadModal(false)
+
+      // Reset form
+      setSelectedFile(null)
+      setFormData({
+        name: "",
+        status: "draft" as DocumentStatus,
+        accessLevel: "private" as DocumentAccessLevel,
+        category: "" as DocumentCategory | "",
+        tags: ""
+      })
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to upload document'
+      toast.error(errorMessage)
+      console.error('Error uploading document:', err)
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -387,10 +509,12 @@ export default function DocumentControlPage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              <Button>
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Document
-              </Button>
+              {authService.hasPermission('create', 'document') && (
+                <Button onClick={() => setShowUploadModal(true)}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Document
+                </Button>
+              )}
             </div>
           </div>
 
@@ -489,7 +613,7 @@ export default function DocumentControlPage() {
               <p className="text-gray-600 mb-4">
                 {searchTerm ? 'Try adjusting your search criteria' : 'Get started by uploading your first document'}
               </p>
-              <Button>
+              <Button onClick={() => setShowUploadModal(true)}>
                 <Upload className="w-4 h-4 mr-2" />
                 Upload First Document
               </Button>
@@ -499,6 +623,159 @@ export default function DocumentControlPage() {
       ) : (
         <DocumentDetails document={selectedDocument} />
       )}
+
+      {/* Upload Document Modal */}
+      <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Upload Document</DialogTitle>
+            <DialogDescription>
+              Upload a new document to the system. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              {/* File Upload */}
+              <div className="grid gap-2">
+                <Label htmlFor="file">File *</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="file"
+                    type="file"
+                    onChange={handleFileChange}
+                    className="cursor-pointer"
+                    required
+                  />
+                  {selectedFile && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedFile(null)
+                        const fileInput = document.getElementById('file') as HTMLInputElement
+                        if (fileInput) fileInput.value = ''
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                {selectedFile && (
+                  <div className="text-sm text-gray-600">
+                    <p>Selected: {selectedFile.name}</p>
+                    <p>Size: {formatFileSize(selectedFile.size)}</p>
+                    <p>Type: {selectedFile.type || 'Unknown'}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Document Name */}
+              <div className="grid gap-2">
+                <Label htmlFor="name">Document Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter document name"
+                  required
+                />
+              </div>
+
+              {/* Status and Access Level */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value as DocumentStatus })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="accessLevel">Access Level</Label>
+                  <Select
+                    value={formData.accessLevel}
+                    onValueChange={(value) => setFormData({ ...formData, accessLevel: value as DocumentAccessLevel })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="private">Private</SelectItem>
+                      <SelectItem value="restricted">Restricted</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Category */}
+              <div className="grid gap-2">
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value as DocumentCategory })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contract">Contract</SelectItem>
+                    <SelectItem value="financial">Financial</SelectItem>
+                    <SelectItem value="technical">Technical</SelectItem>
+                    <SelectItem value="legal">Legal</SelectItem>
+                    <SelectItem value="hr">HR</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Tags */}
+              <div className="grid gap-2">
+                <Label htmlFor="tags">Tags (comma-separated)</Label>
+                <Input
+                  id="tags"
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  placeholder="e.g., important, 2024, budget"
+                />
+                <p className="text-xs text-gray-500">Separate multiple tags with commas</p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowUploadModal(false)} disabled={isUploading}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isUploading}>
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Document
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
