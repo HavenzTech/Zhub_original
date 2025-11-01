@@ -23,6 +23,8 @@ A comprehensive organizational intelligence and management platform built with N
 - [Getting Started](#getting-started)
 - [Installation](#installation)
 - [Project Structure](#project-structure)
+- [Documentation](#documentation)
+- [AI-Assisted Development](#ai-assisted-development)
 - [Responsive Design](#responsive-design)
 - [Components](#components)
 - [Customization](#customization)
@@ -171,6 +173,51 @@ havenz-hub/
 ├── next.config.js             # Next.js configuration
 └── package.json               # Dependencies and scripts
 ```
+
+## 📚 Documentation
+
+Comprehensive documentation is available for developers:
+
+| Document | Description | Location |
+|----------|-------------|----------|
+| **AI Development Guide** | How to use AI assistants for development | `docs/AI_DEVELOPMENT_GUIDE.md` |
+| **Frontend API Reference** | Complete API endpoints and usage | `docs/FRONTEND_API_REFERENCE.md` |
+| **Backend Integration** | How to integrate with backend APIs | `docs/BACKEND_API_INTEGRATION_GUIDE.md` |
+| **Permission Matrix** | Role-based access control rules | `docs/PERMISSION_MATRIX.md` |
+
+### Quick Links
+
+- 🤖 [**AI-Assisted Development Guide**](docs/AI_DEVELOPMENT_GUIDE.md) - Essential for developers using AI coding assistants
+- 🔌 [**API Reference**](docs/FRONTEND_API_REFERENCE.md) - All API endpoints and request/response formats
+- 🔐 [**Permissions**](docs/PERMISSION_MATRIX.md) - Role-based access control matrix
+
+## 🤖 AI-Assisted Development
+
+This project is optimized for AI-assisted development. See [`docs/AI_DEVELOPMENT_GUIDE.md`](docs/AI_DEVELOPMENT_GUIDE.md) for:
+
+- **Common task prompts** - Ready-to-use prompts for AI assistants
+- **Troubleshooting guide** - Solutions to common issues
+- **Architecture overview** - How the frontend/backend work together
+- **Best practices** - Patterns that work well with AI assistants
+
+### Quick Start with AI
+
+When working with AI assistants (Claude, GitHub Copilot, ChatGPT):
+
+1. **Always reference working examples**: Point AI to `app/companies/page.tsx` for CRUD patterns
+2. **Include documentation**: Reference `FRONTEND_API_REFERENCE.md` for API details
+3. **Specify exact files**: Give file paths and line numbers for context
+4. **Request incremental changes**: Break large tasks into steps
+
+**Example Prompt:**
+```
+Add create functionality for departments following the pattern in
+app/companies/page.tsx lines 111-171. Reference the Department CREATE
+endpoint in docs/FRONTEND_API_REFERENCE.md and apply permission checks from
+docs/PERMISSION_MATRIX.md (admin only).
+```
+
+See the full guide at [`docs/AI_DEVELOPMENT_GUIDE.md`](docs/AI_DEVELOPMENT_GUIDE.md).
 
 ## 📱 Responsive Design
 

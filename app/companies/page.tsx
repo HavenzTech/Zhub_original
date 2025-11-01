@@ -2,12 +2,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi"
-import { Company } from "@/types/bms"
+import { authService } from "@/lib/services/auth"
+import { Company, CompanyStatus } from "@/types/bms"
 import { toast } from "sonner"
 import {
   Building2,
@@ -29,18 +31,65 @@ import {
   Loader2,
   RefreshCw
 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 
 export default function CompaniesPage() {
+  const router = useRouter()
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    industry: "",
+    status: "active" as CompanyStatus,
+    locationAddress: "",
+    locationCity: "",
+    locationProvince: "",
+    locationCountry: "",
+    locationPostalCode: "",
+    contactEmail: "",
+    contactPhone: "",
+    annualRevenue: "",
+    logoUrl: ""
+  })
 
+  // Initialize auth on mount
   useEffect(() => {
+    const auth = authService.getAuth()
+    if (!auth) {
+      router.push('/login')
+      return
+    }
+
+    const token = authService.getToken()
+    const companyId = authService.getCurrentCompanyId()
+
+    if (token) bmsApi.setToken(token)
+    if (companyId) bmsApi.setCompanyId(companyId)
+
     loadCompanies()
-  }, [])
+  }, [router])
 
   const loadCompanies = async () => {
     try {
@@ -58,6 +107,141 @@ export default function CompaniesPage() {
       console.error('Error loading companies:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.name.trim()) {
+      toast.error("Company name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const payload: any = {
+        name: formData.name,
+        status: formData.status
+      }
+
+      // Only add optional fields if they have values
+      if (formData.industry?.trim()) payload.industry = formData.industry
+      if (formData.locationAddress?.trim()) payload.locationAddress = formData.locationAddress
+      if (formData.locationCity?.trim()) payload.locationCity = formData.locationCity
+      if (formData.locationProvince?.trim()) payload.locationProvince = formData.locationProvince
+      if (formData.locationCountry?.trim()) payload.locationCountry = formData.locationCountry
+      if (formData.locationPostalCode?.trim()) payload.locationPostalCode = formData.locationPostalCode
+      if (formData.contactEmail?.trim()) payload.contactEmail = formData.contactEmail
+      if (formData.contactPhone?.trim()) payload.contactPhone = formData.contactPhone
+      if (formData.logoUrl?.trim()) payload.logoUrl = formData.logoUrl
+      if (formData.annualRevenue && !isNaN(parseFloat(formData.annualRevenue))) {
+        payload.annualRevenue = parseFloat(formData.annualRevenue)
+      }
+
+      console.log('Creating company with payload:', payload)
+      const newCompany = await bmsApi.companies.create(payload)
+
+      setCompanies(prev => [...prev, newCompany as Company])
+      toast.success("Company created successfully!")
+      setShowAddForm(false)
+      setFormData({
+        name: "",
+        industry: "",
+        status: "active" as CompanyStatus,
+        locationAddress: "",
+        locationCity: "",
+        locationProvince: "",
+        locationCountry: "",
+        locationPostalCode: "",
+        contactEmail: "",
+        contactPhone: "",
+        annualRevenue: "",
+        logoUrl: ""
+      })
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to create company'
+      toast.error(errorMessage)
+      console.error('Error creating company:', err)
+      if (err instanceof BmsApiError) {
+        console.error('Error details:', { status: err.status, code: err.code, details: err.details })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleEditClick = (company: Company) => {
+    setEditingCompany(company)
+    setFormData({
+      name: company.name,
+      industry: company.industry || "",
+      status: company.status,
+      locationAddress: company.locationAddress || "",
+      locationCity: company.locationCity || "",
+      locationProvince: company.locationProvince || "",
+      locationCountry: company.locationCountry || "",
+      locationPostalCode: company.locationPostalCode || "",
+      contactEmail: company.contactEmail || "",
+      contactPhone: company.contactPhone || "",
+      annualRevenue: company.annualRevenue?.toString() || "",
+      logoUrl: company.logoUrl || ""
+    })
+    setShowEditForm(true)
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingCompany || !formData.name.trim()) {
+      toast.error("Company name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const payload: any = {
+        id: editingCompany.id,
+        name: formData.name,
+        status: formData.status
+      }
+
+      // Only add optional fields if they have values
+      if (formData.industry?.trim()) payload.industry = formData.industry
+      if (formData.locationAddress?.trim()) payload.locationAddress = formData.locationAddress
+      if (formData.locationCity?.trim()) payload.locationCity = formData.locationCity
+      if (formData.locationProvince?.trim()) payload.locationProvince = formData.locationProvince
+      if (formData.locationCountry?.trim()) payload.locationCountry = formData.locationCountry
+      if (formData.locationPostalCode?.trim()) payload.locationPostalCode = formData.locationPostalCode
+      if (formData.contactEmail?.trim()) payload.contactEmail = formData.contactEmail
+      if (formData.contactPhone?.trim()) payload.contactPhone = formData.contactPhone
+      if (formData.logoUrl?.trim()) payload.logoUrl = formData.logoUrl
+      if (formData.annualRevenue && !isNaN(parseFloat(formData.annualRevenue))) {
+        payload.annualRevenue = parseFloat(formData.annualRevenue)
+      }
+
+      await bmsApi.companies.update(editingCompany.id, payload)
+
+      // Update the company in the list
+      setCompanies(prev => prev.map(c =>
+        c.id === editingCompany.id ? { ...c, ...payload } : c
+      ))
+
+      // Update selected company if it's the one being edited
+      if (selectedCompany?.id === editingCompany.id) {
+        setSelectedCompany({ ...selectedCompany, ...payload })
+      }
+
+      toast.success("Company updated successfully!")
+      setShowEditForm(false)
+      setEditingCompany(null)
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to update company'
+      toast.error(errorMessage)
+      console.error('Error updating company:', err)
+      if (err instanceof BmsApiError) {
+        console.error('Error details:', { status: err.status, code: err.code, details: err.details })
+      }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -190,10 +374,12 @@ export default function CompaniesPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Company
-              </Button>
+              {authService.hasPermission('update', 'company') && (
+                <Button variant="outline" onClick={() => handleEditClick(company)}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Company
+                </Button>
+              )}
             </div>
           </div>
 
@@ -337,10 +523,13 @@ export default function CompaniesPage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              <Button onClick={() => setShowAddForm(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Company
-              </Button>
+              {/* Company CREATE endpoint not implemented in backend - companies are created during user registration */}
+              {false && authService.hasPermission('create', 'company') && (
+                <Button onClick={() => setShowAddForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Company
+                </Button>
+              )}
             </div>
           </div>
 
@@ -392,6 +581,372 @@ export default function CompaniesPage() {
           <CompanyDetails company={selectedCompany} />
         </>
       )}
+
+      {/* Add Company Modal */}
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Company</DialogTitle>
+            <DialogDescription>
+              Create a new company in the system. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              {/* Basic Information */}
+              <div className="grid gap-2">
+                <Label htmlFor="name">Company Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter company name"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="industry">Industry</Label>
+                  <Input
+                    id="industry"
+                    value={formData.industry}
+                    onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                    placeholder="e.g., Technology, Healthcare"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value as CompanyStatus })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="contactEmail">Contact Email</Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={formData.contactEmail}
+                    onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                    placeholder="company@example.com"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="contactPhone">Contact Phone</Label>
+                  <Input
+                    id="contactPhone"
+                    value={formData.contactPhone}
+                    onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="grid gap-2">
+                <Label htmlFor="locationAddress">Address</Label>
+                <Input
+                  id="locationAddress"
+                  value={formData.locationAddress}
+                  onChange={(e) => setFormData({ ...formData, locationAddress: e.target.value })}
+                  placeholder="Street address"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="locationCity">City</Label>
+                  <Input
+                    id="locationCity"
+                    value={formData.locationCity}
+                    onChange={(e) => setFormData({ ...formData, locationCity: e.target.value })}
+                    placeholder="City"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="locationProvince">Province/State</Label>
+                  <Input
+                    id="locationProvince"
+                    value={formData.locationProvince}
+                    onChange={(e) => setFormData({ ...formData, locationProvince: e.target.value })}
+                    placeholder="Province or State"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="locationCountry">Country</Label>
+                  <Input
+                    id="locationCountry"
+                    value={formData.locationCountry}
+                    onChange={(e) => setFormData({ ...formData, locationCountry: e.target.value })}
+                    placeholder="Country"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="locationPostalCode">Postal Code</Label>
+                  <Input
+                    id="locationPostalCode"
+                    value={formData.locationPostalCode}
+                    onChange={(e) => setFormData({ ...formData, locationPostalCode: e.target.value })}
+                    placeholder="Postal Code"
+                  />
+                </div>
+              </div>
+
+              {/* Financial */}
+              <div className="grid gap-2">
+                <Label htmlFor="annualRevenue">Annual Revenue (CAD)</Label>
+                <Input
+                  id="annualRevenue"
+                  type="number"
+                  value={formData.annualRevenue}
+                  onChange={(e) => setFormData({ ...formData, annualRevenue: e.target.value })}
+                  placeholder="0"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="logoUrl">Logo URL</Label>
+                <Input
+                  id="logoUrl"
+                  type="url"
+                  value={formData.logoUrl}
+                  onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                  placeholder="https://example.com/logo.png"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Company
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Company Modal */}
+      <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Company</DialogTitle>
+            <DialogDescription>
+              Update company information. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="grid gap-4 py-4">
+              {/* Basic Information */}
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">Company Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter company name"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-industry">Industry</Label>
+                  <Input
+                    id="edit-industry"
+                    value={formData.industry}
+                    onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                    placeholder="e.g., Technology, Healthcare"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value as CompanyStatus })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-contactEmail">Contact Email</Label>
+                  <Input
+                    id="edit-contactEmail"
+                    type="email"
+                    value={formData.contactEmail}
+                    onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                    placeholder="company@example.com"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-contactPhone">Contact Phone</Label>
+                  <Input
+                    id="edit-contactPhone"
+                    value={formData.contactPhone}
+                    onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="grid gap-2">
+                <Label htmlFor="edit-locationAddress">Address</Label>
+                <Input
+                  id="edit-locationAddress"
+                  value={formData.locationAddress}
+                  onChange={(e) => setFormData({ ...formData, locationAddress: e.target.value })}
+                  placeholder="Street address"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-locationCity">City</Label>
+                  <Input
+                    id="edit-locationCity"
+                    value={formData.locationCity}
+                    onChange={(e) => setFormData({ ...formData, locationCity: e.target.value })}
+                    placeholder="City"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-locationProvince">Province/State</Label>
+                  <Input
+                    id="edit-locationProvince"
+                    value={formData.locationProvince}
+                    onChange={(e) => setFormData({ ...formData, locationProvince: e.target.value })}
+                    placeholder="Province or State"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-locationCountry">Country</Label>
+                  <Input
+                    id="edit-locationCountry"
+                    value={formData.locationCountry}
+                    onChange={(e) => setFormData({ ...formData, locationCountry: e.target.value })}
+                    placeholder="Country"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-locationPostalCode">Postal Code</Label>
+                  <Input
+                    id="edit-locationPostalCode"
+                    value={formData.locationPostalCode}
+                    onChange={(e) => setFormData({ ...formData, locationPostalCode: e.target.value })}
+                    placeholder="Postal Code"
+                  />
+                </div>
+              </div>
+
+              {/* Financial */}
+              <div className="grid gap-2">
+                <Label htmlFor="edit-annualRevenue">Annual Revenue (CAD)</Label>
+                <Input
+                  id="edit-annualRevenue"
+                  type="number"
+                  value={formData.annualRevenue}
+                  onChange={(e) => setFormData({ ...formData, annualRevenue: e.target.value })}
+                  placeholder="0"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-logoUrl">Logo URL</Label>
+                <Input
+                  id="edit-logoUrl"
+                  type="url"
+                  value={formData.logoUrl}
+                  onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                  placeholder="https://example.com/logo.png"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowEditForm(false)
+                  setEditingCompany(null)
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Update Company
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

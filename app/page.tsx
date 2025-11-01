@@ -152,12 +152,12 @@ export default function HavenzHubDashboard() {
     { id: "projects", icon: FolderOpen, label: "Projects" },
     { id: "properties", icon: Home, label: "Properties" }, // NEW 4th Category
     { id: "document-control", icon: FileText, label: "Document Control" },
-    { id: "workflows", icon: Workflow, label: "Workflows" },
+    // { id: "workflows", icon: Workflow, label: "Workflows" }, // Hidden temporarily
     { id: "virtual-chatbots", icon: MessageSquare, label: "Virtual Chatbots" }, // NEW
-    { id: "secure-datacenter", icon: Server, label: "Secure Data Center" }, // NEW
-    { id: "bms-hardware", icon: Smartphone, label: "BMS Hardware" }, // NEW
+    // { id: "secure-datacenter", icon: Server, label: "Secure Data Center" }, // Hidden temporarily
+    // { id: "bms-hardware", icon: Smartphone, label: "BMS Hardware" }, // Hidden temporarily
     { id: "z-ai", icon: Bot, label: "Z AI" },
-    { id: "settings", icon: Settings, label: "Settings" }
+    // { id: "settings", icon: Settings, label: "Settings" } // Hidden temporarily
   ]
 
   const renderGlobalDashboard = () => {
