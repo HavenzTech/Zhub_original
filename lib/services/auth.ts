@@ -112,12 +112,20 @@ class AuthService {
   /**
    * Get user's role for the current company
    */
-  getCurrentRole(): 'admin' | 'member' | 'viewer' | null {
+  getCurrentRole(): 'super_admin' | 'admin' | 'member' | 'viewer' | null {
     const auth = this.getAuth()
     if (!auth || !auth.currentCompanyId) return null
 
     const company = auth.companies.find(c => c.companyId === auth.currentCompanyId)
     return company?.role || null
+  }
+
+  /**
+   * Check if user is a super admin
+   */
+  isSuperAdmin(): boolean {
+    const role = this.getCurrentRole()
+    return role === 'super_admin'
   }
 
   /**
@@ -127,8 +135,14 @@ class AuthService {
     const role = this.getCurrentRole()
     if (!role) return false
 
-    // Admin has all permissions
-    if (role === 'admin') return true
+    // Super admin has all permissions (including creating companies)
+    if (role === 'super_admin') return true
+
+    // Admin has all permissions except creating companies
+    if (role === 'admin') {
+      if (action === 'create' && entity === 'company') return false
+      return true
+    }
 
     // Viewer has no write permissions
     if (role === 'viewer') return false
