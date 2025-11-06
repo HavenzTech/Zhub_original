@@ -3,7 +3,7 @@
 export interface Company {
   companyId: string
   companyName: string
-  role: 'admin' | 'member' | 'viewer'
+  role: 'super_admin' | 'admin' | 'member' | 'viewer'
 }
 
 export interface LoginResponse {

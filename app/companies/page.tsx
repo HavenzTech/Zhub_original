@@ -84,6 +84,16 @@ export default function CompaniesPage() {
 
     const token = authService.getToken()
     const companyId = authService.getCurrentCompanyId()
+    const role = authService.getCurrentRole()
+
+    console.log('🔐 Auth Debug:', {
+      hasAuth: !!auth,
+      hasToken: !!token,
+      companyId,
+      role,
+      isSuperAdmin: authService.isSuperAdmin(),
+      email: auth?.email
+    })
 
     if (token) bmsApi.setToken(token)
     if (companyId) bmsApi.setCompanyId(companyId)
@@ -95,16 +105,47 @@ export default function CompaniesPage() {
     try {
       setLoading(true)
       setError(null)
-      const data = await bmsApi.companies.getAll()
-      setCompanies(data as Company[])
-      toast.success(`Loaded ${(data as Company[]).length} companies`)
+
+      // Try to get companies - if 403, try getting user's companies instead
+      try {
+        const data = await bmsApi.companies.getAll()
+        setCompanies(data as Company[])
+        toast.success(`Loaded ${(data as Company[]).length} companies`)
+      } catch (getAllError) {
+        // If getAll fails with 403, try getting companies by user
+        if (getAllError instanceof BmsApiError && getAllError.status === 403) {
+          console.log('⚠️ GET /company returned 403, trying to get user companies...')
+          const auth = authService.getAuth()
+          if (auth?.userId) {
+            const data = await bmsApi.companies.getByUser(auth.userId)
+            setCompanies(data as Company[])
+            toast.info(`Loaded ${(data as Company[]).length} companies (user-specific)`)
+          } else {
+            throw getAllError
+          }
+        } else {
+          throw getAllError
+        }
+      }
     } catch (err) {
       const errorMessage = err instanceof BmsApiError
         ? err.message
         : 'Failed to load companies'
       setError(errorMessage)
-      toast.error(errorMessage)
-      console.error('Error loading companies:', err)
+
+      console.error('❌ Error loading companies:', {
+        error: err,
+        message: errorMessage,
+        status: err instanceof BmsApiError ? err.status : 'unknown',
+        details: err instanceof BmsApiError ? err.details : null
+      })
+
+      // Show specific error message for 403
+      if (err instanceof BmsApiError && err.status === 403) {
+        toast.error('Access denied. The GET /company endpoint may not be implemented on the backend.')
+      } else {
+        toast.error(errorMessage)
+      }
     } finally {
       setLoading(false)
     }
@@ -523,11 +564,10 @@ export default function CompaniesPage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              {/* Company CREATE endpoint not implemented in backend - companies are created during user registration */}
-              {false && authService.hasPermission('create', 'company') && (
+              {authService.hasPermission('create', 'company') && (
                 <Button onClick={() => setShowAddForm(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Company
+                  Create Company
                 </Button>
               )}
             </div>
@@ -563,10 +603,12 @@ export default function CompaniesPage() {
               <p className="text-gray-600 mb-4">
                 {searchTerm ? 'Try adjusting your search criteria' : 'Get started by adding your first company'}
               </p>
-              <Button onClick={() => setShowAddForm(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add First Company
-              </Button>
+              {authService.hasPermission('create', 'company') && (
+                <Button onClick={() => setShowAddForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create First Company
+                </Button>
+              )}
             </div>
           )}
         </>

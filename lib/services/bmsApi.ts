@@ -66,6 +66,18 @@ class BmsApiService {
       headers['X-Company-Id'] = this.companyId;
     }
 
+    // Debug logging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🌐 API Request:', {
+        method: fetchOptions.method || 'GET',
+        url,
+        headers: {
+          ...headers,
+          Authorization: headers['Authorization'] ? `Bearer ${(headers['Authorization'] as string).substring(7, 27)}...` : 'none'
+        }
+      });
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
