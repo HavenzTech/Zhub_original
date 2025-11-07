@@ -60,7 +60,7 @@ class AuthService {
         name: 'Dev User',
         companies: [{
           companyId: 'dev-company-1',
-          name: 'Dev Company',
+          companyName: 'Dev Company',
           role: 'super_admin'
         }],
         currentCompanyId: 'dev-company-1',
