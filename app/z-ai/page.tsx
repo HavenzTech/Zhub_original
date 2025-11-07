@@ -39,6 +39,7 @@ interface Message {
     parent_folder: string
   }>
   company?: string
+  generatedImages?: string[]
 }
 
 export default function ZAiPage() {
@@ -60,27 +61,7 @@ export default function ZAiPage() {
     error: null,
     downloadUrl: undefined
   })
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "internal-z",
-      content: "Z AI INTERNAL MODE ACTIVE\n\nI have access to all your Havenz Hub data, documents, and company information. I can help you:\n\n• Search across all documents and files\n• Analyze company performance and KPIs\n• Generate reports and insights\n• Track project progress\n• Manage workflows and tasks\n\nWhat would you like to know about your organization?",
-      timestamp: "9:00 AM",
-      type: "query"
-    },
-    {
-      role: "user",
-      content: "Show me all contracts uploaded for AHI Red Deer in the last 30 days",
-      timestamp: "9:15 AM"
-    },
-    {
-      role: "internal-z",
-      content: "DOCUMENT SEARCH RESULTS - AHI RED DEER (Last 30 Days)\n\nFound 7 contract documents:\n\n📄 Service_Agreement_2025.pdf (Jan 15, 2025)\n📄 Equipment_Lease_Contract.pdf (Jan 10, 2025)\n📄 Maintenance_Contract_Renewal.pdf (Jan 8, 2025)\n📄 Software_Licensing_Agreement.pdf (Jan 5, 2025)\n📄 Consulting_Services_Contract.pdf (Dec 28, 2024)\n📄 Insurance_Policy_Update.pdf (Dec 22, 2024)\n📄 Vendor_Agreement_Amendment.pdf (Dec 20, 2024)\n\nTotal contract value: $847,500\nPending approvals: 2 documents\nExpiring soon: 1 contract (Equipment Lease - expires Feb 28)\n\nWould you like me to analyze any specific contract or flag potential issues?",
-      timestamp: "9:15 AM",
-      type: "analysis",
-      relatedDocuments: ["Service_Agreement_2025.pdf", "Equipment_Lease_Contract.pdf"],
-      company: "AHI Red Deer"
-    }
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
 
   const quickActions = [
     {
@@ -126,6 +107,14 @@ export default function ZAiPage() {
     try {
       if (aiMode === "internal") {
         // Use RAG backend for Internal Z mode
+        // Convert messages to backend chat_history format
+        const formattedHistory = messages
+          .filter(msg => msg.role === "user" || msg.role === "internal-z")
+          .map(msg => ({
+            role: msg.role === "user" ? "user" : "assistant",
+            text: msg.content
+          }))
+
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
@@ -133,7 +122,9 @@ export default function ZAiPage() {
           },
           body: JSON.stringify({
             query: currentInput,
-            search_type: "ahlp_general"
+            chat_history: formattedHistory,
+            search_type: "general",
+            user_email: "" // Can be populated from auth if available
           })
         })
 
@@ -142,6 +133,10 @@ export default function ZAiPage() {
         }
 
         const data = await response.json()
+
+        console.log('[Z-AI] Backend response:', data)
+        console.log('[Z-AI] Generated images:', data.generated_images)
+        console.log('[Z-AI] Generated images length:', data.generated_images?.length)
 
         const aiResponse: Message = {
           role: "internal-z",
@@ -152,8 +147,12 @@ export default function ZAiPage() {
             title: doc.metadata?.title || "Unknown Document",
             relevance_score: doc.metadata?.relevance_score || 0,
             parent_folder: doc.metadata?.parent_folder || ""
-          })) || []
+          })) || [],
+          generatedImages: data.generated_images || []
         }
+
+        console.log('[Z-AI] AI Response message:', aiResponse)
+        console.log('[Z-AI] AI Response generatedImages:', aiResponse.generatedImages)
 
         setMessages(prev => [...prev, aiResponse])
       } else {
@@ -422,14 +421,62 @@ export default function ZAiPage() {
                   
                   <div className={cn(
                     "p-4 rounded-lg border",
-                    message.role === "user" 
-                      ? "bg-gray-50 border-gray-200" 
+                    message.role === "user"
+                      ? "bg-gray-50 border-gray-200"
                       : "bg-blue-50 border-blue-200"
                   )}>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed text-gray-900">
                       {message.content}
                     </p>
-                    
+
+                    {message.generatedImages && message.generatedImages.length > 0 && (
+                      <div className="mt-4 space-y-3">
+                        <p className="text-xs font-medium text-blue-600">Generated Images:</p>
+                        {message.generatedImages.map((image: any, i) => {
+                          const filename = image.image_path?.split('/').pop()?.split('\\').pop() || `generated_image_${i + 1}.png`
+                          const imageUrl = `/api/proxy-image/${filename}`
+                          const fileSizeKB = ((image.file_size || 0) / 1024).toFixed(1)
+
+                          return (
+                            <div key={i} className="p-3 bg-white rounded-lg border border-blue-200">
+                              <div className="mb-2">
+                                <img
+                                  src={imageUrl}
+                                  alt={image.prompt || `Generated image ${i + 1}`}
+                                  className="w-full rounded border border-gray-300"
+                                  onError={(e) => {
+                                    console.error('Image load error:', filename)
+                                    e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="%23f0f0f0"/><text x="50%" y="50%" text-anchor="middle" fill="%23999">Image not found</text></svg>'
+                                  }}
+                                />
+                              </div>
+                              {image.prompt && (
+                                <p className="text-xs text-gray-600 italic mb-2">
+                                  &quot;{image.prompt}&quot;
+                                </p>
+                              )}
+                              <div className="flex items-center justify-between text-xs text-gray-500">
+                                <div className="flex items-center gap-2">
+                                  <span>{image.model || 'sdxl'}</span>
+                                  <span>•</span>
+                                  <span>{fileSizeKB} KB</span>
+                                </div>
+                                <a
+                                  href={imageUrl}
+                                  download={filename}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  Download
+                                </a>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
                     {(message.sourceDocuments && message.sourceDocuments.length > 0) ? (
                       <div className="mt-3 pt-3 border-t border-blue-200">
                         <p className="text-xs text-blue-600 mb-2">Source Documents (Top 3):</p>

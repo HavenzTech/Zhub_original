@@ -49,6 +49,7 @@ import ProjectsPage from "./projects/page"
 import DepartmentsPage from "./departments/page"
 import PropertiesPage from "./properties/page" // NEW
 import DocumentControlPage from "./document-control/page"
+import UsersPage from "./users/page" // NEW - Admin only
 import WorkflowsPage from "./workflows/page"
 import VirtualChatbotsPage from "./virtual-chatbots/page" // NEW
 import SecureDataCenterPage from "./secure-datacenter/page" // NEW
@@ -152,6 +153,7 @@ export default function HavenzHubDashboard() {
     { id: "projects", icon: FolderOpen, label: "Projects" },
     { id: "properties", icon: Home, label: "Properties" }, // NEW 4th Category
     { id: "document-control", icon: FileText, label: "Document Control" },
+    { id: "users", icon: Shield, label: "User Management", adminOnly: true }, // NEW - Admin only
     // { id: "workflows", icon: Workflow, label: "Workflows" }, // Hidden temporarily
     { id: "virtual-chatbots", icon: MessageSquare, label: "Virtual Chatbots" }, // NEW
     // { id: "secure-datacenter", icon: Server, label: "Secure Data Center" }, // Hidden temporarily
@@ -476,22 +478,31 @@ export default function HavenzHubDashboard() {
 
           {/* Navigation */}
           <nav className="space-y-2 flex-1">
-            {sidebarItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                  activeSection === item.id
-                    ? "bg-blue-50 text-blue-700 border border-blue-200"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
-              >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                {!sidebarCollapsed && (
-                  <span className="font-medium">{item.label}</span>
-                )}
-              </button>
-            ))}
+            {sidebarItems
+              .filter((item) => {
+                // Filter out admin-only items if user is not admin/super_admin
+                if (item.adminOnly) {
+                  const role = authService.getCurrentRole()
+                  return role === 'admin' || role === 'super_admin'
+                }
+                return true
+              })
+              .map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                    activeSection === item.id
+                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  }`}
+                >
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  {!sidebarCollapsed && (
+                    <span className="font-medium">{item.label}</span>
+                  )}
+                </button>
+              ))}
           </nav>
 
           {/* Enhanced Security Status */}
@@ -533,6 +544,7 @@ export default function HavenzHubDashboard() {
                 {activeSection === "projects" && "Projects"}
                 {activeSection === "properties" && "Properties"}
                 {activeSection === "document-control" && "Document Control"}
+                {activeSection === "users" && "User Management"}
                 {activeSection === "workflows" && "Workflows"}
                 {activeSection === "virtual-chatbots" && "Virtual Chatbots"}
                 {activeSection === "secure-datacenter" && "Secure Data Center"}
@@ -573,6 +585,7 @@ export default function HavenzHubDashboard() {
             {activeSection === "projects" && <ProjectsPage />}
             {activeSection === "properties" && <PropertiesPage />}
             {activeSection === "document-control" && <DocumentControlPage />}
+            {activeSection === "users" && <UsersPage />}
             {activeSection === "workflows" && <WorkflowsPage />}
             {activeSection === "virtual-chatbots" && <VirtualChatbotsPage />}
             {activeSection === "secure-datacenter" && <SecureDataCenterPage />}

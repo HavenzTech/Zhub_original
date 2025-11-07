@@ -14,7 +14,10 @@ export function useAuth(redirectTo = '/login') {
   useEffect(() => {
     const authData = authService.getAuth()
 
-    if (!authData) {
+    // DEV MODE: Check if dev mode is enabled
+    const devMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
+
+    if (!authData && !devMode) {
       router.push(redirectTo)
       return
     }

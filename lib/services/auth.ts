@@ -49,6 +49,25 @@ class AuthService {
   getAuth(): AuthState | null {
     if (typeof window === 'undefined') return null
 
+    // DEV MODE: Bypass authentication if enabled
+    const devMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
+    if (devMode) {
+      console.log('[DEV MODE] Authentication bypassed - using mock user')
+      return {
+        token: 'dev-mode-token',
+        userId: 'dev-user-123',
+        email: 'dev@havenhub.com',
+        name: 'Dev User',
+        companies: [{
+          companyId: 'dev-company-1',
+          name: 'Dev Company',
+          role: 'super_admin'
+        }],
+        currentCompanyId: 'dev-company-1',
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
+      }
+    }
+
     const stored = localStorage.getItem('auth')
     if (!stored) return null
 
