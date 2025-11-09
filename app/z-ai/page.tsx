@@ -38,8 +38,13 @@ interface Message {
     relevance_score: number
     parent_folder: string
   }>
+  generatedImages?: Array<{
+    image_path: string
+    prompt?: string
+    model?: string
+    file_size?: number
+  }>
   company?: string
-  generatedImages?: string[]
 }
 
 export default function ZAiPage() {
@@ -429,51 +434,31 @@ export default function ZAiPage() {
                       {message.content}
                     </p>
 
-                    {message.generatedImages && message.generatedImages.length > 0 && (
-                      <div className="mt-4 space-y-3">
-                        <p className="text-xs font-medium text-blue-600">Generated Images:</p>
-                        {message.generatedImages.map((image: any, i) => {
-                          const filename = image.image_path?.split('/').pop()?.split('\\').pop() || `generated_image_${i + 1}.png`
-                          const imageUrl = `/api/proxy-image/${filename}`
-                          const fileSizeKB = ((image.file_size || 0) / 1024).toFixed(1)
-
-                          return (
-                            <div key={i} className="p-3 bg-white rounded-lg border border-blue-200">
-                              <div className="mb-2">
+                    {(message.generatedImages && message.generatedImages.length > 0) && (
+                      <div className="mt-3 pt-3 border-t border-blue-200">
+                        <p className="text-xs text-blue-600 mb-2">Generated Images:</p>
+                        <div className="space-y-2">
+                          {message.generatedImages.map((img, i) => {
+                            const filename = img.image_path.split('/').pop() || img.image_path;
+                            const imageUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/images/${filename}`;
+                            return (
+                              <div key={i} className="bg-white p-2 rounded-lg border border-blue-200">
                                 <img
                                   src={imageUrl}
-                                  alt={image.prompt || `Generated image ${i + 1}`}
-                                  className="w-full rounded border border-gray-300"
+                                  alt={img.prompt || 'Generated image'}
+                                  className="w-full h-auto rounded"
                                   onError={(e) => {
-                                    console.error('Image load error:', filename)
-                                    e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="%23f0f0f0"/><text x="50%" y="50%" text-anchor="middle" fill="%23999">Image not found</text></svg>'
+                                    console.error('Image load error:', imageUrl);
+                                    e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>';
                                   }}
                                 />
+                                {img.model && (
+                                  <p className="text-xs text-gray-600 mt-1">Model: {img.model}</p>
+                                )}
                               </div>
-                              {image.prompt && (
-                                <p className="text-xs text-gray-600 italic mb-2">
-                                  &quot;{image.prompt}&quot;
-                                </p>
-                              )}
-                              <div className="flex items-center justify-between text-xs text-gray-500">
-                                <div className="flex items-center gap-2">
-                                  <span>{image.model || 'sdxl'}</span>
-                                  <span>•</span>
-                                  <span>{fileSizeKB} KB</span>
-                                </div>
-                                <a
-                                  href={imageUrl}
-                                  download={filename}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800"
-                                >
-                                  Download
-                                </a>
-                              </div>
-                            </div>
-                          )
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 

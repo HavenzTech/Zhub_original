@@ -12,12 +12,11 @@ export async function POST(request: NextRequest) {
       query: body.query,
       chat_history: body.chat_history || [],
       search_type: body.search_type || "general",
-      user_email: body.user_email || ""
+      user_email: body.user_email || "anonymous@example.com"
     }
 
-    // Call HavenzHub-AI backend on port 8001 at /chat/agent endpoint
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
-    const response = await fetch(`${backendUrl}/chat/agent`, {
+    // Call your RAG backend
+    const response = await fetch('http://localhost:8001/chat/agent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
