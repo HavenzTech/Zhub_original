@@ -10,6 +10,40 @@ export interface User {
   updatedAt: string;
 }
 
+// User Management Types
+export interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+  pictureUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  role?: string; // User's role in the current company context
+}
+
+export interface CreateUserRequest {
+  email: string;
+  name: string;
+  pictureUrl?: string;
+  role: UserRole; // Role to assign in the current company
+}
+
+export interface CreateUserResponse {
+  id: string;
+  email: string;
+  name: string;
+  pictureUrl?: string;
+  role: string;
+  temporaryPassword: string; // Temporary password for the user
+  createdAt: string;
+}
+
+export interface UpdateUserRequest {
+  name: string;
+  pictureUrl?: string;
+  // Email and role cannot be changed via update endpoint
+}
+
 export interface Company {
   id: string;
   name: string;
@@ -193,6 +227,7 @@ export interface FacialRecognition {
 }
 
 // Enums
+export type UserRole = 'super_admin' | 'admin' | 'member' | 'viewer';
 export type CompanyStatus = 'active' | 'inactive' | 'pending';
 export type ProjectStatus = 'planning' | 'active' | 'on-hold' | 'completed' | 'cancelled';
 export type ProjectPriority = 'low' | 'medium' | 'high' | 'critical';

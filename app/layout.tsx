@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   keywords: ["organizational management", "business intelligence", "document control", "workflow automation"],
   authors: [{ name: "Havenz Hub Team" }],
   robots: "index, follow",
+  themeColor: "#00C49A",
+  colorScheme: "light",
   // viewport removed - now handled by generateViewport
 }
 
@@ -40,12 +42,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full">
-      <head>
-        <meta name="color-scheme" content="light" />
-        <meta name="theme-color" content="#00C49A" />
-      </head>
-      <body className={`${inter.variable} ${geistMono.variable} font-sans antialiased min-h-full bg-background text-foreground selection:bg-primary/20 selection:text-primary`}>
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${geistMono.variable} font-sans antialiased min-h-full bg-background text-foreground selection:bg-primary/20 selection:text-primary`}
+        suppressHydrationWarning
+      >
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/10">
           {children}
         </div>

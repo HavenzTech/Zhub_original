@@ -53,6 +53,7 @@ Havenz Hub is a modern, secure, and fully responsive organizational intelligence
 - **🏢 Company Management**: Multi-company organization and tracking
 - **📁 Project Management**: Project lifecycle and resource management
 - **👥 Department Management**: Team organization and workflow management
+- **👤 User Management**: Create and manage users with role-based access (Admin only)
 - **📄 Document Control**: Secure document storage and version control
 - **⚙️ Workflow Automation**: Custom workflow creation and management
 - **🤖 AI Assistant**: Integrated AI for intelligent task assistance
@@ -123,9 +124,14 @@ Havenz Hub is a modern, secure, and fully responsive organizational intelligence
    ```
    Edit `.env.local` with your configuration:
    ```env
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
-   NEXT_PUBLIC_API_URL=http://localhost:3000/api
+   # Backend API (HavenzHub-AI)
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8001
+
+   # Development Mode (bypass authentication)
+   NEXT_PUBLIC_DEV_MODE=true
    ```
+
+   > 💡 **Dev Mode**: Set `NEXT_PUBLIC_DEV_MODE=true` to bypass authentication during development. See [docs/DEV_MODE.md](docs/DEV_MODE.md) for details.
 
 4. **Run the development server**
    ```bash
@@ -148,6 +154,8 @@ havenz-hub/
 │   ├── departments/             # Department management pages
 │   ├── document-control/        # Document control pages
 │   ├── projects/               # Project management pages
+│   ├── properties/             # Property management pages
+│   ├── users/                  # User management pages (Admin only)
 │   ├── settings/               # Settings and configuration
 │   ├── workflows/              # Workflow management pages
 │   ├── z-ai/                   # AI assistant pages
@@ -159,13 +167,21 @@ havenz-hub/
 │       ├── badge.tsx           # Badge component
 │       ├── button.tsx          # Button component
 │       ├── card.tsx            # Card component
+│       ├── dialog.tsx          # Dialog/Modal component
 │       ├── input.tsx           # Input component
+│       ├── select.tsx          # Select dropdown component
 │       ├── sidebar.tsx         # Sidebar component
 │       └── ...                 # Other UI components
 ├── hooks/                      # Custom React hooks
 │   └── use-responsive.ts       # Responsive utilities
 ├── lib/                        # Utility functions
+│   ├── services/               # API service layer
+│   │   ├── auth.ts            # Authentication service
+│   │   └── bmsApi.ts          # BMS API client
 │   └── utils.ts               # Common utilities
+├── types/                      # TypeScript type definitions
+│   ├── bms.ts                 # BMS entity types
+│   └── index.ts               # Type exports
 ├── public/                     # Static assets
 ├── styles/                     # Additional stylesheets
 ├── tailwind.config.ts          # Tailwind configuration
@@ -181,6 +197,7 @@ Comprehensive documentation is available for developers:
 | Document | Description | Location |
 |----------|-------------|----------|
 | **AI Development Guide** | How to use AI assistants for development | `docs/AI_DEVELOPMENT_GUIDE.md` |
+| **Dev Mode Setup** | Bypass authentication in development | `docs/DEV_MODE.md` ⭐ |
 | **Frontend API Reference** | Complete API endpoints and usage | `docs/FRONTEND_API_REFERENCE.md` |
 | **Backend Integration** | How to integrate with backend APIs | `docs/BACKEND_API_INTEGRATION_GUIDE.md` |
 | **Permission Matrix** | Role-based access control rules | `docs/PERMISSION_MATRIX.md` |
@@ -188,6 +205,7 @@ Comprehensive documentation is available for developers:
 ### Quick Links
 
 - 🤖 [**AI-Assisted Development Guide**](docs/AI_DEVELOPMENT_GUIDE.md) - Essential for developers using AI coding assistants
+- 🔓 [**Dev Mode Guide**](docs/DEV_MODE.md) - Bypass authentication for quick development ⭐
 - 🔌 [**API Reference**](docs/FRONTEND_API_REFERENCE.md) - All API endpoints and request/response formats
 - 🔐 [**Permissions**](docs/PERMISSION_MATRIX.md) - Role-based access control matrix
 
