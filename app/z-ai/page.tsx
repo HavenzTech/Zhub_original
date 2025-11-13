@@ -1,7 +1,7 @@
 // app/z-ai/page.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -67,6 +67,58 @@ export default function ZAiPage() {
     downloadUrl: undefined
   })
   const [messages, setMessages] = useState<Message[]>([])
+  const [currentSessionId, setCurrentSessionId] = useState<string>("")
+
+  // Load session from localStorage on mount
+  useEffect(() => {
+    console.log('[Session] Initializing session...')
+    const authData = localStorage.getItem('auth')
+    console.log('[Session] Auth data:', authData ? 'Found' : 'Not found')
+
+    if (!authData) {
+      console.log('[Session] No auth data, skipping session load')
+      return
+    }
+
+    const auth = JSON.parse(authData)
+    const userEmail = auth.email
+    console.log('[Session] User email:', userEmail)
+
+    if (!userEmail) {
+      console.log('[Session] No user email, skipping session load')
+      return
+    }
+
+    // Generate session ID based on date and user
+    const sessionId = `session_${userEmail}_${new Date().toISOString().split('T')[0]}`
+    console.log('[Session] Session ID:', sessionId)
+    setCurrentSessionId(sessionId)
+
+    // Load existing messages for this session
+    const savedMessages = localStorage.getItem(sessionId)
+    console.log('[Session] Saved messages:', savedMessages ? `Found (${savedMessages.length} chars)` : 'Not found')
+
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages)
+        setMessages(parsed)
+        console.log(`[Session] ✅ Loaded ${parsed.length} messages from session ${sessionId}`)
+      } catch (e) {
+        console.error('[Session] ❌ Failed to parse saved messages:', e)
+      }
+    } else {
+      console.log('[Session] No previous messages for this session')
+    }
+  }, [])
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    console.log('[Session] Save effect triggered - SessionID:', currentSessionId, 'Messages:', messages.length)
+    if (currentSessionId && messages.length > 0) {
+      localStorage.setItem(currentSessionId, JSON.stringify(messages))
+      console.log(`[Session] ✅ Saved ${messages.length} messages to session ${currentSessionId}`)
+    }
+  }, [messages, currentSessionId])
 
   const quickActions = [
     {
@@ -120,16 +172,26 @@ export default function ZAiPage() {
             text: msg.content
           }))
 
+        // Get auth token from localStorage
+        const authData = localStorage.getItem('auth')
+        const token = authData ? JSON.parse(authData).token : null
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        }
+
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
         const response = await fetch('/api/chat', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({
             query: currentInput,
             chat_history: formattedHistory,
             search_type: "general",
-            user_email: "" // Can be populated from auth if available
+            user_email: "" // Will be extracted from token by backend
           })
         })
 
@@ -439,7 +501,8 @@ export default function ZAiPage() {
                         <p className="text-xs text-blue-600 mb-2">Generated Images:</p>
                         <div className="space-y-2">
                           {message.generatedImages.map((img, i) => {
-                            const filename = img.image_path.split('/').pop() || img.image_path;
+                            // Extract just the filename from path (handle both / and \ separators)
+                            const filename = img.image_path.split(/[/\\]/).pop() || img.image_path;
                             const imageUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/images/${filename}`;
                             return (
                               <div key={i} className="bg-white p-2 rounded-lg border border-blue-200">

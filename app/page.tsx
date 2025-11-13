@@ -155,7 +155,7 @@ export default function HavenzHubDashboard() {
     { id: "document-control", icon: FileText, label: "Document Control" },
     { id: "users", icon: Shield, label: "User Management", adminOnly: true }, // NEW - Admin only
     // { id: "workflows", icon: Workflow, label: "Workflows" }, // Hidden temporarily
-    { id: "virtual-chatbots", icon: MessageSquare, label: "Virtual Chatbots" }, // NEW
+    // { id: "virtual-chatbots", icon: MessageSquare, label: "Virtual Chatbots" }, // Hidden temporarily
     // { id: "secure-datacenter", icon: Server, label: "Secure Data Center" }, // Hidden temporarily
     // { id: "bms-hardware", icon: Smartphone, label: "BMS Hardware" }, // Hidden temporarily
     { id: "z-ai", icon: Bot, label: "Z AI" },
@@ -254,6 +254,7 @@ export default function HavenzHubDashboard() {
       </div>
 
       {/* Quick Actions - Enhanced */}
+      {/* Temporarily hidden
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardContent className="p-6">
@@ -317,6 +318,7 @@ export default function HavenzHubDashboard() {
           </CardContent>
         </Card>
       </div>
+      */}
 
       {/* Enhanced Company Overview */}
       <Card className="bg-white border border-gray-200">

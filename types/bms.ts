@@ -116,10 +116,27 @@ export interface Property {
   updatedAt: string;
 }
 
+export interface Folder {
+  id: string;
+  companyId: string;
+  parentFolderId?: string;
+  name: string;
+  description?: string;
+  path: string;
+  createdByUserId: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+  // Navigation properties (optional, loaded from API)
+  childFolders?: Folder[];
+  documents?: Document[];
+}
+
 export interface Document {
   id: string;
   uploadedByUserId: string;
   companyId: string;
+  folderId?: string;
   name: string;
   fileType?: string;
   fileSizeBytes?: number;
@@ -134,6 +151,8 @@ export interface Document {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
+  // Navigation property (optional)
+  folder?: Folder;
 }
 
 export interface BmsDevice {

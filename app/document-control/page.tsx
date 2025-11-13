@@ -9,8 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi"
 import { authService } from "@/lib/services/auth"
-import { Document, DocumentStatus, DocumentAccessLevel, DocumentCategory } from "@/types/bms"
+import { Document, DocumentStatus, DocumentAccessLevel, DocumentCategory, Folder } from "@/types/bms"
 import { toast } from "sonner"
+import FolderTreeView from "@/components/FolderTreeView"
+import CreateFolderModal from "@/components/CreateFolderModal"
+import EditMetadataModal from "@/components/EditMetadataModal"
 import {
   FileText,
   Upload,
@@ -56,19 +59,26 @@ import { Textarea } from "@/components/ui/textarea"
 export default function DocumentControlPage() {
   const router = useRouter()
   const [documents, setDocuments] = useState<Document[]>([])
+  const [folders, setFolders] = useState<Folder[]>([])
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null)
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false)
+  const [parentFolderForCreation, setParentFolderForCreation] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [showEditMetadataModal, setShowEditMetadataModal] = useState(false)
+  const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     status: "draft" as DocumentStatus,
     accessLevel: "private" as DocumentAccessLevel,
     category: "" as DocumentCategory | "",
-    tags: ""
+    tags: "",
+    folderId: null as string | null
   })
 
   // Initialize auth on mount
@@ -86,6 +96,7 @@ export default function DocumentControlPage() {
     if (companyId) bmsApi.setCompanyId(companyId)
 
     loadDocuments()
+    loadFolders()
   }, [router])
 
   const loadDocuments = async () => {
@@ -104,6 +115,124 @@ export default function DocumentControlPage() {
       console.error('Error loading documents:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadFolders = async () => {
+    try {
+      const data = await bmsApi.folders.getTree()
+      setFolders(data as Folder[])
+    } catch (err) {
+      console.error('Error loading folders:', err)
+      // Don't show error toast for folders, just log it
+    }
+  }
+
+  const handleCreateFolder = async (name: string, description?: string, parentFolderId?: string) => {
+    try {
+      const payload = {
+        name,
+        description,
+        parentFolderId: parentFolderId || undefined
+      }
+      await bmsApi.folders.create(payload)
+      toast.success(`Folder "${name}" created successfully!`)
+      await loadFolders()
+      setParentFolderForCreation(null)
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to create folder'
+      throw new Error(errorMessage)
+    }
+  }
+
+  const handleOpenCreateFolderModal = (parentFolderId?: string) => {
+    setParentFolderForCreation(parentFolderId || null)
+    setShowCreateFolderModal(true)
+  }
+
+  // Helper to find folder by ID (for getting parent folder name)
+  const findFolderById = (folderId: string, folderList: Folder[] = folders): Folder | null => {
+    for (const folder of folderList) {
+      if (folder.id === folderId) return folder
+      if (folder.childFolders && folder.childFolders.length > 0) {
+        const found = findFolderById(folderId, folder.childFolders)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  const handleFolderDelete = async (folderId: string) => {
+    try {
+      await bmsApi.folders.delete(folderId)
+      toast.success('Folder and all contents deleted successfully')
+      await loadFolders()
+      await loadDocuments()
+      if (selectedFolderId === folderId) {
+        setSelectedFolderId(null)
+      }
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to delete folder'
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleDocumentEdit = async (documentId: string) => {
+    setEditingDocumentId(documentId)
+    setShowEditMetadataModal(true)
+  }
+
+  const handleDocumentDelete = async (documentId: string) => {
+    try {
+      await bmsApi.documents.softDelete(documentId)
+      toast.success('Document deleted successfully')
+      setDocuments(prev => prev.filter(d => d.id !== documentId))
+      await loadFolders() // Refresh folder tree to update counts
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to delete document'
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleSaveMetadata = async (documentId: string, updates: Partial<Document>) => {
+    try {
+      const document = documents.find(d => d.id === documentId)
+      if (!document) throw new Error('Document not found')
+
+      // Only send the fields that can be updated (exclude navigation properties)
+      const cleanUpdatedDoc = {
+        id: document.id,
+        companyId: document.companyId,
+        uploadedByUserId: document.uploadedByUserId,
+        folderId: document.folderId,
+        name: updates.name || document.name,
+        fileType: document.fileType,
+        fileSizeBytes: document.fileSizeBytes,
+        contentHash: document.contentHash,
+        storagePath: document.storagePath,
+        version: document.version,
+        status: document.status,
+        accessLevel: updates.accessLevel || document.accessLevel,
+        category: updates.category || document.category,
+        metadata: document.metadata,
+        tags: updates.tags !== undefined ? updates.tags : document.tags,
+        createdAt: document.createdAt,
+        updatedAt: new Date().toISOString(),
+        deletedAt: document.deletedAt
+      }
+
+      await bmsApi.documents.update(documentId, cleanUpdatedDoc)
+
+      toast.success('Metadata updated successfully')
+
+      // Update local state with the cleaned document
+      setDocuments(prev => prev.map(d => d.id === documentId ? { ...document, ...updates } : d))
+      await loadFolders() // Refresh tree
+      setShowEditMetadataModal(false)
+      setEditingDocumentId(null)
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to update metadata'
+      throw new Error(errorMessage)
     }
   }
 
@@ -134,37 +263,72 @@ export default function DocumentControlPage() {
 
     setIsUploading(true)
     try {
-      // Calculate file hash
-      const arrayBuffer = await selectedFile.arrayBuffer()
-      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
-      const hashArray = Array.from(new Uint8Array(hashBuffer))
-      const contentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+      // Step 1: Upload the actual file to storage
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', selectedFile)
+      if (formData.folderId && formData.folderId !== 'root') {
+        formDataUpload.append('folderId', formData.folderId)
+      }
 
-      // Build payload - companyId and uploadedByUserId are set automatically from headers
+      // Get auth token and company ID
+      const token = authService.getToken()
+      const companyId = authService.getCurrentCompanyId()
+
+      if (!token || !companyId) {
+        throw new Error('Authentication required. Please log in again.')
+      }
+
+      const uploadResponse = await fetch('http://localhost:5087/api/havenzhub/document/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Company-Id': companyId
+        },
+        body: formDataUpload
+      })
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text()
+        throw new Error(`File upload failed: ${uploadResponse.statusText} - ${errorText}`)
+      }
+
+      const uploadResult = await uploadResponse.json()
+
+      // Step 2: Save document metadata to database
       const payload: any = {
         name: formData.name,
-        fileType: selectedFile.type || selectedFile.name.split('.').pop() || 'unknown',
-        fileSizeBytes: selectedFile.size,
-        contentHash,
-        storagePath: `/uploads/${selectedFile.name}`,
+        fileType: uploadResult.fileType || selectedFile.type || 'unknown',
+        fileSizeBytes: uploadResult.fileSizeBytes || selectedFile.size,
+        contentHash: uploadResult.contentHash,
+        storagePath: uploadResult.storagePath,
         version: 1,
-        status: formData.status,
-        accessLevel: formData.accessLevel
+        accessLevel: formData.accessLevel,
+        folderId: formData.folderId === 'root' ? null : formData.folderId
       }
 
       // Only add optional fields if they have values
       if (formData.category) payload.category = formData.category
-      if (formData.tags?.trim()) payload.tags = formData.tags.split(',').map(t => t.trim())
 
-      payload.metadata = {
+      // Tags: Convert to JSON string array for backend JSONB storage
+      if (formData.tags?.trim()) {
+        const tagsArray = formData.tags.split(',').map(t => t.trim())
+        payload.tags = JSON.stringify(tagsArray)
+      }
+
+      // Metadata: Convert to JSON string for backend JSONB storage
+      payload.metadata = JSON.stringify({
         originalFileName: selectedFile.name,
         uploadDate: new Date().toISOString()
-      }
+      })
 
       const newDocument = await bmsApi.documents.create(payload)
 
       setDocuments(prev => [...prev, newDocument as Document])
       toast.success("Document uploaded successfully!")
+
+      // Refresh folders to update document counts in tree
+      await loadFolders()
+
       setShowUploadModal(false)
 
       // Reset form
@@ -174,7 +338,8 @@ export default function DocumentControlPage() {
         status: "draft" as DocumentStatus,
         accessLevel: "private" as DocumentAccessLevel,
         category: "" as DocumentCategory | "",
-        tags: ""
+        tags: "",
+        folderId: selectedFolderId
       })
     } catch (err) {
       const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to upload document'
@@ -185,11 +350,18 @@ export default function DocumentControlPage() {
     }
   }
 
-  const filteredDocuments = documents.filter(doc =>
-    doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.fileType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredDocuments = documents.filter(doc => {
+    // Filter by selected folder
+    const folderMatch = selectedFolderId === null || doc.folderId === selectedFolderId
+
+    // Filter by search term
+    const searchMatch = !searchTerm ||
+      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.fileType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.category?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return folderMatch && searchMatch
+  })
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return "N/A"
@@ -505,12 +677,19 @@ export default function DocumentControlPage() {
               <p className="text-gray-600">Manage and track all organizational documents</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={loadDocuments}>
+              <Button variant="outline" onClick={() => { loadDocuments(); loadFolders(); }}>
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
+              <Button variant="outline" onClick={() => handleOpenCreateFolderModal()}>
+                <Plus className="w-4 h-4 mr-2" />
+                New Folder
+              </Button>
               {authService.hasPermission('create', 'document') && (
-                <Button onClick={() => setShowUploadModal(true)}>
+                <Button onClick={() => {
+                  setFormData({ ...formData, folderId: selectedFolderId });
+                  setShowUploadModal(true);
+                }}>
                   <Upload className="w-4 h-4 mr-2" />
                   Upload Document
                 </Button>
@@ -583,42 +762,74 @@ export default function DocumentControlPage() {
             </Card>
           </div>
 
-          {/* Search */}
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-              <Input
-                placeholder="Search documents..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Badge variant="secondary">
-              {filteredDocuments.length} {filteredDocuments.length === 1 ? 'document' : 'documents'}
-            </Badge>
-          </div>
+          {/* Two-Column Layout: Folders (Left) + Documents (Right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Left Panel: Folder Tree */}
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle className="text-base">Folders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FolderTreeView
+                  folders={folders}
+                  selectedFolderId={selectedFolderId}
+                  onFolderSelect={setSelectedFolderId}
+                  onFolderCreate={handleOpenCreateFolderModal}
+                  onFolderDelete={handleFolderDelete}
+                  onDocumentEdit={handleDocumentEdit}
+                  onDocumentDelete={handleDocumentDelete}
+                  showDocuments={true}
+                />
+              </CardContent>
+            </Card>
 
-          {/* Documents Grid */}
-          {filteredDocuments.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredDocuments.map((document) => (
-                <DocumentCard key={document.id} document={document} />
-              ))}
+            {/* Right Panel: Documents */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* Search */}
+              <div className="flex items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                  <Input
+                    placeholder="Search documents..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Badge variant="secondary">
+                  {filteredDocuments.length} {filteredDocuments.length === 1 ? 'document' : 'documents'}
+                </Badge>
+              </div>
+
+              {/* Documents Grid */}
+              {filteredDocuments.length > 0 ? (
+                <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+                  {filteredDocuments.map((document) => (
+                    <DocumentCard key={document.id} document={document} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
+                  <p className="text-gray-600 mb-4">
+                    {searchTerm
+                      ? 'Try adjusting your search criteria'
+                      : selectedFolderId
+                      ? 'This folder is empty. Upload a document to get started.'
+                      : 'Get started by uploading your first document'}
+                  </p>
+                  <Button onClick={() => {
+                    setFormData({ ...formData, folderId: selectedFolderId });
+                    setShowUploadModal(true);
+                  }}>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Document
+                  </Button>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
-              <p className="text-gray-600 mb-4">
-                {searchTerm ? 'Try adjusting your search criteria' : 'Get started by uploading your first document'}
-              </p>
-              <Button onClick={() => setShowUploadModal(true)}>
-                <Upload className="w-4 h-4 mr-2" />
-                Upload First Document
-              </Button>
-            </div>
-          )}
+          </div>
         </>
       ) : (
         <DocumentDetails document={selectedDocument} />
@@ -720,26 +931,48 @@ export default function DocumentControlPage() {
                 </div>
               </div>
 
-              {/* Category */}
-              <div className="grid gap-2">
-                <Label htmlFor="category">Category</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value as DocumentCategory })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="contract">Contract</SelectItem>
-                    <SelectItem value="financial">Financial</SelectItem>
-                    <SelectItem value="technical">Technical</SelectItem>
-                    <SelectItem value="legal">Legal</SelectItem>
-                    <SelectItem value="hr">HR</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* Category and Folder */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value as DocumentCategory })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="financial">Financial</SelectItem>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="legal">Legal</SelectItem>
+                      <SelectItem value="hr">HR</SelectItem>
+                      <SelectItem value="marketing">Marketing</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="folder">Folder</Label>
+                  <Select
+                    value={formData.folderId || "root"}
+                    onValueChange={(value) => setFormData({ ...formData, folderId: value === "root" ? null : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="root">Root (No Folder)</SelectItem>
+                      {folders.map((folder) => (
+                        <SelectItem key={folder.id} value={folder.id}>
+                          {folder.path}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Tags */}
@@ -776,6 +1009,29 @@ export default function DocumentControlPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Create Folder Modal */}
+      <CreateFolderModal
+        isOpen={showCreateFolderModal}
+        onClose={() => {
+          setShowCreateFolderModal(false)
+          setParentFolderForCreation(null)
+        }}
+        onSubmit={handleCreateFolder}
+        parentFolderId={parentFolderForCreation || undefined}
+        parentFolderName={parentFolderForCreation ? findFolderById(parentFolderForCreation)?.name : undefined}
+      />
+
+      {/* Edit Metadata Modal */}
+      <EditMetadataModal
+        isOpen={showEditMetadataModal}
+        onClose={() => {
+          setShowEditMetadataModal(false)
+          setEditingDocumentId(null)
+        }}
+        document={editingDocumentId ? documents.find(d => d.id === editingDocumentId) || null : null}
+        onSave={handleSaveMetadata}
+      />
     </div>
   )
 }
