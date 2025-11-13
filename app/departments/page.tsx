@@ -45,6 +45,7 @@ export default function DepartmentsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -147,6 +148,87 @@ export default function DepartmentsPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedDepartment || !formData.name.trim()) {
+      toast.error("Department name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    let payload: any = null
+    try {
+      // Build payload using UpdateDepartmentRequest DTO (no timestamps, no companyId)
+      payload = {
+        id: selectedDepartment.id,
+        name: formData.name.trim(),
+        description: formData.description?.trim() || null,
+        headName: formData.headName?.trim() || null,
+        headEmail: formData.headEmail?.trim() || null,
+        headPhone: formData.headPhone?.trim() || null,
+        budgetAllocated: null,
+        budgetSpent: null
+      }
+
+      // Only set budget fields if they have valid values
+      const budgetAllocated = formData.budgetAllocated?.trim()
+      if (budgetAllocated && !isNaN(parseFloat(budgetAllocated))) {
+        payload.budgetAllocated = parseFloat(budgetAllocated)
+      }
+
+      const budgetSpent = formData.budgetSpent?.trim()
+      if (budgetSpent && !isNaN(parseFloat(budgetSpent))) {
+        payload.budgetSpent = parseFloat(budgetSpent)
+      }
+
+      console.log('Updating department with payload:', JSON.stringify(payload, null, 2))
+      await bmsApi.departments.update(selectedDepartment.id, payload)
+
+      // Update local state with the changed data (backend returns NoContent)
+      const updatedDepartment = {
+        ...selectedDepartment,
+        ...payload,
+        updatedAt: new Date().toISOString()
+      }
+
+      setDepartments(prev => prev.map(d => d.id === selectedDepartment.id ? updatedDepartment : d))
+      setSelectedDepartment(updatedDepartment)
+      toast.success("Department updated successfully!")
+      setShowEditForm(false)
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to update department'
+      toast.error(errorMessage)
+      console.error('Error updating department:', err)
+      if (payload) {
+        console.error('Payload that failed:', JSON.stringify(payload, null, 2))
+      }
+      if (err instanceof BmsApiError) {
+        console.error('Error details:', {
+          status: err.status,
+          code: err.code,
+          details: err.details,
+          message: err.message
+        })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const openEditForm = (department: Department) => {
+    console.log('Opening edit form for department:', JSON.stringify(department, null, 2))
+    setFormData({
+      name: department.name,
+      description: department.description || "",
+      headName: department.headName || "",
+      headEmail: department.headEmail || "",
+      headPhone: department.headPhone || "",
+      budgetAllocated: department.budgetAllocated?.toString() || "",
+      budgetSpent: department.budgetSpent?.toString() || ""
+    })
+    setShowEditForm(true)
   }
 
   const filteredDepartments = departments.filter(dept =>
@@ -293,7 +375,7 @@ export default function DepartmentsPage() {
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => openEditForm(department)}>
                   <Edit className="w-4 h-4 mr-2" />
                   Edit
                 </Button>
@@ -694,6 +776,123 @@ export default function DepartmentsPage() {
                   <>
                     <Plus className="w-4 h-4 mr-2" />
                     Create Department
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Department Modal */}
+      <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Department</DialogTitle>
+            <DialogDescription>
+              Update department information. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">Department Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter department name"
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Department description"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-headName">Department Head Name</Label>
+                <Input
+                  id="edit-headName"
+                  value={formData.headName}
+                  onChange={(e) => setFormData({ ...formData, headName: e.target.value })}
+                  placeholder="Full name"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-headEmail">Head Email</Label>
+                  <Input
+                    id="edit-headEmail"
+                    type="email"
+                    value={formData.headEmail}
+                    onChange={(e) => setFormData({ ...formData, headEmail: e.target.value })}
+                    placeholder="email@example.com"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-headPhone">Head Phone</Label>
+                  <Input
+                    id="edit-headPhone"
+                    value={formData.headPhone}
+                    onChange={(e) => setFormData({ ...formData, headPhone: e.target.value })}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-budgetAllocated">Budget Allocated (CAD)</Label>
+                  <Input
+                    id="edit-budgetAllocated"
+                    type="number"
+                    value={formData.budgetAllocated}
+                    onChange={(e) => setFormData({ ...formData, budgetAllocated: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-budgetSpent">Budget Spent (CAD)</Label>
+                  <Input
+                    id="edit-budgetSpent"
+                    type="number"
+                    value={formData.budgetSpent}
+                    onChange={(e) => setFormData({ ...formData, budgetSpent: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowEditForm(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Update Department
                   </>
                 )}
               </Button>

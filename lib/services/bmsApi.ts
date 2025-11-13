@@ -245,6 +245,18 @@ class BmsApiService {
     hardDelete: (id: string) => this.delete(`/document/${id}/hard`),
   };
 
+  // Folder endpoints
+  folders = {
+    getAll: () => this.get('/folder'),
+    getTree: () => this.get('/folder/tree'),
+    getById: (id: string) => this.get(`/folder/${id}`),
+    getChildren: (id: string) => this.get(`/folder/${id}/children`),
+    getDocuments: (id: string) => this.get(`/folder/${id}/documents`),
+    create: (data: any) => this.post('/folder', data),
+    update: (id: string, data: any) => this.put(`/folder/${id}`, data),
+    delete: (id: string) => this.delete(`/folder/${id}`),
+  };
+
   // BMS Device endpoints
   bmsDevices = {
     getAll: () => this.get('/bmsdevice'),

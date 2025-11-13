@@ -1,7 +1,7 @@
 // app/z-ai/page.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -38,8 +38,13 @@ interface Message {
     relevance_score: number
     parent_folder: string
   }>
+  generatedImages?: Array<{
+    image_path: string
+    prompt?: string
+    model?: string
+    file_size?: number
+  }>
   company?: string
-  generatedImages?: string[]
 }
 
 export default function ZAiPage() {
@@ -62,6 +67,58 @@ export default function ZAiPage() {
     downloadUrl: undefined
   })
   const [messages, setMessages] = useState<Message[]>([])
+  const [currentSessionId, setCurrentSessionId] = useState<string>("")
+
+  // Load session from localStorage on mount
+  useEffect(() => {
+    console.log('[Session] Initializing session...')
+    const authData = localStorage.getItem('auth')
+    console.log('[Session] Auth data:', authData ? 'Found' : 'Not found')
+
+    if (!authData) {
+      console.log('[Session] No auth data, skipping session load')
+      return
+    }
+
+    const auth = JSON.parse(authData)
+    const userEmail = auth.email
+    console.log('[Session] User email:', userEmail)
+
+    if (!userEmail) {
+      console.log('[Session] No user email, skipping session load')
+      return
+    }
+
+    // Generate session ID based on date and user
+    const sessionId = `session_${userEmail}_${new Date().toISOString().split('T')[0]}`
+    console.log('[Session] Session ID:', sessionId)
+    setCurrentSessionId(sessionId)
+
+    // Load existing messages for this session
+    const savedMessages = localStorage.getItem(sessionId)
+    console.log('[Session] Saved messages:', savedMessages ? `Found (${savedMessages.length} chars)` : 'Not found')
+
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages)
+        setMessages(parsed)
+        console.log(`[Session] ✅ Loaded ${parsed.length} messages from session ${sessionId}`)
+      } catch (e) {
+        console.error('[Session] ❌ Failed to parse saved messages:', e)
+      }
+    } else {
+      console.log('[Session] No previous messages for this session')
+    }
+  }, [])
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    console.log('[Session] Save effect triggered - SessionID:', currentSessionId, 'Messages:', messages.length)
+    if (currentSessionId && messages.length > 0) {
+      localStorage.setItem(currentSessionId, JSON.stringify(messages))
+      console.log(`[Session] ✅ Saved ${messages.length} messages to session ${currentSessionId}`)
+    }
+  }, [messages, currentSessionId])
 
   const quickActions = [
     {
@@ -115,16 +172,26 @@ export default function ZAiPage() {
             text: msg.content
           }))
 
+        // Get auth token from localStorage
+        const authData = localStorage.getItem('auth')
+        const token = authData ? JSON.parse(authData).token : null
+
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        }
+
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
         const response = await fetch('/api/chat', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({
             query: currentInput,
             chat_history: formattedHistory,
             search_type: "general",
-            user_email: "" // Can be populated from auth if available
+            user_email: "" // Will be extracted from token by backend
           })
         })
 
@@ -429,51 +496,32 @@ export default function ZAiPage() {
                       {message.content}
                     </p>
 
-                    {message.generatedImages && message.generatedImages.length > 0 && (
-                      <div className="mt-4 space-y-3">
-                        <p className="text-xs font-medium text-blue-600">Generated Images:</p>
-                        {message.generatedImages.map((image: any, i) => {
-                          const filename = image.image_path?.split('/').pop()?.split('\\').pop() || `generated_image_${i + 1}.png`
-                          const imageUrl = `/api/proxy-image/${filename}`
-                          const fileSizeKB = ((image.file_size || 0) / 1024).toFixed(1)
-
-                          return (
-                            <div key={i} className="p-3 bg-white rounded-lg border border-blue-200">
-                              <div className="mb-2">
+                    {(message.generatedImages && message.generatedImages.length > 0) && (
+                      <div className="mt-3 pt-3 border-t border-blue-200">
+                        <p className="text-xs text-blue-600 mb-2">Generated Images:</p>
+                        <div className="space-y-2">
+                          {message.generatedImages.map((img, i) => {
+                            // Extract just the filename from path (handle both / and \ separators)
+                            const filename = img.image_path.split(/[/\\]/).pop() || img.image_path;
+                            const imageUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/images/${filename}`;
+                            return (
+                              <div key={i} className="bg-white p-2 rounded-lg border border-blue-200">
                                 <img
                                   src={imageUrl}
-                                  alt={image.prompt || `Generated image ${i + 1}`}
-                                  className="w-full rounded border border-gray-300"
+                                  alt={img.prompt || 'Generated image'}
+                                  className="w-full h-auto rounded"
                                   onError={(e) => {
-                                    console.error('Image load error:', filename)
-                                    e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="%23f0f0f0"/><text x="50%" y="50%" text-anchor="middle" fill="%23999">Image not found</text></svg>'
+                                    console.error('Image load error:', imageUrl);
+                                    e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>';
                                   }}
                                 />
+                                {img.model && (
+                                  <p className="text-xs text-gray-600 mt-1">Model: {img.model}</p>
+                                )}
                               </div>
-                              {image.prompt && (
-                                <p className="text-xs text-gray-600 italic mb-2">
-                                  &quot;{image.prompt}&quot;
-                                </p>
-                              )}
-                              <div className="flex items-center justify-between text-xs text-gray-500">
-                                <div className="flex items-center gap-2">
-                                  <span>{image.model || 'sdxl'}</span>
-                                  <span>•</span>
-                                  <span>{fileSizeKB} KB</span>
-                                </div>
-                                <a
-                                  href={imageUrl}
-                                  download={filename}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800"
-                                >
-                                  Download
-                                </a>
-                              </div>
-                            </div>
-                          )
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 

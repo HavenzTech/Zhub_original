@@ -51,6 +51,7 @@ export default function PropertiesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -181,6 +182,125 @@ export default function PropertiesPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedProperty || !formData.name.trim()) {
+      toast.error("Property name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      // Build payload using UpdatePropertyRequest DTO
+      const payload: any = {
+        id: selectedProperty.id,
+        name: formData.name.trim(),
+        description: formData.description?.trim() || null,
+        type: formData.type?.trim() || null,
+        status: formData.status,
+        locationAddress: formData.locationAddress?.trim() || null,
+        locationCity: formData.locationCity?.trim() || null,
+        locationProvince: formData.locationProvince?.trim() || null,
+        locationCountry: formData.locationCountry?.trim() || null,
+        locationPostalCode: formData.locationPostalCode?.trim() || null,
+        locationLatitude: null,
+        locationLongitude: null,
+        sizeTotalArea: null,
+        sizeUsableArea: null,
+        sizeFloors: null,
+        currentValue: null,
+        monthlyOperatingCosts: null
+      }
+
+      // Only set numeric fields if they have valid values
+      const locationLatitude = formData.locationLatitude?.trim()
+      if (locationLatitude && !isNaN(parseFloat(locationLatitude))) {
+        payload.locationLatitude = parseFloat(locationLatitude)
+      }
+
+      const locationLongitude = formData.locationLongitude?.trim()
+      if (locationLongitude && !isNaN(parseFloat(locationLongitude))) {
+        payload.locationLongitude = parseFloat(locationLongitude)
+      }
+
+      const sizeTotalArea = formData.sizeTotalArea?.trim()
+      if (sizeTotalArea && !isNaN(parseFloat(sizeTotalArea))) {
+        payload.sizeTotalArea = parseFloat(sizeTotalArea)
+      }
+
+      const sizeUsableArea = formData.sizeUsableArea?.trim()
+      if (sizeUsableArea && !isNaN(parseFloat(sizeUsableArea))) {
+        payload.sizeUsableArea = parseFloat(sizeUsableArea)
+      }
+
+      const sizeFloors = formData.sizeFloors?.trim()
+      if (sizeFloors && !isNaN(parseInt(sizeFloors))) {
+        payload.sizeFloors = parseInt(sizeFloors)
+      }
+
+      const currentValue = formData.currentValue?.trim()
+      if (currentValue && !isNaN(parseFloat(currentValue))) {
+        payload.currentValue = parseFloat(currentValue)
+      }
+
+      const monthlyOperatingCosts = formData.monthlyOperatingCosts?.trim()
+      if (monthlyOperatingCosts && !isNaN(parseFloat(monthlyOperatingCosts))) {
+        payload.monthlyOperatingCosts = parseFloat(monthlyOperatingCosts)
+      }
+
+      console.log('Updating property with payload:', payload)
+      await bmsApi.properties.update(selectedProperty.id, payload)
+
+      // Update local state with the changed data (backend returns NoContent)
+      const updatedProperty = {
+        ...selectedProperty,
+        ...payload,
+        updatedAt: new Date().toISOString()
+      }
+
+      setProperties(prev => prev.map(p => p.id === selectedProperty.id ? updatedProperty : p))
+      setSelectedProperty(updatedProperty)
+      toast.success("Property updated successfully!")
+      setShowEditForm(false)
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to update property'
+      toast.error(errorMessage)
+      console.error('Error updating property:', err)
+      if (err instanceof BmsApiError) {
+        console.error('Error details:', {
+          status: err.status,
+          code: err.code,
+          details: err.details,
+          message: err.message
+        })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const openEditForm = (property: Property) => {
+    setFormData({
+      name: property.name,
+      description: property.description || "",
+      type: property.type || "",
+      status: property.status,
+      locationAddress: property.locationAddress || "",
+      locationCity: property.locationCity || "",
+      locationProvince: property.locationProvince || "",
+      locationCountry: property.locationCountry || "",
+      locationPostalCode: property.locationPostalCode || "",
+      locationLatitude: property.locationLatitude?.toString() || "",
+      locationLongitude: property.locationLongitude?.toString() || "",
+      sizeTotalArea: property.sizeTotalArea?.toString() || "",
+      sizeUsableArea: property.sizeUsableArea?.toString() || "",
+      sizeFloors: property.sizeFloors?.toString() || "",
+      currentValue: property.currentValue?.toString() || "",
+      monthlyOperatingCosts: property.monthlyOperatingCosts?.toString() || ""
+    })
+    setShowEditForm(true)
   }
 
   const filteredProperties = properties.filter(property =>
@@ -327,7 +447,7 @@ export default function PropertiesPage() {
             </div>
 
             <div className="flex gap-2">
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => openEditForm(property)}>
                 <Edit className="w-4 h-4 mr-2" />
                 Edit
               </Button>
@@ -894,6 +1014,266 @@ export default function PropertiesPage() {
                   <>
                     <Plus className="w-4 h-4 mr-2" />
                     Create Property
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Property Modal */}
+      <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Property</DialogTitle>
+            <DialogDescription>
+              Update property information. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="grid gap-4 py-4">
+              {/* Basic Information */}
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">Property Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter property name"
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Property description"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-type">Property Type</Label>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value) => setFormData({ ...formData, type: value as PropertyType })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="office">Office</SelectItem>
+                      <SelectItem value="warehouse">Warehouse</SelectItem>
+                      <SelectItem value="datacenter">Data Center</SelectItem>
+                      <SelectItem value="residential">Residential</SelectItem>
+                      <SelectItem value="industrial">Industrial</SelectItem>
+                      <SelectItem value="retail">Retail</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value as PropertyStatus })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="under-construction">Under Construction</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Location Information */}
+              <div className="border-t pt-4 mt-2">
+                <h3 className="font-medium text-sm mb-3">Location Information</h3>
+
+                <div className="grid gap-2 mb-4">
+                  <Label htmlFor="edit-locationAddress">Address</Label>
+                  <Input
+                    id="edit-locationAddress"
+                    value={formData.locationAddress}
+                    onChange={(e) => setFormData({ ...formData, locationAddress: e.target.value })}
+                    placeholder="Street address"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-locationCity">City</Label>
+                    <Input
+                      id="edit-locationCity"
+                      value={formData.locationCity}
+                      onChange={(e) => setFormData({ ...formData, locationCity: e.target.value })}
+                      placeholder="City"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-locationProvince">Province/State</Label>
+                    <Input
+                      id="edit-locationProvince"
+                      value={formData.locationProvince}
+                      onChange={(e) => setFormData({ ...formData, locationProvince: e.target.value })}
+                      placeholder="Province or State"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-locationCountry">Country</Label>
+                    <Input
+                      id="edit-locationCountry"
+                      value={formData.locationCountry}
+                      onChange={(e) => setFormData({ ...formData, locationCountry: e.target.value })}
+                      placeholder="Country"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-locationPostalCode">Postal Code</Label>
+                    <Input
+                      id="edit-locationPostalCode"
+                      value={formData.locationPostalCode}
+                      onChange={(e) => setFormData({ ...formData, locationPostalCode: e.target.value })}
+                      placeholder="Postal Code"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-locationLatitude">Latitude</Label>
+                    <Input
+                      id="edit-locationLatitude"
+                      type="number"
+                      step="any"
+                      value={formData.locationLatitude}
+                      onChange={(e) => setFormData({ ...formData, locationLatitude: e.target.value })}
+                      placeholder="e.g., 43.6532"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-locationLongitude">Longitude</Label>
+                    <Input
+                      id="edit-locationLongitude"
+                      type="number"
+                      step="any"
+                      value={formData.locationLongitude}
+                      onChange={(e) => setFormData({ ...formData, locationLongitude: e.target.value })}
+                      placeholder="e.g., -79.3832"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Size Information */}
+              <div className="border-t pt-4 mt-2">
+                <h3 className="font-medium text-sm mb-3">Size Information</h3>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-sizeTotalArea">Total Area (sq ft)</Label>
+                    <Input
+                      id="edit-sizeTotalArea"
+                      type="number"
+                      value={formData.sizeTotalArea}
+                      onChange={(e) => setFormData({ ...formData, sizeTotalArea: e.target.value })}
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-sizeUsableArea">Usable Area (sq ft)</Label>
+                    <Input
+                      id="edit-sizeUsableArea"
+                      type="number"
+                      value={formData.sizeUsableArea}
+                      onChange={(e) => setFormData({ ...formData, sizeUsableArea: e.target.value })}
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-sizeFloors">Number of Floors</Label>
+                    <Input
+                      id="edit-sizeFloors"
+                      type="number"
+                      value={formData.sizeFloors}
+                      onChange={(e) => setFormData({ ...formData, sizeFloors: e.target.value })}
+                      placeholder="0"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Information */}
+              <div className="border-t pt-4 mt-2">
+                <h3 className="font-medium text-sm mb-3">Financial Information</h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-currentValue">Current Value (CAD)</Label>
+                    <Input
+                      id="edit-currentValue"
+                      type="number"
+                      value={formData.currentValue}
+                      onChange={(e) => setFormData({ ...formData, currentValue: e.target.value })}
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-monthlyOperatingCosts">Monthly Operating Costs (CAD)</Label>
+                    <Input
+                      id="edit-monthlyOperatingCosts"
+                      type="number"
+                      value={formData.monthlyOperatingCosts}
+                      onChange={(e) => setFormData({ ...formData, monthlyOperatingCosts: e.target.value })}
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowEditForm(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Update Property
                   </>
                 )}
               </Button>

@@ -55,6 +55,7 @@ export default function ProjectsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -157,6 +158,88 @@ export default function ProjectsPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedProject || !formData.name.trim()) {
+      toast.error("Project name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const payload: any = {
+        id: selectedProject.id,
+        companyId: selectedProject.companyId,
+        name: formData.name.trim(),
+        status: formData.status,
+        priority: formData.priority,
+        progress: formData.progress,
+        company: selectedProject.company // Include the company object
+      }
+
+      // Only add optional fields if they have values (exclude empty strings)
+      if (formData.description?.trim()) payload.description = formData.description.trim()
+      if (formData.startDate?.trim()) payload.startDate = formData.startDate.trim()
+      if (formData.endDate?.trim()) payload.endDate = formData.endDate.trim()
+      if (formData.teamLead?.trim()) payload.teamLead = formData.teamLead.trim()
+
+      const budgetAllocated = formData.budgetAllocated?.trim()
+      if (budgetAllocated && !isNaN(parseFloat(budgetAllocated))) {
+        payload.budgetAllocated = parseFloat(budgetAllocated)
+      }
+
+      const budgetSpent = formData.budgetSpent?.trim()
+      if (budgetSpent && !isNaN(parseFloat(budgetSpent))) {
+        payload.budgetSpent = parseFloat(budgetSpent)
+      }
+
+      console.log('Updating project with payload:', payload)
+      await bmsApi.projects.update(selectedProject.id, payload)
+
+      // Update local state with the changed data (backend returns NoContent)
+      const updatedProject = {
+        ...selectedProject,
+        ...payload,
+        updatedAt: new Date().toISOString()
+      }
+
+      setProjects(prev => prev.map(p => p.id === selectedProject.id ? updatedProject : p))
+      setSelectedProject(updatedProject)
+      toast.success("Project updated successfully!")
+      setShowEditForm(false)
+    } catch (err) {
+      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to update project'
+      toast.error(errorMessage)
+      console.error('Error updating project:', err)
+      if (err instanceof BmsApiError) {
+        console.error('Error details:', {
+          status: err.status,
+          code: err.code,
+          details: err.details,
+          message: err.message
+        })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const openEditForm = (project: Project) => {
+    setFormData({
+      name: project.name,
+      description: project.description || "",
+      status: project.status,
+      priority: project.priority,
+      progress: project.progress,
+      startDate: project.startDate || "",
+      endDate: project.endDate || "",
+      budgetAllocated: project.budgetAllocated?.toString() || "",
+      budgetSpent: project.budgetSpent?.toString() || "",
+      teamLead: project.teamLead || ""
+    })
+    setShowEditForm(true)
   }
 
   const filteredProjects = projects.filter(project =>
@@ -316,7 +399,7 @@ export default function ProjectsPage() {
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => openEditForm(project)}>
                   <Edit className="w-4 h-4 mr-2" />
                   Edit
                 </Button>
@@ -770,6 +853,181 @@ export default function ProjectsPage() {
                   <>
                     <Plus className="w-4 h-4 mr-2" />
                     Create Project
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Project Modal */}
+      <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+            <DialogDescription>
+              Update project information. Fields marked with * are required.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="grid gap-4 py-4">
+              {/* Project Name */}
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">Project Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter project name"
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div className="grid gap-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Project description"
+                  rows={3}
+                />
+              </div>
+
+              {/* Status and Priority */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => setFormData({ ...formData, status: value as ProjectStatus })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="on-hold">On Hold</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-priority">Priority</Label>
+                  <Select
+                    value={formData.priority}
+                    onValueChange={(value) => setFormData({ ...formData, priority: value as ProjectPriority })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Progress */}
+              <div className="grid gap-2">
+                <Label htmlFor="edit-progress">Progress (%)</Label>
+                <Input
+                  id="edit-progress"
+                  type="number"
+                  value={formData.progress}
+                  onChange={(e) => setFormData({ ...formData, progress: parseInt(e.target.value) || 0 })}
+                  placeholder="0"
+                  min="0"
+                  max="100"
+                />
+              </div>
+
+              {/* Start and End Dates */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-startDate">Start Date</Label>
+                  <Input
+                    id="edit-startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-endDate">End Date</Label>
+                  <Input
+                    id="edit-endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Budget Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-budgetAllocated">Budget Allocated (CAD)</Label>
+                  <Input
+                    id="edit-budgetAllocated"
+                    type="number"
+                    value={formData.budgetAllocated}
+                    onChange={(e) => setFormData({ ...formData, budgetAllocated: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-budgetSpent">Budget Spent (CAD)</Label>
+                  <Input
+                    id="edit-budgetSpent"
+                    type="number"
+                    value={formData.budgetSpent}
+                    onChange={(e) => setFormData({ ...formData, budgetSpent: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              {/* Team Lead */}
+              <div className="grid gap-2">
+                <Label htmlFor="edit-teamLead">Team Lead</Label>
+                <Input
+                  id="edit-teamLead"
+                  value={formData.teamLead}
+                  onChange={(e) => setFormData({ ...formData, teamLead: e.target.value })}
+                  placeholder="Team lead name"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowEditForm(false)} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Update Project
                   </>
                 )}
               </Button>
