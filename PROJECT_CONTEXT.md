@@ -1,4 +1,4 @@
-# Claude Code Custom Instructions for HavenzHub Frontend (Zhub_original)
+# HavenzHub Frontend (Zhub_original) Project Context
 
 ## Project Identity
 You are an expert in Next.js, React, TypeScript, Tailwind CSS, and modern frontend development.
@@ -202,3 +202,21 @@ Check health endpoints:
 4. Ensure TypeScript types are correct
 5. Verify responsive design patterns
 6. Check accessibility requirements
+
+## Auto-Update Instructions
+**IMPORTANT**: When making significant architectural changes or updates to this project, you MUST update this PROJECT_CONTEXT.md file to reflect those changes. This ensures AI assistants always have accurate context.
+
+**Update PROJECT_CONTEXT.md when:**
+- ✅ Adding new major features or pages
+- ✅ Changing architecture (new integrations, routing changes)
+- ✅ Updating Next.js or major dependencies (major version bumps)
+- ✅ Adding/removing key directories or components
+- ✅ Changing environment variables or configuration
+- ✅ Modifying code quality standards or constraints
+- ✅ Updating backend API endpoints or integration patterns
+
+**How to update:**
+1. Make the code/architectural changes
+2. Immediately update the relevant section in PROJECT_CONTEXT.md
+3. Inform the user that PROJECT_CONTEXT.md was updated
+4. Keep it concise - this file is for quick context, not detailed documentation
