@@ -606,7 +606,9 @@ export default function HavenzHubDashboard() {
                   <CheckSquare className="w-5 h-5" />
                   To-Dos
                 </h3>
-                <p className="text-xs text-gray-500 mt-1">Linked to projects, companies & more</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Linked to projects, companies & more
+                </p>
               </div>
               <Button
                 variant="ghost"
@@ -626,39 +628,39 @@ export default function HavenzHubDashboard() {
           <div className={`flex-1 overflow-auto ${todosPanelCollapsed ? 'hidden' : 'p-4'}`}>
             <div className="space-y-3">
               {recentTodos.map((todo) => (
-                <div key={todo.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="text-sm font-medium text-gray-900 line-clamp-2">{todo.task}</h4>
-                    <Badge
-                      variant={todo.priority === "high" ? "destructive" : todo.priority === "medium" ? "default" : "secondary"}
-                      className="text-xs ml-2 flex-shrink-0"
-                    >
-                      {todo.priority}
-                    </Badge>
-                  </div>
+                    <div key={todo.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="text-sm font-medium text-gray-900 line-clamp-2">{todo.task}</h4>
+                        <Badge
+                          variant={todo.priority === "high" ? "destructive" : todo.priority === "medium" ? "default" : "secondary"}
+                          className="text-xs ml-2 flex-shrink-0"
+                        >
+                          {todo.priority}
+                        </Badge>
+                      </div>
 
-                  {/* Linked Entity Display */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-4 h-4 bg-blue-100 rounded flex items-center justify-center">
-                      {todo.linkedTo.type === 'company' && <Building2 className="w-3 h-3 text-blue-600" />}
-                      {todo.linkedTo.type === 'project' && <FolderOpen className="w-3 h-3 text-green-600" />}
-                      {todo.linkedTo.type === 'department' && <Users className="w-3 h-3 text-purple-600" />}
-                      {todo.linkedTo.type === 'property' && <Home className="w-3 h-3 text-orange-600" />}
+                      {/* Linked Entity Display */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-4 h-4 bg-blue-100 rounded flex items-center justify-center">
+                          {todo.linkedTo.type === 'company' && <Building2 className="w-3 h-3 text-blue-600" />}
+                          {todo.linkedTo.type === 'project' && <FolderOpen className="w-3 h-3 text-green-600" />}
+                          {todo.linkedTo.type === 'department' && <Users className="w-3 h-3 text-purple-600" />}
+                          {todo.linkedTo.type === 'property' && <Home className="w-3 h-3 text-orange-600" />}
+                        </div>
+                        <span className="text-xs text-gray-600 capitalize">
+                          {todo.linkedTo.type}: {todo.linkedTo.name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Calendar className="w-3 h-3" />
+                        <span>{todo.due}</span>
+                      </div>
                     </div>
-                    <span className="text-xs text-gray-600 capitalize">
-                      {todo.linkedTo.type}: {todo.linkedTo.name}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <Calendar className="w-3 h-3" />
-                    <span>{todo.due}</span>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
           </div>
-          
+
           <div className={`${todosPanelCollapsed ? 'hidden' : 'p-4'} border-t border-gray-200`}>
             <Button className="w-full" size="sm">
               <Plus className="w-4 h-4 mr-2" />

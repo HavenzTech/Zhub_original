@@ -14,7 +14,7 @@ import { toast } from "sonner"
 import FolderTreeView from "@/components/FolderTreeView"
 import CreateFolderModal from "@/components/CreateFolderModal"
 import EditMetadataModal from "@/components/EditMetadataModal"
-import DocumentViewModal from "@/components/DocumentViewModal"
+import DocumentPreview from "@/components/DocumentPreview"
 import {
   FileText,
   Upload,
@@ -57,7 +57,15 @@ import {
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
-export default function DocumentControlPage() {
+interface DocumentControlPageProps {
+  selectedDocumentForPreview: Document | null
+  setSelectedDocumentForPreview: (doc: Document | null) => void
+}
+
+export default function DocumentControlPage({
+  selectedDocumentForPreview,
+  setSelectedDocumentForPreview
+}: DocumentControlPageProps): JSX.Element {
   const router = useRouter()
   const [documents, setDocuments] = useState<Document[]>([])
   const [folders, setFolders] = useState<Folder[]>([])
@@ -66,8 +74,6 @@ export default function DocumentControlPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null)
-  const [selectedDocumentForModal, setSelectedDocumentForModal] = useState<Document | null>(null)
-  const [showDocumentModal, setShowDocumentModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false)
   const [parentFolderForCreation, setParentFolderForCreation] = useState<string | null>(null)
@@ -421,226 +427,7 @@ export default function DocumentControlPage() {
     return <FileText className="w-6 h-6 text-gray-600" />
   }
 
-  const DocumentCard = ({ document }: { document: Document }) => (
-    <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedDocument(document)}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              {getFileTypeIcon(document.fileType)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <CardTitle className="text-base truncate">{document.name}</CardTitle>
-              <p className="text-sm text-gray-600">v{document.version}</p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-1 items-end flex-shrink-0 ml-2">
-            <Badge className={getStatusColor(document.status)} className="text-xs">
-              {document.status}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Type:</span>
-            <span className="font-medium uppercase">{document.fileType || 'N/A'}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Size:</span>
-            <span className="font-medium">{formatFileSize(document.fileSizeBytes)}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 flex items-center gap-1">
-              {getAccessLevelIcon(document.accessLevel)} Access:
-            </span>
-            <Badge className={getAccessLevelColor(document.accessLevel)} className="text-xs capitalize">
-              {document.accessLevel}
-            </Badge>
-          </div>
-          {document.category && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">Category:</span>
-              <Badge variant="secondary" className="text-xs capitalize">{document.category}</Badge>
-            </div>
-          )}
-        </div>
-
-        <div className="pt-3 border-t border-gray-200 text-xs text-gray-500">
-          Updated {formatDate(document.updatedAt)}
-        </div>
-      </CardContent>
-    </Card>
-  )
-
-  const DocumentDetails = ({ document }: { document: Document }) => (
-    <div className="space-y-6">
-      <Button variant="ghost" onClick={() => setSelectedDocument(null)}>
-        ← Back to Documents
-      </Button>
-
-      {/* Document Header */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-start gap-6 mb-6">
-            <div className="w-20 h-20 bg-blue-100 rounded-xl flex items-center justify-center">
-              {getFileTypeIcon(document.fileType)}
-            </div>
-
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{document.name}</h1>
-              <p className="text-gray-600 mb-4">Version {document.version}</p>
-
-              <div className="flex gap-3 mb-4">
-                <Badge className={getStatusColor(document.status)}>{document.status}</Badge>
-                <Badge className={getAccessLevelColor(document.accessLevel)} className="flex items-center gap-1">
-                  {getAccessLevelIcon(document.accessLevel)}
-                  {document.accessLevel}
-                </Badge>
-                {document.category && (
-                  <Badge variant="secondary" className="capitalize">{document.category}</Badge>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">File Type:</span>
-                  <div className="font-medium uppercase">{document.fileType || 'N/A'}</div>
-                </div>
-                <div>
-                  <span className="text-gray-600">File Size:</span>
-                  <div className="font-medium">{formatFileSize(document.fileSizeBytes)}</div>
-                </div>
-                <div>
-                  <span className="text-gray-600">Document ID:</span>
-                  <div className="font-medium font-mono text-xs">{document.id.slice(0, 8)}...</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Download
-              </Button>
-              <Button variant="outline">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Document Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Document Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Status</span>
-              <Badge className={getStatusColor(document.status)}>{document.status}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Access Level</span>
-              <Badge className={getAccessLevelColor(document.accessLevel)} className="flex items-center gap-1">
-                {getAccessLevelIcon(document.accessLevel)}
-                {document.accessLevel}
-              </Badge>
-            </div>
-            {document.category && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Category</span>
-                <Badge variant="secondary" className="capitalize">{document.category}</Badge>
-              </div>
-            )}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Version</span>
-              <span className="text-sm font-medium">v{document.version}</span>
-            </div>
-            {document.contentHash && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Content Hash</span>
-                <span className="text-sm font-mono text-xs">{document.contentHash.slice(0, 16)}...</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Timestamps
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Created</span>
-              <span className="text-sm font-medium">{formatDate(document.createdAt)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Last Updated</span>
-              <span className="text-sm font-medium">{formatDate(document.updatedAt)}</span>
-            </div>
-            {document.deletedAt && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Deleted</span>
-                <span className="text-sm font-medium text-red-600">{formatDate(document.deletedAt)}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              Organization
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Company ID</span>
-              <Badge variant="secondary" className="font-mono text-xs">{document.companyId.slice(0, 8)}...</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Uploaded By</span>
-              <Badge variant="secondary" className="font-mono text-xs">{document.uploadedByUserId.slice(0, 8)}...</Badge>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FolderOpen className="w-5 h-5" />
-              Storage
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <span className="text-sm text-gray-600">Storage Path:</span>
-              <div className="font-medium font-mono text-xs mt-1 break-all">
-                {document.storagePath || 'N/A'}
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">File Size</span>
-              <span className="text-sm font-medium">{formatFileSize(document.fileSizeBytes)}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
-
+  // Early returns for loading and error states
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -650,7 +437,7 @@ export default function DocumentControlPage() {
           <p className="text-gray-600">Please wait while we fetch your data</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -666,9 +453,10 @@ export default function DocumentControlPage() {
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
+  // Main component render
   return (
     <div className="space-y-6">
       {!selectedDocument ? (
@@ -700,8 +488,9 @@ export default function DocumentControlPage() {
             </div>
           </div>
 
-          {/* Stats Overview */}
-          <div className="hidden grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Stats Overview - COMMENTED OUT */}
+          {/*
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
@@ -764,23 +553,22 @@ export default function DocumentControlPage() {
               </CardContent>
             </Card>
           </div>
+          */}
 
-          {/* Folder Tree */}
-          <div className="grid grid-cols-1 gap-6">
-            <Card className="h-[calc(100vh-12rem)]">
-              <CardHeader>
+          {/* Two-Column Layout: Folder Tree (Left) + Document Preview (Right) */}
+          <div className="grid grid-cols-12 gap-6 h-[calc(100vh-20rem)]">
+            {/* Left Panel: Folder Tree - 2 columns */}
+            <Card className="col-span-2 overflow-hidden flex flex-col">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base">Folders</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1 overflow-y-auto">
                 <FolderTreeView
                   folders={folders}
                   selectedFolderId={selectedFolderId}
-                  selectedDocumentId={selectedDocumentForModal?.id}
+                  selectedDocumentId={selectedDocumentForPreview?.id}
                   onFolderSelect={setSelectedFolderId}
-                  onDocumentSelect={(doc) => {
-                    setSelectedDocumentForModal(doc)
-                    setShowDocumentModal(true)
-                  }}
+                  onDocumentSelect={setSelectedDocumentForPreview}
                   onFolderCreate={handleOpenCreateFolderModal}
                   onFolderDelete={handleFolderDelete}
                   onDocumentEdit={handleDocumentEdit}
@@ -789,6 +577,81 @@ export default function DocumentControlPage() {
                 />
               </CardContent>
             </Card>
+
+            {/* Right Panel: Document Preview - 10 columns (Chat is now in right sidebar) */}
+            <div className="col-span-10 overflow-hidden">
+              {selectedDocumentForPreview ? (
+                <DocumentPreview
+                  document={selectedDocumentForPreview}
+                  onDownload={(doc) => {
+                    window.open(`http://localhost:5087/api/havenzhub/document/${doc.id}/download`, '_blank')
+                  }}
+                />
+              ) : (
+                <Card className="h-full overflow-hidden">
+                  <CardContent className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No document selected</h3>
+                      <p className="text-sm text-gray-500">
+                        Select a document from the tree to preview it here. Chat will appear in the right sidebar.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+              {/* COMMENTED OUT: Card View - Replaced by tree selection */}
+              {/*
+              <div className="flex items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                  <Input
+                    placeholder="Search documents..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Badge variant="secondary">
+                  {filteredDocuments.length} {filteredDocuments.length === 1 ? 'document' : 'documents'}
+                </Badge>
+              </div>
+              <Card className="flex-1 overflow-hidden">
+                <CardContent className="h-full overflow-y-auto p-4">
+                  {filteredDocuments.length > 0 ? (
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                      {filteredDocuments.map((document) => (
+                        <DocumentCard key={document.id} document={document} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
+                        <p className="text-gray-600 mb-4">
+                          {searchTerm
+                            ? 'Try adjusting your search criteria'
+                            : selectedFolderId
+                            ? 'This folder is empty. Upload a document to get started.'
+                            : 'Get started by uploading your first document'}
+                        </p>
+                        <Button onClick={() => {
+                          setFormData({ ...formData, folderId: selectedFolderId });
+                          setShowUploadModal(true);
+                        }}>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Document
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              */}
+            </div>
           </div>
         </>
       ) : (
@@ -991,16 +854,6 @@ export default function DocumentControlPage() {
         }}
         document={editingDocumentId ? documents.find(d => d.id === editingDocumentId) || null : null}
         onSave={handleSaveMetadata}
-      />
-
-      {/* Document View Modal */}
-      <DocumentViewModal
-        document={selectedDocumentForModal}
-        open={showDocumentModal}
-        onClose={() => {
-          setShowDocumentModal(false)
-          setSelectedDocumentForModal(null)
-        }}
       />
     </div>
   )

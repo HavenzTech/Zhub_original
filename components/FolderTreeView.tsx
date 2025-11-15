@@ -7,7 +7,9 @@ import type { Folder as FolderType, Document } from '@/types/bms';
 interface FolderTreeViewProps {
   folders: FolderType[];
   selectedFolderId?: string | null;
+  selectedDocumentId?: string | null;
   onFolderSelect: (folderId: string | null) => void;
+  onDocumentSelect?: (document: Document) => void;
   onFolderCreate?: (parentFolderId?: string) => void;
   onFolderDelete?: (folderId: string) => void;
   onDocumentEdit?: (documentId: string) => void;
@@ -18,7 +20,9 @@ interface FolderTreeViewProps {
 interface FolderNodeProps {
   folder: FolderType;
   isSelected: boolean;
+  selectedDocumentId?: string | null;
   onSelect: (folderId: string) => void;
+  onDocumentSelect?: (document: Document) => void;
   onFolderCreate?: (parentFolderId: string) => void;
   onFolderDelete?: (folderId: string) => void;
   onDocumentEdit?: (documentId: string) => void;
@@ -30,7 +34,9 @@ interface FolderNodeProps {
 const FolderNode: React.FC<FolderNodeProps> = ({
   folder,
   isSelected,
+  selectedDocumentId,
   onSelect,
+  onDocumentSelect,
   onFolderCreate,
   onFolderDelete,
   onDocumentEdit,
@@ -145,7 +151,9 @@ const FolderNode: React.FC<FolderNodeProps> = ({
               key={childFolder.id}
               folder={childFolder}
               isSelected={isSelected}
+              selectedDocumentId={selectedDocumentId}
               onSelect={onSelect}
+              onDocumentSelect={onDocumentSelect}
               onFolderCreate={onFolderCreate}
               onFolderDelete={onFolderDelete}
               onDocumentEdit={onDocumentEdit}
@@ -163,10 +171,15 @@ const FolderNode: React.FC<FolderNodeProps> = ({
           {folder.documents!.map((doc) => (
             <div
               key={doc.id}
-              className="flex items-center gap-2 px-2 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
+              className={`flex items-center gap-2 px-2 py-1 rounded-md hover:text-foreground transition-colors cursor-pointer ${
+                selectedDocumentId === doc.id
+                  ? 'bg-blue-100 text-blue-900 font-medium'
+                  : 'text-muted-foreground hover:bg-accent/50'
+              }`}
               style={{ paddingLeft: `${(level + 1) * 16 + 28}px` }}
+              onClick={() => onDocumentSelect?.(doc)}
               onContextMenu={(e) => handleDocumentContextMenu(e, doc.id, doc.name)}
-              title="Right-click for options"
+              title="Click to view, right-click for options"
             >
               <FileText className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="text-xs truncate flex-1">{doc.name}</span>
@@ -184,7 +197,9 @@ const FolderNode: React.FC<FolderNodeProps> = ({
 const FolderTreeView: React.FC<FolderTreeViewProps> = ({
   folders,
   selectedFolderId,
+  selectedDocumentId,
   onFolderSelect,
+  onDocumentSelect,
   onFolderCreate,
   onFolderDelete,
   onDocumentEdit,
@@ -230,7 +245,9 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
           key={folder.id}
           folder={folder}
           isSelected={selectedFolderId === folder.id}
+          selectedDocumentId={selectedDocumentId}
           onSelect={onFolderSelect}
+          onDocumentSelect={onDocumentSelect}
           onFolderCreate={onFolderCreate}
           onFolderDelete={onFolderDelete}
           onDocumentEdit={onDocumentEdit}
