@@ -71,14 +71,19 @@ export default function DocumentChatPanel({ document }: DocumentChatPanelProps) 
     setLoading(true)
 
     try {
-      // Construct full filename with extension if not present
-      const fileName = document.name.includes('.')
-        ? document.name
-        : `${document.name}.${document.fileType?.toLowerCase().replace('application/', '') || 'pdf'}`
+      console.log('[Chat] Analyzing document:', document.name, 'ID:', document.id)
 
-      console.log('[Chat] Analyzing document:', fileName)
+      // Send the document's storage path to Python so it can read from BMS storage directly
+      // The storagePath is like: "/uploads/{companyId}/{uniqueFileName}.pdf"
+      const storagePath = (document as any).storagePath || ''
 
-      // Call the new document analysis API (Hybrid text/vision LLM)
+      // Construct the full file path for Python to access
+      // Python will read from: c:/repositories/HavenzBMS/WebApp/uploads/{companyId}/{file}
+      const fullPath = `c:/repositories/HavenzBMS/WebApp${storagePath}`
+
+      console.log('[Chat] Document storage path:', fullPath)
+
+      // Call the Python API with the file path
       const pythonApiUrl = process.env.NEXT_PUBLIC_PYTHON_API || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
       const response = await fetch(`${pythonApiUrl}/analyze-document`, {
         method: 'POST',
@@ -86,9 +91,9 @@ export default function DocumentChatPanel({ document }: DocumentChatPanelProps) 
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          document_id: fileName,
+          document_id: fullPath,
           query: input,
-          page_num: 0
+          page_num: -1  // -1 means analyze all pages
         })
       })
 
@@ -152,118 +157,134 @@ export default function DocumentChatPanel({ document }: DocumentChatPanelProps) 
   }
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3 border-b">
+    <div className="h-full flex flex-col border rounded-lg bg-white">
+      <div className="pb-3 p-4 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-blue-600" />
-            <CardTitle className="text-base">Ask about this document</CardTitle>
+            <h3 className="text-base font-semibold">Ask about this document</h3>
           </div>
           <Badge variant="secondary" className="text-xs">
             <Sparkles className="w-3 h-3 mr-1" />
             AI Powered
           </Badge>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-        {/* Messages Area */}
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {message.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-5 h-5 text-blue-600" />
-                  </div>
-                )}
-
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
-                >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  <span className="text-xs opacity-70 mt-1 block">
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-
-                {message.role === 'user' && (
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 text-gray-600" />
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {loading && (
-              <div className="flex gap-3 justify-start">
+      {/* Messages Area - with explicit height and scrolling */}
+      <style jsx>{`
+        .chat-messages::-webkit-scrollbar {
+          width: 8px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 4px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+          background: #555;
+        }
+      `}</style>
+      <div
+        className="chat-messages flex-1 overflow-y-scroll px-4 pt-4 pb-2 min-h-0"
+        ref={scrollRef}
+      >
+        <div className="space-y-4 pb-2">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              {message.role === 'assistant' && (
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                   <Bot className="w-5 h-5 text-blue-600" />
                 </div>
-                <div className="bg-gray-100 rounded-lg p-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
-                </div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-
-        {/* Quick Actions */}
-        {messages.length <= 1 && (
-          <div className="px-4 py-2 border-t bg-gray-50">
-            <p className="text-xs text-gray-600 mb-2">Quick actions:</p>
-            <div className="flex gap-2 flex-wrap">
-              {quickActions.map((action) => (
-                <Button
-                  key={action.label}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickAction(action.query)}
-                  className="text-xs"
-                >
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  {action.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Input Area */}
-        <div className="p-4 border-t">
-          <div className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !loading && handleSend()}
-              placeholder="Ask about this document..."
-              disabled={loading}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleSend}
-              disabled={loading || !input.trim()}
-              size="icon"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
               )}
-            </Button>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Currently viewing: <span className="font-medium">{document.name}</span>
-          </p>
+
+              <div
+                className={`max-w-[80%] rounded-lg p-3 ${
+                  message.role === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                }`}
+              >
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <span className="text-xs opacity-70 mt-1 block">
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+
+              {message.role === 'user' && (
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                  <User className="w-5 h-5 text-gray-600" />
+                </div>
+              )}
+            </div>
+          ))}
+
+          {loading && (
+            <div className="flex gap-3 justify-start">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="bg-gray-100 rounded-lg p-3">
+                <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
+              </div>
+            </div>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Quick Actions */}
+      {messages.length <= 1 && (
+        <div className="px-4 py-2 border-t bg-gray-50 flex-shrink-0">
+          <p className="text-xs text-gray-600 mb-2">Quick actions:</p>
+          <div className="flex gap-2 flex-wrap">
+            {quickActions.map((action) => (
+              <Button
+                key={action.label}
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickAction(action.query)}
+                className="text-xs"
+              >
+                <Sparkles className="w-3 h-3 mr-1" />
+                {action.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Input Area */}
+      <div className="p-4 border-t flex-shrink-0">
+        <div className="flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && !loading && handleSend()}
+            placeholder="Ask about this document..."
+            disabled={loading}
+            className="flex-1"
+          />
+          <Button
+            onClick={handleSend}
+            disabled={loading || !input.trim()}
+            size="icon"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Currently viewing: <span className="font-medium">{document.name}</span>
+        </p>
+      </div>
+    </div>
   )
 }

@@ -14,8 +14,7 @@ import { toast } from "sonner"
 import FolderTreeView from "@/components/FolderTreeView"
 import CreateFolderModal from "@/components/CreateFolderModal"
 import EditMetadataModal from "@/components/EditMetadataModal"
-import DocumentPreview from "@/components/DocumentPreview"
-import DocumentChatPanel from "@/components/DocumentChatPanel"
+import DocumentViewModal from "@/components/DocumentViewModal"
 import {
   FileText,
   Upload,
@@ -67,7 +66,8 @@ export default function DocumentControlPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null)
-  const [selectedDocumentForPreview, setSelectedDocumentForPreview] = useState<Document | null>(null)
+  const [selectedDocumentForModal, setSelectedDocumentForModal] = useState<Document | null>(null)
+  const [showDocumentModal, setShowDocumentModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false)
   const [parentFolderForCreation, setParentFolderForCreation] = useState<string | null>(null)
@@ -701,7 +701,7 @@ export default function DocumentControlPage() {
           </div>
 
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="hidden grid-cols-1 md:grid-cols-4 gap-6">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
@@ -765,10 +765,9 @@ export default function DocumentControlPage() {
             </Card>
           </div>
 
-          {/* Two-Column Layout: Folders (Left) + Documents (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Left Panel: Folder Tree */}
-            <Card className="lg:col-span-1">
+          {/* Folder Tree */}
+          <div className="grid grid-cols-1 gap-6">
+            <Card className="h-[calc(100vh-12rem)]">
               <CardHeader>
                 <CardTitle className="text-base">Folders</CardTitle>
               </CardHeader>
@@ -776,9 +775,12 @@ export default function DocumentControlPage() {
                 <FolderTreeView
                   folders={folders}
                   selectedFolderId={selectedFolderId}
-                  selectedDocumentId={selectedDocumentForPreview?.id}
+                  selectedDocumentId={selectedDocumentForModal?.id}
                   onFolderSelect={setSelectedFolderId}
-                  onDocumentSelect={setSelectedDocumentForPreview}
+                  onDocumentSelect={(doc) => {
+                    setSelectedDocumentForModal(doc)
+                    setShowDocumentModal(true)
+                  }}
                   onFolderCreate={handleOpenCreateFolderModal}
                   onFolderDelete={handleFolderDelete}
                   onDocumentEdit={handleDocumentEdit}
@@ -787,82 +789,6 @@ export default function DocumentControlPage() {
                 />
               </CardContent>
             </Card>
-
-            {/* Middle Panel: Document Preview */}
-            <div className="lg:col-span-2">
-              {selectedDocumentForPreview ? (
-                <DocumentPreview
-                  document={selectedDocumentForPreview}
-                  onDownload={(doc) => {
-                    window.open(`http://localhost:5087/api/havenzhub/document/${doc.id}/download`, '_blank')
-                  }}
-                />
-              ) : (
-                <Card className="h-full">
-                  <CardContent className="h-full flex items-center justify-center p-12">
-                    <div className="text-center">
-                      <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No document selected</h3>
-                      <p className="text-sm text-gray-500">
-                        Select a document from the tree to preview it here
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            {/* Right Panel: Document Chat */}
-            <div className="lg:col-span-2">
-              <DocumentChatPanel document={selectedDocumentForPreview} />
-            </div>
-
-            {/* HIDDEN: Original Documents Grid */}
-            <div className="hidden lg:col-span-3 space-y-6">
-              {/* Search */}
-              <div className="flex items-center gap-4">
-                <div className="relative flex-1">
-                  <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                  <Input
-                    placeholder="Search documents..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Badge variant="secondary">
-                  {filteredDocuments.length} {filteredDocuments.length === 1 ? 'document' : 'documents'}
-                </Badge>
-              </div>
-
-              {/* Documents Grid */}
-              {filteredDocuments.length > 0 ? (
-                <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
-                  {filteredDocuments.map((document) => (
-                    <DocumentCard key={document.id} document={document} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
-                  <p className="text-gray-600 mb-4">
-                    {searchTerm
-                      ? 'Try adjusting your search criteria'
-                      : selectedFolderId
-                      ? 'This folder is empty. Upload a document to get started.'
-                      : 'Get started by uploading your first document'}
-                  </p>
-                  <Button onClick={() => {
-                    setFormData({ ...formData, folderId: selectedFolderId });
-                    setShowUploadModal(true);
-                  }}>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Document
-                  </Button>
-                </div>
-              )}
-            </div>
           </div>
         </>
       ) : (
@@ -1065,6 +991,16 @@ export default function DocumentControlPage() {
         }}
         document={editingDocumentId ? documents.find(d => d.id === editingDocumentId) || null : null}
         onSave={handleSaveMetadata}
+      />
+
+      {/* Document View Modal */}
+      <DocumentViewModal
+        document={selectedDocumentForModal}
+        open={showDocumentModal}
+        onClose={() => {
+          setShowDocumentModal(false)
+          setSelectedDocumentForModal(null)
+        }}
       />
     </div>
   )
