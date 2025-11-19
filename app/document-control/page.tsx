@@ -292,21 +292,38 @@ export default function DocumentControlPage() {
 
       if (!uploadResponse.ok) {
         const errorText = await uploadResponse.text()
+        console.error('Upload failed:', uploadResponse.status, errorText)
         throw new Error(`File upload failed: ${uploadResponse.statusText} - ${errorText}`)
       }
 
       const uploadResult = await uploadResponse.json()
+      console.log('Upload result:', uploadResult)
 
       // Step 2: Save document metadata to database
+      // Only send fields allowed by CreateDocumentRequest schema
+
+      // Simplify long MIME types to fit maxLength=50 constraint
+      let fileType = uploadResult.fileType || selectedFile.type || 'unknown'
+      if (fileType.length > 50) {
+        // Shorten common long MIME types
+        const typeMap: Record<string, string> = {
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'application/xlsx',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'application/docx',
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'application/pptx'
+        }
+        fileType = typeMap[fileType] || fileType.substring(0, 50)
+      }
+
       const payload: any = {
         name: formData.name,
-        fileType: uploadResult.fileType || selectedFile.type || 'unknown',
+        fileType: fileType,
         fileSizeBytes: uploadResult.fileSizeBytes || selectedFile.size,
         contentHash: uploadResult.contentHash,
         storagePath: uploadResult.storagePath,
         version: 1,
         accessLevel: formData.accessLevel,
         folderId: formData.folderId === 'root' ? null : formData.folderId
+        // NOTE: status, companyId, uploadedByUserId are set by backend automatically
       }
 
       // Only add optional fields if they have values
@@ -324,7 +341,9 @@ export default function DocumentControlPage() {
         uploadDate: new Date().toISOString()
       })
 
+      console.log('Payload being sent to create document:', payload)
       const newDocument = await bmsApi.documents.create(payload)
+      console.log('Document created successfully:', newDocument)
 
       setDocuments(prev => [...prev, newDocument as Document])
       toast.success("Document uploaded successfully!")

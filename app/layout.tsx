@@ -23,9 +23,7 @@ export const metadata: Metadata = {
   keywords: ["organizational management", "business intelligence", "document control", "workflow automation"],
   authors: [{ name: "Havenz Hub Team" }],
   robots: "index, follow",
-  themeColor: "#00C49A",
-  colorScheme: "light",
-  // viewport removed - now handled by generateViewport
+  // viewport and colorScheme moved to generateViewport
 }
 
 // Separate viewport export (required for Next.js 14+)
@@ -33,6 +31,8 @@ export function generateViewport() {
   return {
     width: 'device-width',
     initialScale: 1,
+    themeColor: "#00C49A",
+    colorScheme: "light",
   }
 }
 

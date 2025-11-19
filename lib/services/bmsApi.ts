@@ -100,6 +100,12 @@ class BmsApiService {
 
       if (!response.ok) {
         const errorData = isJson ? await response.json() : { message: response.statusText };
+        console.error('BMS API Error:', {
+          url,
+          status: response.status,
+          errorData,
+          requestBody: fetchOptions.body
+        });
         throw new BmsApiError(
           errorData.message || 'API request failed',
           response.status,
