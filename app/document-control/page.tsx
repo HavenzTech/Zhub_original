@@ -281,7 +281,12 @@ export default function DocumentControlPage() {
         throw new Error('Authentication required. Please log in again.')
       }
 
-      const uploadResponse = await fetch('http://localhost:5087/api/havenzhub/document/upload', {
+      const BMS_API_BASE = process.env.NEXT_PUBLIC_BMS_API_BASE_URL
+      if (!BMS_API_BASE) {
+        throw new Error('API configuration error: NEXT_PUBLIC_BMS_API_BASE_URL not set')
+      }
+
+      const uploadResponse = await fetch(`${BMS_API_BASE}/api/havenzhub/document/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
