@@ -103,7 +103,6 @@ export default function UsersPage() {
       setError(null)
       const data = await bmsApi.users.getAll()
       setUsers(data as UserResponse[])
-      toast.success(`Loaded ${(data as UserResponse[]).length} users`)
     } catch (err) {
       const errorMessage = err instanceof BmsApiError
         ? err.message

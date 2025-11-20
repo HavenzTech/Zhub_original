@@ -41,8 +41,11 @@ export async function GET(request: NextRequest) {
     else if (ext === 'jpg' || ext === 'jpeg') contentType = 'image/jpeg'
     else if (ext === 'webp') contentType = 'image/webp'
 
+    // Convert Buffer to Uint8Array to satisfy NextResponse BodyInit typing
+    const body = new Uint8Array(fileBuffer)
+
     // Return the file with proper headers
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(body, {
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `inline; filename="${fileName}"`,

@@ -80,7 +80,6 @@ export default function DepartmentsPage() {
       setError(null)
       const data = await bmsApi.departments.getAll()
       setDepartments(data as Department[])
-      toast.success(`Loaded ${(data as Department[]).length} departments`)
     } catch (err) {
       const errorMessage = err instanceof BmsApiError
         ? err.message

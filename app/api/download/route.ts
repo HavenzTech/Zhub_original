@@ -52,6 +52,9 @@ export async function GET(request: NextRequest) {
     const fileName = path.basename(fullPath)
     const fileBuffer = await readFile(fullPath)
 
+    // Convert Buffer to Uint8Array for BodyInit compatibility
+    const body = new Uint8Array(fileBuffer)
+
     // Determine content type
     const extension = path.extname(fileName).toLowerCase()
     let contentType = 'application/octet-stream'
@@ -79,7 +82,7 @@ export async function GET(request: NextRequest) {
         contentType = 'application/octet-stream'
     }
 
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(body, {
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `inline; filename="${fileName}"`,

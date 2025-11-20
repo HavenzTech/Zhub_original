@@ -95,7 +95,6 @@ export default function PropertiesPage() {
       setError(null)
       const data = await bmsApi.properties.getAll()
       setProperties(data as Property[])
-      toast.success(`Loaded ${(data as Property[]).length} properties`)
     } catch (err) {
       const errorMessage = err instanceof BmsApiError
         ? err.message

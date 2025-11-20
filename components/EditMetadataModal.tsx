@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
-import type { Document, DocumentCategory } from '@/types/bms';
+import React, { useState, useEffect } from "react";
+import { X, Save } from "lucide-react";
+import type { Document, DocumentCategory } from "@/types/bms";
 
 interface EditMetadataModalProps {
   isOpen: boolean;
@@ -15,45 +15,63 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
   isOpen,
   onClose,
   document,
-  onSave
+  onSave,
 }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    category: '' as DocumentCategory | '',
-    tags: '',
-    accessLevel: 'private' as 'public' | 'private' | 'restricted'
+    name: "",
+    category: "" as DocumentCategory | "",
+    tags: "",
+    accessLevel: "private" as "public" | "private" | "restricted",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (document) {
-      // Parse tags from JSON string if needed
-      let tagsString = '';
+      // Parse tags from JSON string or handle array/string directly
+      let tagsString = "";
       if (document.tags) {
         try {
-          const parsedTags = JSON.parse(document.tags);
-          tagsString = Array.isArray(parsedTags) ? parsedTags.join(', ') : '';
+          if (typeof document.tags === "string") {
+            const parsedTags = JSON.parse(document.tags);
+            if (Array.isArray(parsedTags)) {
+              tagsString = parsedTags.join(", ");
+            } else if (typeof parsedTags === "string") {
+              tagsString = parsedTags;
+            } else {
+              tagsString = "";
+            }
+          } else if (Array.isArray(document.tags)) {
+            tagsString = document.tags.join(", ");
+          } else {
+            tagsString = String(document.tags);
+          }
         } catch {
-          tagsString = document.tags;
+          // If parsing fails and tags is a string, use it directly; if it's an array, join it
+          tagsString =
+            typeof document.tags === "string"
+              ? document.tags
+              : Array.isArray(document.tags)
+              ? document.tags.join(", ")
+              : String(document.tags);
         }
       }
 
       setFormData({
-        name: document.name || '',
-        category: (document.category as DocumentCategory) || '',
+        name: document.name || "",
+        category: (document.category as DocumentCategory) || "",
         tags: tagsString,
-        accessLevel: document.accessLevel || 'private'
+        accessLevel: document.accessLevel || "private",
       });
     }
   }, [document]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!document || !formData.name.trim()) {
-      setError('Document name is required');
+      setError("Document name is required");
       return;
     }
 
@@ -62,13 +80,16 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
       const updates: Partial<Document> = {
         name: formData.name.trim(),
         category: formData.category || undefined,
-        accessLevel: formData.accessLevel
+        accessLevel: formData.accessLevel,
       };
 
-      // Convert tags to JSON string array
+      // Convert tags to string[] array
       if (formData.tags?.trim()) {
-        const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(t => t);
-        updates.tags = JSON.stringify(tagsArray);
+        const tagsArray = formData.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t);
+        updates.tags = tagsArray;
       } else {
         updates.tags = undefined;
       }
@@ -76,7 +97,7 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
       await onSave(document.id, updates);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to update metadata');
+      setError(err.message || "Failed to update metadata");
     } finally {
       setIsSubmitting(false);
     }
@@ -84,7 +105,7 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setError('');
+      setError("");
       onClose();
     }
   };
@@ -120,7 +141,9 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
               id="docName"
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               placeholder="Enter document name"
               maxLength={500}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
@@ -131,13 +154,21 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
 
           {/* Category */}
           <div>
-            <label htmlFor="category" className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="category"
+              className="block text-sm font-medium mb-1"
+            >
               Category
             </label>
             <select
               id="category"
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value as DocumentCategory | '' })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  category: e.target.value as DocumentCategory | "",
+                })
+              }
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={isSubmitting}
             >
@@ -161,7 +192,9 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
               id="tags"
               type="text"
               value={formData.tags}
-              onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, tags: e.target.value })
+              }
               placeholder="e.g., important, confidential, review"
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={isSubmitting}
@@ -173,13 +206,18 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
 
           {/* Access Level */}
           <div>
-            <label htmlFor="accessLevel" className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="accessLevel"
+              className="block text-sm font-medium mb-1"
+            >
               Access Level
             </label>
             <select
               id="accessLevel"
               value={formData.accessLevel}
-              onChange={(e) => setFormData({ ...formData, accessLevel: e.target.value as any })}
+              onChange={(e) =>
+                setFormData({ ...formData, accessLevel: e.target.value as any })
+              }
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={isSubmitting}
             >
@@ -198,9 +236,20 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
 
           {/* File Info (Read-only) */}
           <div className="text-xs text-muted-foreground bg-muted p-2 rounded space-y-1">
-            <div><strong>File Type:</strong> {document.fileType?.toUpperCase() || 'Unknown'}</div>
-            <div><strong>Size:</strong> {document.fileSizeBytes ? `${(document.fileSizeBytes / 1024).toFixed(2)} KB` : 'N/A'}</div>
-            <div><strong>Uploaded:</strong> {new Date(document.createdAt).toLocaleDateString()}</div>
+            <div>
+              <strong>File Type:</strong>{" "}
+              {document.fileType?.toUpperCase() || "Unknown"}
+            </div>
+            <div>
+              <strong>Size:</strong>{" "}
+              {document.fileSizeBytes
+                ? `${(document.fileSizeBytes / 1024).toFixed(2)} KB`
+                : "N/A"}
+            </div>
+            <div>
+              <strong>Uploaded:</strong>{" "}
+              {new Date(document.createdAt).toLocaleDateString()}
+            </div>
           </div>
 
           {/* Actions */}
@@ -219,7 +268,7 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
               className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>
