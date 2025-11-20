@@ -1,17 +1,17 @@
 // app/projects/page.tsx
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { bmsApi, BmsApiError } from "@/lib/services/bmsApi"
-import { authService } from "@/lib/services/auth"
-import { Project, ProjectStatus, ProjectPriority } from "@/types/bms"
-import { toast } from "sonner"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
+import { authService } from "@/lib/services/auth";
+import { Project, ProjectStatus, ProjectPriority } from "@/types/bms";
+import { toast } from "sonner";
 import {
   FolderOpen,
   Plus,
@@ -27,8 +27,8 @@ import {
   TrendingUp,
   Loader2,
   RefreshCw,
-  Target
-} from 'lucide-react'
+  Target,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -36,27 +36,27 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ProjectsPage() {
-  const router = useRouter()
-  const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [showEditForm, setShowEditForm] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -67,78 +67,80 @@ export default function ProjectsPage() {
     endDate: "",
     budgetAllocated: "",
     budgetSpent: "",
-    teamLead: ""
-  })
+    teamLead: "",
+  });
 
   // Initialize auth on mount
   useEffect(() => {
-    const auth = authService.getAuth()
+    const auth = authService.getAuth();
     if (!auth) {
-      router.push('/login')
-      return
+      router.push("/login");
+      return;
     }
 
-    const token = authService.getToken()
-    const companyId = authService.getCurrentCompanyId()
+    const token = authService.getToken();
+    const companyId = authService.getCurrentCompanyId();
 
-    if (token) bmsApi.setToken(token)
-    if (companyId) bmsApi.setCompanyId(companyId)
+    if (token) bmsApi.setToken(token);
+    if (companyId) bmsApi.setCompanyId(companyId);
 
-    loadProjects()
-  }, [router])
+    loadProjects();
+  }, [router]);
 
   const loadProjects = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const data = await bmsApi.projects.getAll()
-      setProjects(data as Project[])
-      toast.success(`Loaded ${(data as Project[]).length} projects`)
+      setLoading(true);
+      setError(null);
+      const data = await bmsApi.projects.getAll();
+      setProjects(data as Project[]);
     } catch (err) {
-      const errorMessage = err instanceof BmsApiError
-        ? err.message
-        : 'Failed to load projects'
-      setError(errorMessage)
-      toast.error(errorMessage)
-      console.error('Error loading projects:', err)
+      const errorMessage =
+        err instanceof BmsApiError ? err.message : "Failed to load projects";
+      setError(errorMessage);
+      toast.error(errorMessage);
+      console.error("Error loading projects:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!formData.name.trim()) {
-      toast.error("Project name is required")
-      return
+      toast.error("Project name is required");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       const payload: any = {
         name: formData.name,
         status: formData.status,
         priority: formData.priority,
-        progress: formData.progress
-      }
+        progress: formData.progress,
+      };
 
       // Only add optional fields if they have values
-      if (formData.description?.trim()) payload.description = formData.description
-      if (formData.startDate?.trim()) payload.startDate = formData.startDate
-      if (formData.endDate?.trim()) payload.endDate = formData.endDate
-      if (formData.budgetAllocated && !isNaN(parseFloat(formData.budgetAllocated))) {
-        payload.budgetAllocated = parseFloat(formData.budgetAllocated)
+      if (formData.description?.trim())
+        payload.description = formData.description;
+      if (formData.startDate?.trim()) payload.startDate = formData.startDate;
+      if (formData.endDate?.trim()) payload.endDate = formData.endDate;
+      if (
+        formData.budgetAllocated &&
+        !isNaN(parseFloat(formData.budgetAllocated))
+      ) {
+        payload.budgetAllocated = parseFloat(formData.budgetAllocated);
       }
       if (formData.budgetSpent && !isNaN(parseFloat(formData.budgetSpent))) {
-        payload.budgetSpent = parseFloat(formData.budgetSpent)
+        payload.budgetSpent = parseFloat(formData.budgetSpent);
       }
-      if (formData.teamLead?.trim()) payload.teamLead = formData.teamLead
+      if (formData.teamLead?.trim()) payload.teamLead = formData.teamLead;
 
-      const newProject = await bmsApi.projects.create(payload)
+      const newProject = await bmsApi.projects.create(payload);
 
-      setProjects(prev => [...prev, newProject as Project])
-      toast.success("Project created successfully!")
-      setShowAddForm(false)
+      setProjects((prev) => [...prev, newProject as Project]);
+      toast.success("Project created successfully!");
+      setShowAddForm(false);
       setFormData({
         name: "",
         description: "",
@@ -149,25 +151,26 @@ export default function ProjectsPage() {
         endDate: "",
         budgetAllocated: "",
         budgetSpent: "",
-        teamLead: ""
-      })
+        teamLead: "",
+      });
     } catch (err) {
-      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to create project'
-      toast.error(errorMessage)
-      console.error('Error creating project:', err)
+      const errorMessage =
+        err instanceof BmsApiError ? err.message : "Failed to create project";
+      toast.error(errorMessage);
+      console.error("Error creating project:", err);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!selectedProject || !formData.name.trim()) {
-      toast.error("Project name is required")
-      return
+      toast.error("Project name is required");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       const payload: any = {
         id: selectedProject.id,
@@ -176,55 +179,61 @@ export default function ProjectsPage() {
         status: formData.status,
         priority: formData.priority,
         progress: formData.progress,
-        company: selectedProject.company // Include the company object
-      }
+        company: selectedProject.companyId, // Include the company object
+      };
 
       // Only add optional fields if they have values (exclude empty strings)
-      if (formData.description?.trim()) payload.description = formData.description.trim()
-      if (formData.startDate?.trim()) payload.startDate = formData.startDate.trim()
-      if (formData.endDate?.trim()) payload.endDate = formData.endDate.trim()
-      if (formData.teamLead?.trim()) payload.teamLead = formData.teamLead.trim()
+      if (formData.description?.trim())
+        payload.description = formData.description.trim();
+      if (formData.startDate?.trim())
+        payload.startDate = formData.startDate.trim();
+      if (formData.endDate?.trim()) payload.endDate = formData.endDate.trim();
+      if (formData.teamLead?.trim())
+        payload.teamLead = formData.teamLead.trim();
 
-      const budgetAllocated = formData.budgetAllocated?.trim()
+      const budgetAllocated = formData.budgetAllocated?.trim();
       if (budgetAllocated && !isNaN(parseFloat(budgetAllocated))) {
-        payload.budgetAllocated = parseFloat(budgetAllocated)
+        payload.budgetAllocated = parseFloat(budgetAllocated);
       }
 
-      const budgetSpent = formData.budgetSpent?.trim()
+      const budgetSpent = formData.budgetSpent?.trim();
       if (budgetSpent && !isNaN(parseFloat(budgetSpent))) {
-        payload.budgetSpent = parseFloat(budgetSpent)
+        payload.budgetSpent = parseFloat(budgetSpent);
       }
 
-      console.log('Updating project with payload:', payload)
-      await bmsApi.projects.update(selectedProject.id, payload)
+      console.log("Updating project with payload:", payload);
+      await bmsApi.projects.update(selectedProject.id, payload);
 
       // Update local state with the changed data (backend returns NoContent)
       const updatedProject = {
         ...selectedProject,
         ...payload,
-        updatedAt: new Date().toISOString()
-      }
+        updatedAt: new Date().toISOString(),
+      };
 
-      setProjects(prev => prev.map(p => p.id === selectedProject.id ? updatedProject : p))
-      setSelectedProject(updatedProject)
-      toast.success("Project updated successfully!")
-      setShowEditForm(false)
+      setProjects((prev) =>
+        prev.map((p) => (p.id === selectedProject.id ? updatedProject : p))
+      );
+      setSelectedProject(updatedProject);
+      toast.success("Project updated successfully!");
+      setShowEditForm(false);
     } catch (err) {
-      const errorMessage = err instanceof BmsApiError ? err.message : 'Failed to update project'
-      toast.error(errorMessage)
-      console.error('Error updating project:', err)
+      const errorMessage =
+        err instanceof BmsApiError ? err.message : "Failed to update project";
+      toast.error(errorMessage);
+      console.error("Error updating project:", err);
       if (err instanceof BmsApiError) {
-        console.error('Error details:', {
+        console.error("Error details:", {
           status: err.status,
           code: err.code,
           details: err.details,
-          message: err.message
-        })
+          message: err.message,
+        });
       }
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const openEditForm = (project: Project) => {
     setFormData({
@@ -237,59 +246,74 @@ export default function ProjectsPage() {
       endDate: project.endDate || "",
       budgetAllocated: project.budgetAllocated?.toString() || "",
       budgetSpent: project.budgetSpent?.toString() || "",
-      teamLead: project.teamLead || ""
-    })
-    setShowEditForm(true)
-  }
+      teamLead: project.teamLead || "",
+    });
+    setShowEditForm(true);
+  };
 
-  const filteredProjects = projects.filter(project =>
-    project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.teamLead?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredProjects = projects.filter(
+    (project) =>
+      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.teamLead?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const formatCurrency = (value?: number) => {
-    if (!value) return "N/A"
-    return new Intl.NumberFormat('en-CA', {
-      style: 'currency',
-      currency: 'CAD',
+    if (!value) return "N/A";
+    return new Intl.NumberFormat("en-CA", {
+      style: "currency",
+      currency: "CAD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(value)
-  }
+    }).format(value);
+  };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A"
-    return new Date(dateString).toLocaleDateString('en-CA', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-CA", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active": return "bg-green-100 text-green-800"
-      case "planning": return "bg-blue-100 text-blue-800"
-      case "on-hold": return "bg-yellow-100 text-yellow-800"
-      case "completed": return "bg-gray-100 text-gray-800"
-      case "cancelled": return "bg-red-100 text-red-800"
-      default: return "bg-gray-100 text-gray-800"
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "planning":
+        return "bg-blue-100 text-blue-800";
+      case "on-hold":
+        return "bg-yellow-100 text-yellow-800";
+      case "completed":
+        return "bg-gray-100 text-gray-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "critical": return "bg-red-100 text-red-800"
-      case "high": return "bg-orange-100 text-orange-800"
-      case "medium": return "bg-yellow-100 text-yellow-800"
-      case "low": return "bg-green-100 text-green-800"
-      default: return "bg-gray-100 text-gray-800"
+      case "critical":
+        return "bg-red-100 text-red-800";
+      case "high":
+        return "bg-orange-100 text-orange-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const ProjectCard = ({ project }: { project: Project }) => (
-    <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedProject(project)}>
+    <Card
+      className="cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={() => setSelectedProject(project)}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -299,7 +323,9 @@ export default function ProjectsPage() {
             <div>
               <CardTitle className="text-lg">{project.name}</CardTitle>
               {project.teamLead && (
-                <p className="text-sm text-gray-600">Led by {project.teamLead}</p>
+                <p className="text-sm text-gray-600">
+                  Led by {project.teamLead}
+                </p>
               )}
             </div>
           </div>
@@ -315,7 +341,9 @@ export default function ProjectsPage() {
       </CardHeader>
       <CardContent>
         {project.description && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">{project.description}</p>
+          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+            {project.description}
+          </p>
         )}
 
         <div className="mb-4">
@@ -328,11 +356,15 @@ export default function ProjectsPage() {
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center">
-            <div className="text-xl font-bold text-gray-900">{formatCurrency(project.budgetAllocated)}</div>
+            <div className="text-xl font-bold text-gray-900">
+              {formatCurrency(project.budgetAllocated)}
+            </div>
             <div className="text-xs text-gray-600">Budget</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-bold text-gray-900">{formatCurrency(project.budgetSpent)}</div>
+            <div className="text-xl font-bold text-gray-900">
+              {formatCurrency(project.budgetSpent)}
+            </div>
             <div className="text-xs text-gray-600">Spent</div>
           </div>
         </div>
@@ -349,11 +381,14 @@ export default function ProjectsPage() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 
   const ProjectDetails = ({ project }: { project: Project }) => {
-    const budgetRemaining = (project.budgetAllocated || 0) - (project.budgetSpent || 0)
-    const budgetUtilization = project.budgetAllocated ? Math.round(((project.budgetSpent || 0) / project.budgetAllocated) * 100) : 0
+    const budgetRemaining =
+      (project.budgetAllocated || 0) - (project.budgetSpent || 0);
+    const budgetUtilization = project.budgetAllocated
+      ? Math.round(((project.budgetSpent || 0) / project.budgetAllocated) * 100)
+      : 0;
 
     return (
       <div className="space-y-6">
@@ -370,14 +405,20 @@ export default function ProjectsPage() {
               </div>
 
               <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">{project.name}</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  {project.name}
+                </h1>
                 {project.description && (
                   <p className="text-gray-600 mb-4">{project.description}</p>
                 )}
 
                 <div className="flex gap-3 mb-4">
-                  <Badge className={getStatusColor(project.status)}>{project.status}</Badge>
-                  <Badge className={getPriorityColor(project.priority)}>{project.priority}</Badge>
+                  <Badge className={getStatusColor(project.status)}>
+                    {project.status}
+                  </Badge>
+                  <Badge className={getPriorityColor(project.priority)}>
+                    {project.priority}
+                  </Badge>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
@@ -393,7 +434,9 @@ export default function ProjectsPage() {
                   </div>
                   <div>
                     <span className="text-gray-600">Project ID:</span>
-                    <div className="font-medium font-mono text-xs">{project.id.slice(0, 8)}...</div>
+                    <div className="font-medium font-mono text-xs">
+                      {project.id.slice(0, 8)}...
+                    </div>
                   </div>
                 </div>
               </div>
@@ -445,7 +488,9 @@ export default function ProjectsPage() {
                   <TrendingUp className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-gray-900">{formatCurrency(project.budgetSpent)}</div>
+                  <div className="text-lg font-bold text-gray-900">
+                    {formatCurrency(project.budgetSpent)}
+                  </div>
                   <div className="text-sm text-gray-600">Budget Spent</div>
                   <div className="text-xs text-gray-500">
                     {budgetUtilization}% utilized
@@ -462,7 +507,9 @@ export default function ProjectsPage() {
                   <Calendar className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-gray-900">{formatDate(project.startDate)}</div>
+                  <div className="text-sm font-bold text-gray-900">
+                    {formatDate(project.startDate)}
+                  </div>
                   <div className="text-sm text-gray-600">Start Date</div>
                   <div className="text-xs text-gray-500">
                     Ends {formatDate(project.endDate)}
@@ -479,11 +526,11 @@ export default function ProjectsPage() {
                   <Target className="w-5 h-5 text-orange-600" />
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-gray-900">{project.progress}%</div>
-                  <div className="text-sm text-gray-600">Complete</div>
-                  <div className="text-xs text-gray-500">
-                    {project.status}
+                  <div className="text-lg font-bold text-gray-900">
+                    {project.progress}%
                   </div>
+                  <div className="text-sm text-gray-600">Complete</div>
+                  <div className="text-xs text-gray-500">{project.status}</div>
                 </div>
               </div>
             </CardContent>
@@ -499,45 +546,59 @@ export default function ProjectsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Project ID</span>
-                <Badge variant="secondary" className="font-mono text-xs">{project.id.slice(0, 8)}...</Badge>
+                <Badge variant="secondary" className="font-mono text-xs">
+                  {project.id.slice(0, 8)}...
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Company ID</span>
-                <Badge variant="secondary" className="font-mono text-xs">{project.companyId.slice(0, 8)}...</Badge>
+                <Badge variant="secondary" className="font-mono text-xs">
+                  {project.companyId.slice(0, 8)}...
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Status</span>
-                <Badge className={getStatusColor(project.status)}>{project.status}</Badge>
+                <Badge className={getStatusColor(project.status)}>
+                  {project.status}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Priority</span>
-                <Badge className={getPriorityColor(project.priority)}>{project.priority}</Badge>
+                <Badge className={getPriorityColor(project.priority)}>
+                  {project.priority}
+                </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Created</span>
-                <span className="text-sm font-medium">{formatDate(project.createdAt)}</span>
+                <span className="text-sm font-medium">
+                  {formatDate(project.createdAt)}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Last Updated</span>
-                <span className="text-sm font-medium">{formatDate(project.updatedAt)}</span>
+                <span className="text-sm font-medium">
+                  {formatDate(project.updatedAt)}
+                </span>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-    )
-  }
+    );
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Loading projects...</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Loading projects...
+          </h3>
           <p className="text-gray-600">Please wait while we fetch your data</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -545,7 +606,9 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <FolderOpen className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading projects</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Error loading projects
+          </h3>
           <p className="text-red-600 mb-4">{error}</p>
           <Button onClick={loadProjects}>
             <RefreshCw className="w-4 h-4 mr-2" />
@@ -553,7 +616,7 @@ export default function ProjectsPage() {
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -564,14 +627,16 @@ export default function ProjectsPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-              <p className="text-gray-600">Manage and track all organizational projects</p>
+              <p className="text-gray-600">
+                Manage and track all organizational projects
+              </p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={loadProjects}>
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              {authService.hasPermission('create', 'project') && (
+              {authService.hasPermission("create", "project") && (
                 <Button onClick={() => setShowAddForm(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Project
@@ -589,7 +654,9 @@ export default function ProjectsPage() {
                     <FolderOpen className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">{projects.length}</div>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {projects.length}
+                    </div>
                     <div className="text-sm text-gray-600">Total Projects</div>
                   </div>
                 </div>
@@ -604,7 +671,7 @@ export default function ProjectsPage() {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-gray-900">
-                      {projects.filter(p => p.status === 'active').length}
+                      {projects.filter((p) => p.status === "active").length}
                     </div>
                     <div className="text-sm text-gray-600">Active</div>
                   </div>
@@ -620,7 +687,12 @@ export default function ProjectsPage() {
                   </div>
                   <div>
                     <div className="text-xl font-bold text-gray-900">
-                      {formatCurrency(projects.reduce((sum, p) => sum + (p.budgetAllocated || 0), 0))}
+                      {formatCurrency(
+                        projects.reduce(
+                          (sum, p) => sum + (p.budgetAllocated || 0),
+                          0
+                        )
+                      )}
                     </div>
                     <div className="text-sm text-gray-600">Total Budget</div>
                   </div>
@@ -636,7 +708,11 @@ export default function ProjectsPage() {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-gray-900">
-                      {Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length) || 0}%
+                      {Math.round(
+                        projects.reduce((sum, p) => sum + p.progress, 0) /
+                          projects.length
+                      ) || 0}
+                      %
                     </div>
                     <div className="text-sm text-gray-600">Avg Progress</div>
                   </div>
@@ -657,7 +733,8 @@ export default function ProjectsPage() {
               />
             </div>
             <Badge variant="secondary">
-              {filteredProjects.length} {filteredProjects.length === 1 ? 'project' : 'projects'}
+              {filteredProjects.length}{" "}
+              {filteredProjects.length === 1 ? "project" : "projects"}
             </Badge>
           </div>
 
@@ -671,9 +748,13 @@ export default function ProjectsPage() {
           ) : (
             <div className="text-center py-12">
               <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No projects found
+              </h3>
               <p className="text-gray-600 mb-4">
-                {searchTerm ? 'Try adjusting your search criteria' : 'Get started by adding your first project'}
+                {searchTerm
+                  ? "Try adjusting your search criteria"
+                  : "Get started by adding your first project"}
               </p>
               <Button onClick={() => setShowAddForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -692,7 +773,8 @@ export default function ProjectsPage() {
           <DialogHeader>
             <DialogTitle>Add New Project</DialogTitle>
             <DialogDescription>
-              Create a new project in the system. Fields marked with * are required.
+              Create a new project in the system. Fields marked with * are
+              required.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
@@ -703,7 +785,9 @@ export default function ProjectsPage() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Enter project name"
                   required
                 />
@@ -715,7 +799,9 @@ export default function ProjectsPage() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   placeholder="Project description"
                   rows={3}
                 />
@@ -727,7 +813,12 @@ export default function ProjectsPage() {
                   <Label htmlFor="status">Status</Label>
                   <Select
                     value={formData.status}
-                    onValueChange={(value) => setFormData({ ...formData, status: value as ProjectStatus })}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        status: value as ProjectStatus,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -746,7 +837,12 @@ export default function ProjectsPage() {
                   <Label htmlFor="priority">Priority</Label>
                   <Select
                     value={formData.priority}
-                    onValueChange={(value) => setFormData({ ...formData, priority: value as ProjectPriority })}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        priority: value as ProjectPriority,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -768,7 +864,12 @@ export default function ProjectsPage() {
                   id="progress"
                   type="number"
                   value={formData.progress}
-                  onChange={(e) => setFormData({ ...formData, progress: parseInt(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      progress: parseInt(e.target.value) || 0,
+                    })
+                  }
                   placeholder="0"
                   min="0"
                   max="100"
@@ -783,7 +884,9 @@ export default function ProjectsPage() {
                     id="startDate"
                     type="date"
                     value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, startDate: e.target.value })
+                    }
                   />
                 </div>
 
@@ -793,7 +896,9 @@ export default function ProjectsPage() {
                     id="endDate"
                     type="date"
                     value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endDate: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -801,12 +906,19 @@ export default function ProjectsPage() {
               {/* Budget Fields */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="budgetAllocated">Budget Allocated (CAD)</Label>
+                  <Label htmlFor="budgetAllocated">
+                    Budget Allocated (CAD)
+                  </Label>
                   <Input
                     id="budgetAllocated"
                     type="number"
                     value={formData.budgetAllocated}
-                    onChange={(e) => setFormData({ ...formData, budgetAllocated: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        budgetAllocated: e.target.value,
+                      })
+                    }
                     placeholder="0"
                     min="0"
                     step="0.01"
@@ -819,7 +931,9 @@ export default function ProjectsPage() {
                     id="budgetSpent"
                     type="number"
                     value={formData.budgetSpent}
-                    onChange={(e) => setFormData({ ...formData, budgetSpent: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, budgetSpent: e.target.value })
+                    }
                     placeholder="0"
                     min="0"
                     step="0.01"
@@ -833,14 +947,21 @@ export default function ProjectsPage() {
                 <Input
                   id="teamLead"
                   value={formData.teamLead}
-                  onChange={(e) => setFormData({ ...formData, teamLead: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, teamLead: e.target.value })
+                  }
                   placeholder="Team lead name"
                 />
               </div>
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} disabled={isSubmitting}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddForm(false)}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -878,7 +999,9 @@ export default function ProjectsPage() {
                 <Input
                   id="edit-name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Enter project name"
                   required
                 />
@@ -890,7 +1013,9 @@ export default function ProjectsPage() {
                 <Textarea
                   id="edit-description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   placeholder="Project description"
                   rows={3}
                 />
@@ -902,7 +1027,12 @@ export default function ProjectsPage() {
                   <Label htmlFor="edit-status">Status</Label>
                   <Select
                     value={formData.status}
-                    onValueChange={(value) => setFormData({ ...formData, status: value as ProjectStatus })}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        status: value as ProjectStatus,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -921,7 +1051,12 @@ export default function ProjectsPage() {
                   <Label htmlFor="edit-priority">Priority</Label>
                   <Select
                     value={formData.priority}
-                    onValueChange={(value) => setFormData({ ...formData, priority: value as ProjectPriority })}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        priority: value as ProjectPriority,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -943,7 +1078,12 @@ export default function ProjectsPage() {
                   id="edit-progress"
                   type="number"
                   value={formData.progress}
-                  onChange={(e) => setFormData({ ...formData, progress: parseInt(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      progress: parseInt(e.target.value) || 0,
+                    })
+                  }
                   placeholder="0"
                   min="0"
                   max="100"
@@ -958,7 +1098,9 @@ export default function ProjectsPage() {
                     id="edit-startDate"
                     type="date"
                     value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, startDate: e.target.value })
+                    }
                   />
                 </div>
 
@@ -968,7 +1110,9 @@ export default function ProjectsPage() {
                     id="edit-endDate"
                     type="date"
                     value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endDate: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -976,12 +1120,19 @@ export default function ProjectsPage() {
               {/* Budget Fields */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-budgetAllocated">Budget Allocated (CAD)</Label>
+                  <Label htmlFor="edit-budgetAllocated">
+                    Budget Allocated (CAD)
+                  </Label>
                   <Input
                     id="edit-budgetAllocated"
                     type="number"
                     value={formData.budgetAllocated}
-                    onChange={(e) => setFormData({ ...formData, budgetAllocated: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        budgetAllocated: e.target.value,
+                      })
+                    }
                     placeholder="0"
                     min="0"
                     step="0.01"
@@ -994,7 +1145,9 @@ export default function ProjectsPage() {
                     id="edit-budgetSpent"
                     type="number"
                     value={formData.budgetSpent}
-                    onChange={(e) => setFormData({ ...formData, budgetSpent: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, budgetSpent: e.target.value })
+                    }
                     placeholder="0"
                     min="0"
                     step="0.01"
@@ -1008,14 +1161,21 @@ export default function ProjectsPage() {
                 <Input
                   id="edit-teamLead"
                   value={formData.teamLead}
-                  onChange={(e) => setFormData({ ...formData, teamLead: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, teamLead: e.target.value })
+                  }
                   placeholder="Team lead name"
                 />
               </div>
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowEditForm(false)} disabled={isSubmitting}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowEditForm(false)}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -1036,5 +1196,5 @@ export default function ProjectsPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

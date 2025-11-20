@@ -33,7 +33,7 @@ class BmsApiService {
   private token: string | null = null;
   private companyId: string | null = null;
 
-  constructor(baseUrl: string = BASE_URL) {
+  constructor(baseUrl: string = BASE_URL!) {
     this.baseUrl = baseUrl;
   }
 
@@ -58,9 +58,9 @@ class BmsApiService {
 
     const url = `${this.baseUrl}${API_PREFIX}${endpoint}`;
 
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...fetchOptions.headers,
+      ...((fetchOptions.headers as Record<string, string>) || {}),
     };
 
     if (!skipAuth && this.token) {
@@ -78,7 +78,7 @@ class BmsApiService {
         url,
         headers: {
           ...headers,
-          Authorization: headers['Authorization'] ? `Bearer ${(headers['Authorization'] as string).substring(7, 27)}...` : 'none'
+          Authorization: headers['Authorization'] ? `Bearer ${headers['Authorization'].substring(7, 27)}...` : 'none'
         }
       });
     }

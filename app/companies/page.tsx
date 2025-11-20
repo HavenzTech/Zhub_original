@@ -136,7 +136,6 @@ export default function CompaniesPage() {
       try {
         const data = await bmsApi.companies.getAll()
         setCompanies(data as Company[])
-        toast.success(`Loaded ${(data as Company[]).length} companies`)
       } catch (getAllError) {
         // If getAll fails with 403, try getting companies by user
         if (getAllError instanceof BmsApiError && getAllError.status === 403) {
@@ -145,7 +144,6 @@ export default function CompaniesPage() {
           if (auth?.userId) {
             const data = await bmsApi.companies.getByUser(auth.userId)
             setCompanies(data as Company[])
-            toast.info(`Loaded ${(data as Company[]).length} companies (user-specific)`)
           } else {
             throw getAllError
           }
