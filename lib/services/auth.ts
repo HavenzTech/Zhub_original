@@ -6,7 +6,12 @@ import type {
   ApiError,
 } from "@/lib/types/auth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// Environment variables - configured in .env.local
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
+}
 
 class AuthService {
   /**

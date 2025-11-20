@@ -19,7 +19,7 @@ interface FolderTreeViewProps {
 
 interface FolderNodeProps {
   folder: FolderType;
-  isSelected: boolean;
+  selectedFolderId?: string | null;
   selectedDocumentId?: string | null;
   onSelect: (folderId: string) => void;
   onDocumentSelect?: (document: Document) => void;
@@ -33,7 +33,7 @@ interface FolderNodeProps {
 
 const FolderNode: React.FC<FolderNodeProps> = ({
   folder,
-  isSelected,
+  selectedFolderId,
   selectedDocumentId,
   onSelect,
   onDocumentSelect,
@@ -45,6 +45,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   level
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const isSelected = selectedFolderId === folder.id;
   const hasChildren = folder.childFolders && folder.childFolders.length > 0;
   const hasDocuments = showDocuments && folder.documents && folder.documents.length > 0;
 
@@ -150,7 +151,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
             <FolderNode
               key={childFolder.id}
               folder={childFolder}
-              isSelected={isSelected}
+              selectedFolderId={selectedFolderId}
               selectedDocumentId={selectedDocumentId}
               onSelect={onSelect}
               onDocumentSelect={onDocumentSelect}
@@ -244,7 +245,7 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
         <FolderNode
           key={folder.id}
           folder={folder}
-          isSelected={selectedFolderId === folder.id}
+          selectedFolderId={selectedFolderId}
           selectedDocumentId={selectedDocumentId}
           onSelect={onFolderSelect}
           onDocumentSelect={onDocumentSelect}

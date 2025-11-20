@@ -1,8 +1,13 @@
 import { ApiResponse, ApiError } from '@/types/bms';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BMS_API_BASE_URL || 'http://localhost:5000';
+// Environment variables - configured in .env.local
+const BASE_URL = process.env.NEXT_PUBLIC_BMS_API_BASE_URL;
 const API_PREFIX = '/api/havenzhub';
 const TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
+
+if (!BASE_URL) {
+  throw new Error('NEXT_PUBLIC_BMS_API_BASE_URL is not defined in environment variables');
+}
 
 class BmsApiError extends Error {
   status: number;
