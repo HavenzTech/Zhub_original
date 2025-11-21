@@ -67,6 +67,8 @@ export default function DocumentControlPage() {
   const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +97,9 @@ export default function DocumentControlPage() {
     category: "" as DocumentCategory | "",
     tags: "",
     folderId: null as string | null,
+    projectId: null as string | null,
+    departmentId: null as string | null,
+    gcpFolderPath: "",
   });
 
   // Initialize auth on mount
@@ -113,6 +118,8 @@ export default function DocumentControlPage() {
 
     loadDocuments();
     loadFolders();
+    loadProjects();
+    loadDepartments();
   }, [router]);
 
   const loadDocuments = async () => {
@@ -139,6 +146,24 @@ export default function DocumentControlPage() {
     } catch (err) {
       console.error("Error loading folders:", err);
       // Don't show error toast for folders, just log it
+    }
+  };
+
+  const loadProjects = async () => {
+    try {
+      const data = await bmsApi.projects.getAll();
+      setProjects(data as any[]);
+    } catch (err) {
+      console.error("Error loading projects:", err);
+    }
+  };
+
+  const loadDepartments = async () => {
+    try {
+      const data = await bmsApi.departments.getAll();
+      setDepartments(data as any[]);
+    } catch (err) {
+      console.error("Error loading departments:", err);
     }
   };
 
@@ -300,6 +325,19 @@ export default function DocumentControlPage() {
         formDataUpload.append("folderId", formData.folderId);
       }
 
+      // Add project/department context for access control
+      if (formData.projectId) {
+        formDataUpload.append("context", `project:${formData.projectId}`);
+      }
+      if (formData.departmentId) {
+        formDataUpload.append("context", `dept:${formData.departmentId}`);
+      }
+
+      // Add GCP folder path for cloud storage organization
+      if (formData.gcpFolderPath && formData.gcpFolderPath.trim()) {
+        formDataUpload.append("folderPath", formData.gcpFolderPath.trim());
+      }
+
       // Get auth token and company ID
       const token = authService.getToken();
       const companyId = authService.getCurrentCompanyId();
@@ -382,6 +420,9 @@ export default function DocumentControlPage() {
         category: "" as DocumentCategory | "",
         tags: "",
         folderId: selectedFolderId,
+        projectId: null,
+        departmentId: null,
+        gcpFolderPath: "",
       });
     } catch (err) {
       const errorMessage =
@@ -1097,6 +1138,83 @@ export default function DocumentControlPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Project and Department */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="project">Project (Optional)</Label>
+                  <Select
+                    value={formData.projectId || "none"}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        projectId: value === "none" ? null : value,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select project (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    Link to project for access control
+                  </p>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="department">Department (Optional)</Label>
+                  <Select
+                    value={formData.departmentId || "none"}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        departmentId: value === "none" ? null : value,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select department (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    Link to department for access control
+                  </p>
+                </div>
+              </div>
+
+              {/* GCP Folder Path */}
+              <div className="grid gap-2">
+                <Label htmlFor="gcpFolderPath">
+                  GCP Folder Path (Optional)
+                </Label>
+                <Input
+                  id="gcpFolderPath"
+                  value={formData.gcpFolderPath}
+                  onChange={(e) =>
+                    setFormData({ ...formData, gcpFolderPath: e.target.value })
+                  }
+                  placeholder="e.g., contracts/2024 or invoices"
+                />
+                <p className="text-xs text-gray-500">
+                  Organize files in cloud storage subfolder
+                </p>
               </div>
 
               {/* Tags */}

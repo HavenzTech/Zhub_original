@@ -1,8 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Plus } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Plus, Edit, Trash2 } from 'lucide-react';
 import type { Folder as FolderType, Document } from '@/types/bms';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface FolderTreeViewProps {
   folders: FolderType[];
@@ -45,6 +55,8 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   level
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [deleteDocumentId, setDeleteDocumentId] = useState<string | null>(null);
+  const [deleteDocumentName, setDeleteDocumentName] = useState<string>('');
   const isSelected = selectedFolderId === folder.id;
   const hasChildren = folder.childFolders && folder.childFolders.length > 0;
   const hasDocuments = showDocuments && folder.documents && folder.documents.length > 0;
@@ -65,27 +77,32 @@ const FolderNode: React.FC<FolderNodeProps> = ({
     }
   };
 
-  const handleFolderContextMenu = (e: React.MouseEvent) => {
+  const handleDocumentEdit = (e: React.MouseEvent, docId: string) => {
     e.preventDefault();
-    if (onFolderDelete) {
-      if (confirm(`Delete folder "${folder.name}"?\n\nThis will also delete all subfolders and documents inside it.`)) {
-        onFolderDelete(folder.id);
-      }
+    e.stopPropagation();
+    if (onDocumentEdit) {
+      onDocumentEdit(docId);
     }
   };
 
-  const handleDocumentContextMenu = (e: React.MouseEvent, docId: string, docName: string) => {
+  const handleDocumentDeleteClick = (e: React.MouseEvent, docId: string, docName: string) => {
     e.preventDefault();
     e.stopPropagation();
+    setDeleteDocumentId(docId);
+    setDeleteDocumentName(docName);
+  };
 
-    const action = confirm(`Choose action for "${docName}":\n\nOK = Edit Metadata\nCancel = Delete Document`);
-    if (action) {
-      if (onDocumentEdit) onDocumentEdit(docId);
-    } else {
-      if (onDocumentDelete && confirm(`Delete document "${docName}"?`)) {
-        onDocumentDelete(docId);
-      }
+  const confirmDelete = () => {
+    if (deleteDocumentId && onDocumentDelete) {
+      onDocumentDelete(deleteDocumentId);
     }
+    setDeleteDocumentId(null);
+    setDeleteDocumentName('');
+  };
+
+  const cancelDelete = () => {
+    setDeleteDocumentId(null);
+    setDeleteDocumentName('');
   };
 
   return (
@@ -97,7 +114,6 @@ const FolderNode: React.FC<FolderNodeProps> = ({
         }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={handleSelect}
-        onContextMenu={handleFolderContextMenu}
       >
         {/* Expand/Collapse Icon */}
         {hasChildren || hasDocuments ? (
@@ -136,10 +152,10 @@ const FolderNode: React.FC<FolderNodeProps> = ({
         {onFolderCreate && (
           <button
             onClick={handleCreateSubfolder}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent-foreground/10 rounded transition-opacity"
+            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-blue-100 rounded transition-opacity"
             title="Create subfolder"
           >
-            <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+            <Plus className="h-3.5 w-3.5 text-black" />
           </button>
         )}
       </div>
@@ -172,25 +188,68 @@ const FolderNode: React.FC<FolderNodeProps> = ({
           {folder.documents!.map((doc) => (
             <div
               key={doc.id}
-              className={`flex items-center gap-2 px-2 py-1 rounded-md hover:text-foreground transition-colors cursor-pointer ${
+              className={`group flex items-center gap-2 px-2 py-1 rounded-md hover:text-foreground transition-colors cursor-pointer ${
                 selectedDocumentId === doc.id
                   ? 'bg-blue-100 text-blue-900 font-medium'
                   : 'text-muted-foreground hover:bg-accent/50'
               }`}
               style={{ paddingLeft: `${(level + 1) * 16 + 28}px` }}
               onClick={() => onDocumentSelect?.(doc)}
-              onContextMenu={(e) => handleDocumentContextMenu(e, doc.id, doc.name)}
-              title="Click to view, right-click for options"
+              title="Click to view"
             >
               <FileText className="h-3.5 w-3.5 flex-shrink-0" />
               <span className="text-xs truncate flex-1">{doc.name}</span>
               <span className="text-xs text-muted-foreground">
                 {doc.fileType?.toUpperCase()}
               </span>
+
+              {/* Edit and Delete Icons */}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {onDocumentEdit && (
+                  <button
+                    onClick={(e) => handleDocumentEdit(e, doc.id)}
+                    className="p-1 hover:bg-blue-100 rounded transition-colors"
+                    title="Edit metadata"
+                  >
+                    <Edit className="h-3 w-3 text-blue-600" />
+                  </button>
+                )}
+                {onDocumentDelete && (
+                  <button
+                    onClick={(e) => handleDocumentDeleteClick(e, doc.id, doc.name)}
+                    className="p-1 hover:bg-red-100 rounded transition-colors"
+                    title="Delete document"
+                  >
+                    <Trash2 className="h-3 w-3 text-red-600" />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteDocumentId} onOpenChange={(open) => !open && cancelDelete()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{deleteDocumentName}</strong>?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
