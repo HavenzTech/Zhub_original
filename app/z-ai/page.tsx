@@ -202,6 +202,10 @@ export default function ZAiPage() {
         const data = await response.json()
 
         console.log('[Z-AI] Backend response:', data)
+        console.log('[Z-AI] Source documents:', data.source_documents)
+        if (data.source_documents && data.source_documents.length > 0) {
+          console.log('[Z-AI] First document metadata:', data.source_documents[0].metadata)
+        }
         console.log('[Z-AI] Generated images:', data.generated_images)
         console.log('[Z-AI] Generated images length:', data.generated_images?.length)
 
@@ -210,11 +214,21 @@ export default function ZAiPage() {
           content: data.response || data.answer || "I apologize, but I couldn't process your request at the moment.",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: "analysis",
-          sourceDocuments: data.source_documents?.map((doc: any) => ({
-            title: doc.metadata?.title || "Unknown Document",
-            relevance_score: doc.metadata?.relevance_score || 0,
-            parent_folder: doc.metadata?.parent_folder || ""
-          })) || [],
+          sourceDocuments: data.source_documents?.map((doc: any) => {
+            console.log('[Z-AI] Processing doc:', doc)
+            console.log('[Z-AI] Doc metadata:', doc.metadata)
+
+            // Temporarily just use title as-is for debugging
+            let displayName = doc.metadata?.title || "Unknown Document"
+
+            console.log('[Z-AI] Display name:', displayName)
+
+            return {
+              title: displayName,
+              relevance_score: doc.metadata?.relevance_score || 0,
+              parent_folder: doc.metadata?.parent_folder || ""
+            }
+          }) || [],
           generatedImages: data.generated_images || []
         }
 
