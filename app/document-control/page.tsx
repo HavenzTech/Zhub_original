@@ -303,7 +303,9 @@ export default function DocumentControlPage() {
       const uploadResult = await uploadResponse.json()
 
       // Step 2: Save document metadata to database
+      // IMPORTANT: Use documentId from upload response to ensure filename UUID matches database ID
       const payload: any = {
+        documentId: uploadResult.documentId, // UUID from upload endpoint (matches filename)
         name: formData.name,
         fileType: uploadResult.fileType || selectedFile.type || 'unknown',
         fileSizeBytes: uploadResult.fileSizeBytes || selectedFile.size,
