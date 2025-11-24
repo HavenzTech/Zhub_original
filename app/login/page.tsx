@@ -1,38 +1,49 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { EyeIcon, EyeOffIcon, Shield, Lock, Zap, Globe } from "lucide-react"
-import { toast } from "sonner"
-import { authService } from "@/lib/services/auth"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { EyeIcon, EyeOffIcon, Shield, Lock, Zap, Globe } from "lucide-react";
+import { toast } from "sonner";
+import { authService } from "@/lib/services/auth";
 
 // Login form validation schema
 const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Invalid email address"),
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
   password: z
     .string()
     .min(1, "Password is required")
     .min(6, "Password must be at least 6 characters"),
-})
+});
 
-type LoginFormValues = z.infer<typeof loginSchema>
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -40,50 +51,54 @@ export default function LoginPage() {
       email: "",
       password: "",
     },
-  })
+  });
 
   const onSubmit = async (values: LoginFormValues) => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const response = await authService.login(values)
+      const response = await authService.login(values);
 
       // Store auth data
-      authService.storeAuth(response)
+      authService.storeAuth(response);
 
       // Show success message
       toast.success("Login successful!", {
         description: `Welcome back, ${response.name}!`,
-      })
+      });
 
       // Redirect to main dashboard
-      router.push("/")
+      router.push("/");
     } catch (error: unknown) {
       // Handle error
-      const apiError = error as { message: string; errors?: Record<string, string[]> }
+      const apiError = error as {
+        message: string;
+        errors?: Record<string, string[]>;
+      };
 
       if (apiError.errors) {
         // Show field-specific errors
         Object.entries(apiError.errors).forEach(([field, messages]) => {
           form.setError(field as keyof LoginFormValues, {
             message: messages.join(", "),
-          })
-        })
+          });
+        });
       }
 
       toast.error("Login failed", {
-        description: apiError.message || "Invalid email or password. Please try again.",
-      })
+        description:
+          apiError.message || "Invalid email or password. Please try again.",
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleLogin = () => {
     toast.info("Google OAuth", {
       description: "Google login is not yet configured.",
-    })
-  }
+    });
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -98,10 +113,14 @@ export default function LoginPage() {
         </div>
 
         {/* Subtle pattern overlay */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(0, 196, 154, 0.15) 1px, transparent 0)',
-          backgroundSize: '20px 20px'
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgba(0, 196, 154, 0.15) 1px, transparent 0)",
+            backgroundSize: "20px 20px",
+          }}
+        ></div>
       </div>
 
       {/* Content */}
@@ -117,7 +136,9 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <CardTitle className="text-3xl font-bold text-foreground mb-2">Welcome back</CardTitle>
+              <CardTitle className="text-3xl font-bold text-foreground mb-2">
+                Welcome back
+              </CardTitle>
               <CardDescription className="text-muted-foreground text-base">
                 Sign in to your Havenz Hub account
               </CardDescription>
@@ -140,13 +161,18 @@ export default function LoginPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
+                >
                   <FormField
                     control={form.control}
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground font-medium">Email</FormLabel>
+                        <FormLabel className="text-foreground font-medium">
+                          Email
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -164,7 +190,9 @@ export default function LoginPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground font-medium">Password</FormLabel>
+                        <FormLabel className="text-foreground font-medium">
+                          Password
+                        </FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input
@@ -227,7 +255,9 @@ export default function LoginPage() {
                   <Separator className="w-full" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-4 py-1 text-muted-foreground rounded-full border border-border/20">Or continue with</span>
+                  <span className="bg-card px-4 py-1 text-muted-foreground rounded-full border border-border/20">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
@@ -259,7 +289,7 @@ export default function LoginPage() {
             </CardContent>
             <CardFooter className="text-center border-t border-border/10 pt-6">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{" "}
+                Do not have an account?{" "}
                 <Link
                   href="/signup"
                   className="text-primary hover:text-accent font-medium transition-colors"
@@ -272,5 +302,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const { filename } = params
+    const { filename } = await params
 
     // Validate filename (allow PNG, JPG, JPEG files with safe characters)
     if (!filename || !/^[\w\-]+\.(png|jpg|jpeg)$/i.test(filename)) {

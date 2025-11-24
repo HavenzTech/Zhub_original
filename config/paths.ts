@@ -1,7 +1,7 @@
 import path from 'path'
 
-// Global repository configuration
-const REPO_BASE = 'C:\\repositories\\Zhub'
+// Global repository configuration - now uses environment variable
+const REPO_BASE = process.env.REPO_BASE_PATH || path.join(process.cwd(), 'storage')
 
 // Derived paths
 export const PATHS = {

@@ -1,8 +1,17 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Plus, Edit, Trash2 } from 'lucide-react';
-import type { Folder as FolderType, Document } from '@/types/bms';
+import React, { useState } from "react";
+import {
+  ChevronRight,
+  ChevronDown,
+  Folder,
+  FolderOpen,
+  FileText,
+  Plus,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import type { Folder as FolderType, Document } from "@/types/bms";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,7 +21,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 interface FolderTreeViewProps {
   folders: FolderType[];
@@ -52,14 +61,15 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   onDocumentEdit,
   onDocumentDelete,
   showDocuments = false,
-  level
+  level,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [deleteDocumentId, setDeleteDocumentId] = useState<string | null>(null);
-  const [deleteDocumentName, setDeleteDocumentName] = useState<string>('');
+  const [deleteDocumentName, setDeleteDocumentName] = useState<string>("");
   const isSelected = selectedFolderId === folder.id;
   const hasChildren = folder.childFolders && folder.childFolders.length > 0;
-  const hasDocuments = showDocuments && folder.documents && folder.documents.length > 0;
+  const hasDocuments =
+    showDocuments && folder.documents && folder.documents.length > 0;
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -85,7 +95,11 @@ const FolderNode: React.FC<FolderNodeProps> = ({
     }
   };
 
-  const handleDocumentDeleteClick = (e: React.MouseEvent, docId: string, docName: string) => {
+  const handleDocumentDeleteClick = (
+    e: React.MouseEvent,
+    docId: string,
+    docName: string
+  ) => {
     e.preventDefault();
     e.stopPropagation();
     setDeleteDocumentId(docId);
@@ -97,12 +111,12 @@ const FolderNode: React.FC<FolderNodeProps> = ({
       onDocumentDelete(deleteDocumentId);
     }
     setDeleteDocumentId(null);
-    setDeleteDocumentName('');
+    setDeleteDocumentName("");
   };
 
   const cancelDelete = () => {
     setDeleteDocumentId(null);
-    setDeleteDocumentName('');
+    setDeleteDocumentName("");
   };
 
   return (
@@ -110,7 +124,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
       {/* Folder Row */}
       <div
         className={`group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors ${
-          isSelected ? 'bg-accent' : ''
+          isSelected ? "bg-accent" : ""
         }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={handleSelect}
@@ -139,7 +153,9 @@ const FolderNode: React.FC<FolderNodeProps> = ({
         )}
 
         {/* Folder Name */}
-        <span className="text-sm font-medium truncate flex-1">{folder.name}</span>
+        <span className="text-sm font-medium truncate flex-1">
+          {folder.name}
+        </span>
 
         {/* Document Count */}
         {showDocuments && folder.documents && folder.documents.length > 0 && (
@@ -190,8 +206,8 @@ const FolderNode: React.FC<FolderNodeProps> = ({
               key={doc.id}
               className={`group flex items-center gap-2 px-2 py-1 rounded-md hover:text-foreground transition-colors cursor-pointer ${
                 selectedDocumentId === doc.id
-                  ? 'bg-blue-100 text-blue-900 font-medium'
-                  : 'text-muted-foreground hover:bg-accent/50'
+                  ? "bg-blue-100 text-blue-900 font-medium"
+                  : "text-muted-foreground hover:bg-accent/50"
               }`}
               style={{ paddingLeft: `${(level + 1) * 16 + 28}px` }}
               onClick={() => onDocumentSelect?.(doc)}
@@ -216,7 +232,9 @@ const FolderNode: React.FC<FolderNodeProps> = ({
                 )}
                 {onDocumentDelete && (
                   <button
-                    onClick={(e) => handleDocumentDeleteClick(e, doc.id, doc.name)}
+                    onClick={(e) =>
+                      handleDocumentDeleteClick(e, doc.id, doc.name)
+                    }
                     className="p-1 hover:bg-red-100 rounded transition-colors"
                     title="Delete document"
                   >
@@ -230,13 +248,17 @@ const FolderNode: React.FC<FolderNodeProps> = ({
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteDocumentId} onOpenChange={(open) => !open && cancelDelete()}>
+      <AlertDialog
+        open={!!deleteDocumentId}
+        onOpenChange={(open) => !open && cancelDelete()}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Document</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete <strong>{deleteDocumentName}</strong>?
-              This action cannot be undone.
+              Are you sure you want to delete{" "}
+              <strong>{deleteDocumentName}</strong>? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -264,10 +286,10 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
   onFolderDelete,
   onDocumentEdit,
   onDocumentDelete,
-  showDocuments = false
+  showDocuments = false,
 }) => {
   // Root folders (no parent)
-  const rootFolders = folders.filter(f => !f.parentFolderId);
+  const rootFolders = folders.filter((f) => !f.parentFolderId);
 
   if (folders.length === 0) {
     return (
@@ -291,7 +313,7 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
       {/* Root Level (All Documents) */}
       <div
         className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors ${
-          selectedFolderId === null ? 'bg-accent' : ''
+          selectedFolderId === null ? "bg-accent" : ""
         }`}
         onClick={() => onFolderSelect(null)}
       >

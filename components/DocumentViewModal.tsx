@@ -1,21 +1,25 @@
-"use client"
+"use client";
 
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
-import DocumentPreview from "@/components/DocumentPreview"
-import DocumentChatPanel from "@/components/DocumentChatPanel"
-import type { Document } from "@/types/bms"
-import { X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import DocumentPreview from "@/components/DocumentPreview";
+import DocumentChatPanel from "@/components/DocumentChatPanel";
+import type { Document } from "@/types/bms";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface DocumentViewModalProps {
-  document: Document | null
-  open: boolean
-  onClose: () => void
+  document: Document | null;
+  open: boolean;
+  onClose: () => void;
 }
 
-export default function DocumentViewModal({ document, open, onClose }: DocumentViewModalProps) {
-  if (!document) return null
+export default function DocumentViewModal({
+  document,
+  open,
+  onClose,
+}: DocumentViewModalProps) {
+  if (!document) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -28,7 +32,9 @@ export default function DocumentViewModal({ document, open, onClose }: DocumentV
           <div className="flex-1 overflow-hidden border-r border-gray-200">
             <div className="h-full flex flex-col">
               <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-                <h2 className="text-lg font-semibold text-gray-900">{document.name}</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {document.name}
+                </h2>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -42,7 +48,10 @@ export default function DocumentViewModal({ document, open, onClose }: DocumentV
                 <DocumentPreview
                   document={document}
                   onDownload={(doc) => {
-                    window.open(`http://localhost:5087/api/havenzhub/document/${doc.id}/download`, '_blank')
+                    window.open(
+                      `http://localhost:5087/api/havenzhub/document/${doc.id}/download`,
+                      "_blank"
+                    );
                   }}
                 />
               </div>
@@ -56,5 +65,5 @@ export default function DocumentViewModal({ document, open, onClose }: DocumentV
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

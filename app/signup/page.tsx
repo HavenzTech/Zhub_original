@@ -1,51 +1,66 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Checkbox } from "@/components/ui/checkbox"
-import { EyeIcon, EyeOffIcon, Shield, Lock, Zap, Globe, UserPlus } from "lucide-react"
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  EyeIcon,
+  EyeOffIcon,
+  Shield,
+  Lock,
+  Zap,
+  Globe,
+  UserPlus,
+} from "lucide-react";
 
 export default function SignupPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    agreeToTerms: false
-  })
-  const [isLoading, setIsLoading] = useState(false)
+    agreeToTerms: false,
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match")
-      return
+      alert("Passwords do not match");
+      return;
     }
     if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions")
-      return
+      alert("Please agree to the terms and conditions");
+      return;
     }
-    setIsLoading(true)
+    setIsLoading(true);
     // Add your signup logic here
-    setTimeout(() => setIsLoading(false), 1000)
-  }
+    setTimeout(() => setIsLoading(false), 1000);
+  };
 
   const handleGoogleSignup = () => {
     // Add Google OAuth logic here
-    console.log("Google signup clicked")
-  }
+    console.log("Google signup clicked");
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -60,10 +75,14 @@ export default function SignupPage() {
         </div>
 
         {/* Subtle pattern overlay */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(0, 196, 154, 0.15) 1px, transparent 0)',
-          backgroundSize: '20px 20px'
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgba(0, 196, 154, 0.15) 1px, transparent 0)",
+            backgroundSize: "20px 20px",
+          }}
+        ></div>
       </div>
 
       {/* Content */}
@@ -79,7 +98,9 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <CardTitle className="text-3xl font-bold text-foreground mb-2">Create account</CardTitle>
+              <CardTitle className="text-3xl font-bold text-foreground mb-2">
+                Create account
+              </CardTitle>
               <CardDescription className="text-muted-foreground text-base">
                 Get started with your Havenz Hub account
               </CardDescription>
@@ -104,32 +125,51 @@ export default function SignupPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-foreground font-medium">First name</Label>
+                    <Label
+                      htmlFor="firstName"
+                      className="text-foreground font-medium"
+                    >
+                      First name
+                    </Label>
                     <Input
                       id="firstName"
                       type="text"
                       placeholder="John"
                       value={formData.firstName}
-                      onChange={(e) => handleInputChange("firstName", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("firstName", e.target.value)
+                      }
                       required
                       className="h-12 bg-background/50 border-border focus:border-primary transition-colors"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-foreground font-medium">Last name</Label>
+                    <Label
+                      htmlFor="lastName"
+                      className="text-foreground font-medium"
+                    >
+                      Last name
+                    </Label>
                     <Input
                       id="lastName"
                       type="text"
                       placeholder="Doe"
                       value={formData.lastName}
-                      onChange={(e) => handleInputChange("lastName", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("lastName", e.target.value)
+                      }
                       required
                       className="h-12 bg-background/50 border-border focus:border-primary transition-colors"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
+                  <Label
+                    htmlFor="email"
+                    className="text-foreground font-medium"
+                  >
+                    Email
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -141,14 +181,21 @@ export default function SignupPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
+                  <Label
+                    htmlFor="password"
+                    className="text-foreground font-medium"
+                  >
+                    Password
+                  </Label>
                   <div className="relative">
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Create a password"
                       value={formData.password}
-                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("password", e.target.value)
+                      }
                       required
                       className="h-12 pr-12 bg-background/50 border-border focus:border-primary transition-colors"
                     />
@@ -168,14 +215,21 @@ export default function SignupPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-foreground font-medium">Confirm password</Label>
+                  <Label
+                    htmlFor="confirmPassword"
+                    className="text-foreground font-medium"
+                  >
+                    Confirm password
+                  </Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm your password"
                       value={formData.confirmPassword}
-                      onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("confirmPassword", e.target.value)
+                      }
                       required
                       className="h-12 pr-12 bg-background/50 border-border focus:border-primary transition-colors"
                     />
@@ -184,7 +238,9 @@ export default function SignupPage() {
                       variant="ghost"
                       size="icon"
                       className="absolute right-0 top-0 h-12 w-12 hover:bg-transparent"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                     >
                       {showConfirmPassword ? (
                         <EyeOffIcon className="h-4 w-4 text-muted-foreground" />
@@ -198,16 +254,27 @@ export default function SignupPage() {
                   <Checkbox
                     id="terms"
                     checked={formData.agreeToTerms}
-                    onCheckedChange={(checked) => handleInputChange("agreeToTerms", !!checked)}
+                    onCheckedChange={(checked) =>
+                      handleInputChange("agreeToTerms", !!checked)
+                    }
                     className="mt-0.5"
                   />
-                  <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
+                  <Label
+                    htmlFor="terms"
+                    className="text-sm text-muted-foreground leading-relaxed"
+                  >
                     I agree to the{" "}
-                    <Link href="/terms" className="text-primary hover:text-accent font-medium transition-colors">
+                    <Link
+                      href="/terms"
+                      className="text-primary hover:text-accent font-medium transition-colors"
+                    >
                       Terms of Service
                     </Link>{" "}
                     and{" "}
-                    <Link href="/privacy" className="text-primary hover:text-accent font-medium transition-colors">
+                    <Link
+                      href="/privacy"
+                      className="text-primary hover:text-accent font-medium transition-colors"
+                    >
                       Privacy Policy
                     </Link>
                   </Label>
@@ -236,7 +303,9 @@ export default function SignupPage() {
                   <Separator className="w-full" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-4 py-1 text-muted-foreground rounded-full border border-border/20">Or continue with</span>
+                  <span className="bg-card px-4 py-1 text-muted-foreground rounded-full border border-border/20">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
@@ -281,5 +350,5 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef } from 'react';
-import { Edit, Trash2, X } from 'lucide-react';
+import React, { useEffect, useRef } from "react";
+import { Edit, Trash2, X } from "lucide-react";
 
 interface ContextMenuProps {
   x: number;
@@ -29,17 +29,17 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, items }) => {
     };
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         onClose();
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [onClose]);
 
@@ -60,7 +60,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, items }) => {
           }}
           disabled={item.disabled}
           className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-            item.danger ? 'text-red-600 hover:text-red-700 hover:bg-red-50' : ''
+            item.danger ? "text-red-600 hover:text-red-700 hover:bg-red-50" : ""
           }`}
         >
           {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
