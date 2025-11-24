@@ -7,10 +7,10 @@ const BMS_API_BASE = process.env.NEXT_PUBLIC_BMS_API_BASE_URL || 'http://localho
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
     // Get auth token and company ID from headers
     const authHeader = request.headers.get('authorization')

@@ -3,6 +3,27 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
+import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
+import { useProjects } from "@/lib/hooks/useProjects";
+import { ProjectCard } from "@/features/projects/components/ProjectCard";
+
+// Dynamic import for modal - only loaded when needed
+const ProjectFormModal = dynamic(
+  () =>
+    import("@/features/projects/components/ProjectFormModal").then((mod) => ({
+      default: mod.ProjectFormModal,
+    })),
+  { ssr: false }
+);
+import {
+  formatCurrency,
+  formatDate,
+  getStatusColor,
+  getPriorityColor,
+} from "@/features/projects/utils/projectHelpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,9 +70,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  // Use custom hook for project management
+  const { projects, loading, error, loadProjects, setProjects } = useProjects();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -85,24 +106,9 @@ export default function ProjectsPage() {
     if (companyId) bmsApi.setCompanyId(companyId);
 
     loadProjects();
-  }, [router]);
+  }, [router, loadProjects]);
 
-  const loadProjects = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await bmsApi.projects.getAll();
-      setProjects(data as Project[]);
-    } catch (err) {
-      const errorMessage =
-        err instanceof BmsApiError ? err.message : "Failed to load projects";
-      setError(errorMessage);
-      toast.error(errorMessage);
-      console.error("Error loading projects:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // loadProjects is now provided by useProjects hook
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -258,130 +264,8 @@ export default function ProjectsPage() {
       project.teamLead?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const formatCurrency = (value?: number) => {
-    if (!value) return "N/A";
-    return new Intl.NumberFormat("en-CA", {
-      style: "currency",
-      currency: "CAD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-CA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "planning":
-        return "bg-blue-100 text-blue-800";
-      case "on-hold":
-        return "bg-yellow-100 text-yellow-800";
-      case "completed":
-        return "bg-gray-100 text-gray-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "critical":
-        return "bg-red-100 text-red-800";
-      case "high":
-        return "bg-orange-100 text-orange-800";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "low":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const ProjectCard = ({ project }: { project: Project }) => (
-    <Card
-      className="cursor-pointer hover:shadow-lg transition-shadow"
-      onClick={() => setSelectedProject(project)}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FolderOpen className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">{project.name}</CardTitle>
-              {project.teamLead && (
-                <p className="text-sm text-gray-600">
-                  Led by {project.teamLead}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Badge className={getStatusColor(project.status)}>
-              {project.status}
-            </Badge>
-            <Badge className={getPriorityColor(project.priority)}>
-              {project.priority}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {project.description && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-            {project.description}
-          </p>
-        )}
-
-        <div className="mb-4">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-600">Progress</span>
-            <span className="font-medium">{project.progress}%</span>
-          </div>
-          <Progress value={project.progress} className="h-2" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="text-center">
-            <div className="text-xl font-bold text-gray-900">
-              {formatCurrency(project.budgetAllocated)}
-            </div>
-            <div className="text-xs text-gray-600">Budget</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xl font-bold text-gray-900">
-              {formatCurrency(project.budgetSpent)}
-            </div>
-            <div className="text-xs text-gray-600">Spent</div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Start Date:</span>
-            <span className="font-medium">{formatDate(project.startDate)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">End Date:</span>
-            <span className="font-medium">{formatDate(project.endDate)}</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  // Helper functions moved to features/projects/utils/projectHelpers.tsx
+  // ProjectCard component moved to features/projects/components/ProjectCard.tsx
 
   const ProjectDetails = ({ project }: { project: Project }) => {
     const budgetRemaining =
@@ -588,613 +472,194 @@ export default function ProjectsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Loading projects...
-          </h3>
-          <p className="text-gray-600">Please wait while we fetch your data</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinnerCentered text="Loading projects..." />;
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <FolderOpen className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Error loading projects
-          </h3>
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={loadProjects}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
+      <ErrorDisplayCentered
+        title="Error loading projects"
+        message={error.message}
+        onRetry={loadProjects}
+      />
     );
   }
 
   return (
-    <div className="space-y-6">
-      {!selectedProject ? (
-        <>
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-              <p className="text-gray-600">
-                Manage and track all organizational projects
-              </p>
+    <AppLayout>
+      <div className="space-y-6">
+        {!selectedProject ? (
+          <>
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
+                <p className="text-gray-600">
+                  Manage and track all organizational projects
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={loadProjects}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
+                {authService.hasPermission("create", "project") && (
+                  <Button onClick={() => setShowAddForm(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Project
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={loadProjects}>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
-              </Button>
-              {authService.hasPermission("create", "project") && (
+
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <FolderOpen className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {projects.length}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Total Projects
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {projects.filter((p) => p.status === "active").length}
+                      </div>
+                      <div className="text-sm text-gray-600">Active</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold text-gray-900">
+                        {formatCurrency(
+                          projects.reduce(
+                            (sum, p) => sum + (p.budgetAllocated || 0),
+                            0
+                          )
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-600">Total Budget</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <Target className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {Math.round(
+                          projects.reduce((sum, p) => sum + p.progress, 0) /
+                            projects.length
+                        ) || 0}
+                        %
+                      </div>
+                      <div className="text-sm text-gray-600">Avg Progress</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Search */}
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                <Input
+                  placeholder="Search projects..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Badge variant="secondary">
+                {filteredProjects.length}{" "}
+                {filteredProjects.length === 1 ? "project" : "projects"}
+              </Badge>
+            </div>
+
+            {/* Projects Grid */}
+            {filteredProjects.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onViewDetails={setSelectedProject}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No projects found
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {searchTerm
+                    ? "Try adjusting your search criteria"
+                    : "Get started by adding your first project"}
+                </p>
                 <Button onClick={() => setShowAddForm(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Project
+                  Add First Project
                 </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <FolderOpen className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {projects.length}
-                    </div>
-                    <div className="text-sm text-gray-600">Total Projects</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {projects.filter((p) => p.status === "active").length}
-                    </div>
-                    <div className="text-sm text-gray-600">Active</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <div className="text-xl font-bold text-gray-900">
-                      {formatCurrency(
-                        projects.reduce(
-                          (sum, p) => sum + (p.budgetAllocated || 0),
-                          0
-                        )
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-600">Total Budget</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <Target className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {Math.round(
-                        projects.reduce((sum, p) => sum + p.progress, 0) /
-                          projects.length
-                      ) || 0}
-                      %
-                    </div>
-                    <div className="text-sm text-gray-600">Avg Progress</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Search */}
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-              <Input
-                placeholder="Search projects..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Badge variant="secondary">
-              {filteredProjects.length}{" "}
-              {filteredProjects.length === 1 ? "project" : "projects"}
-            </Badge>
-          </div>
-
-          {/* Projects Grid */}
-          {filteredProjects.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No projects found
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {searchTerm
-                  ? "Try adjusting your search criteria"
-                  : "Get started by adding your first project"}
-              </p>
-              <Button onClick={() => setShowAddForm(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add First Project
-              </Button>
-            </div>
-          )}
-        </>
-      ) : (
-        <ProjectDetails project={selectedProject} />
-      )}
-
-      {/* Add Project Modal */}
-      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add New Project</DialogTitle>
-            <DialogDescription>
-              Create a new project in the system. Fields marked with * are
-              required.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
-              {/* Project Name */}
-              <div className="grid gap-2">
-                <Label htmlFor="name">Project Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="Enter project name"
-                  required
-                />
               </div>
+            )}
+          </>
+        ) : (
+          <ProjectDetails project={selectedProject} />
+        )}
+        {/* Project Form Modals */}
+        <ProjectFormModal
+          open={showAddForm}
+          onOpenChange={setShowAddForm}
+          mode="add"
+          formData={formData}
+          setFormData={setFormData}
+          isSubmitting={isSubmitting}
+          onSubmit={handleSubmit}
+        />
 
-              {/* Description */}
-              <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder="Project description"
-                  rows={3}
-                />
-              </div>
-
-              {/* Status and Priority */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        status: value as ProjectStatus,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planning">Planning</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="on-hold">On Hold</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="priority">Priority</Label>
-                  <Select
-                    value={formData.priority}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        priority: value as ProjectPriority,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Progress */}
-              <div className="grid gap-2">
-                <Label htmlFor="progress">Progress (%)</Label>
-                <Input
-                  id="progress"
-                  type="number"
-                  value={formData.progress}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      progress: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  placeholder="0"
-                  min="0"
-                  max="100"
-                />
-              </div>
-
-              {/* Start and End Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startDate: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endDate: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Budget Fields */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="budgetAllocated">
-                    Budget Allocated (CAD)
-                  </Label>
-                  <Input
-                    id="budgetAllocated"
-                    type="number"
-                    value={formData.budgetAllocated}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        budgetAllocated: e.target.value,
-                      })
-                    }
-                    placeholder="0"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="budgetSpent">Budget Spent (CAD)</Label>
-                  <Input
-                    id="budgetSpent"
-                    type="number"
-                    value={formData.budgetSpent}
-                    onChange={(e) =>
-                      setFormData({ ...formData, budgetSpent: e.target.value })
-                    }
-                    placeholder="0"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-
-              {/* Team Lead */}
-              <div className="grid gap-2">
-                <Label htmlFor="teamLead">Team Lead</Label>
-                <Input
-                  id="teamLead"
-                  value={formData.teamLead}
-                  onChange={(e) =>
-                    setFormData({ ...formData, teamLead: e.target.value })
-                  }
-                  placeholder="Team lead name"
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowAddForm(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Project
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Project Modal */}
-      <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-            <DialogDescription>
-              Update project information. Fields marked with * are required.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleEditSubmit}>
-            <div className="grid gap-4 py-4">
-              {/* Project Name */}
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">Project Name *</Label>
-                <Input
-                  id="edit-name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="Enter project name"
-                  required
-                />
-              </div>
-
-              {/* Description */}
-              <div className="grid gap-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder="Project description"
-                  rows={3}
-                />
-              </div>
-
-              {/* Status and Priority */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-status">Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        status: value as ProjectStatus,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planning">Planning</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="on-hold">On Hold</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-priority">Priority</Label>
-                  <Select
-                    value={formData.priority}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        priority: value as ProjectPriority,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Progress */}
-              <div className="grid gap-2">
-                <Label htmlFor="edit-progress">Progress (%)</Label>
-                <Input
-                  id="edit-progress"
-                  type="number"
-                  value={formData.progress}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      progress: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  placeholder="0"
-                  min="0"
-                  max="100"
-                />
-              </div>
-
-              {/* Start and End Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-startDate">Start Date</Label>
-                  <Input
-                    id="edit-startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startDate: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-endDate">End Date</Label>
-                  <Input
-                    id="edit-endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endDate: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Budget Fields */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-budgetAllocated">
-                    Budget Allocated (CAD)
-                  </Label>
-                  <Input
-                    id="edit-budgetAllocated"
-                    type="number"
-                    value={formData.budgetAllocated}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        budgetAllocated: e.target.value,
-                      })
-                    }
-                    placeholder="0"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-budgetSpent">Budget Spent (CAD)</Label>
-                  <Input
-                    id="edit-budgetSpent"
-                    type="number"
-                    value={formData.budgetSpent}
-                    onChange={(e) =>
-                      setFormData({ ...formData, budgetSpent: e.target.value })
-                    }
-                    placeholder="0"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-
-              {/* Team Lead */}
-              <div className="grid gap-2">
-                <Label htmlFor="edit-teamLead">Team Lead</Label>
-                <Input
-                  id="edit-teamLead"
-                  value={formData.teamLead}
-                  onChange={(e) =>
-                    setFormData({ ...formData, teamLead: e.target.value })
-                  }
-                  placeholder="Team lead name"
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowEditForm(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Update Project
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+        <ProjectFormModal
+          open={showEditForm}
+          onOpenChange={setShowEditForm}
+          mode="edit"
+          formData={formData}
+          setFormData={setFormData}
+          isSubmitting={isSubmitting}
+          onSubmit={handleEditSubmit}
+        />
+      </div>
+    </AppLayout>
   );
 }

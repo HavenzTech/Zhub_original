@@ -1,17 +1,17 @@
 // app/workflows/page.tsx
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { 
-  Workflow, 
-  Plus, 
-  Search, 
-  Eye, 
-  Edit, 
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Workflow,
+  Plus,
+  Search,
+  Eye,
+  Edit,
   MoreHorizontal,
   Play,
   Pause,
@@ -43,56 +43,73 @@ import {
   Trash2,
   BarChart3,
   ChevronDown,
-  ExternalLink
-} from 'lucide-react'
+  ExternalLink,
+} from "lucide-react";
+import { WorkflowCard } from "@/features/workflows/components/WorkflowCard";
+import { WorkflowDetails } from "@/features/workflows/components/WorkflowDetails";
 
 interface WorkflowIntegration {
-  id: string
-  name: string
-  description: string
-  type: "automation" | "integration" | "notification" | "data-sync"
-  status: "active" | "inactive" | "error" | "pending"
+  id: string;
+  name: string;
+  description: string;
+  type: "automation" | "integration" | "notification" | "data-sync";
+  status: "active" | "inactive" | "error" | "pending";
   trigger: {
-    type: string
-    description: string
-  }
+    type: string;
+    description: string;
+  };
   actions: {
-    type: string
-    description: string
-    target: string
-  }[]
-  integrations: string[]
-  lastRun: string
-  totalRuns: number
-  successRate: number
-  companies: string[]
-  departments: string[]
-  createdBy: string
-  createdDate: string
-  schedule?: string
-  averageRunTime: string
+    type: string;
+    description: string;
+    target: string;
+  }[];
+  integrations: string[];
+  lastRun: string;
+  totalRuns: number;
+  successRate: number;
+  companies: string[];
+  departments: string[];
+  createdBy: string;
+  createdDate: string;
+  schedule?: string;
+  averageRunTime: string;
 }
 
 export default function WorkflowsPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedFilter, setSelectedFilter] = useState("all")
-  const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowIntegration | null>(null)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [selectedWorkflow, setSelectedWorkflow] =
+    useState<WorkflowIntegration | null>(null);
 
   const workflows: WorkflowIntegration[] = [
     {
       id: "WF-001",
       name: "Contract Upload Notification",
-      description: "Automatically notify Legal Department and create tasks when new contracts are uploaded",
+      description:
+        "Automatically notify Legal Department and create tasks when new contracts are uploaded",
       type: "automation",
       status: "active",
       trigger: {
         type: "Document Upload",
-        description: "When a document with 'contract' tag is uploaded to Legal folder"
+        description:
+          "When a document with 'contract' tag is uploaded to Legal folder",
       },
       actions: [
-        { type: "Send Email", description: "Notify Legal Department", target: "legal@havenz.com" },
-        { type: "Create Task", description: "Review new contract", target: "Legal Department" },
-        { type: "Update Dashboard", description: "Add to pending contracts list", target: "Legal Dashboard" }
+        {
+          type: "Send Email",
+          description: "Notify Legal Department",
+          target: "legal@havenz.com",
+        },
+        {
+          type: "Create Task",
+          description: "Review new contract",
+          target: "Legal Department",
+        },
+        {
+          type: "Update Dashboard",
+          description: "Add to pending contracts list",
+          target: "Legal Dashboard",
+        },
       ],
       integrations: ["Document Control", "Email System", "Task Management"],
       lastRun: "2 hours ago",
@@ -103,22 +120,35 @@ export default function WorkflowsPage() {
       createdBy: "Jennifer Lee",
       createdDate: "2024-11-15",
       schedule: "Event-triggered",
-      averageRunTime: "1.2s"
+      averageRunTime: "1.2s",
     },
     {
       id: "WF-002",
       name: "QuickBooks Financial Sync",
-      description: "Synchronize financial data from QuickBooks to company dashboards and generate reports",
+      description:
+        "Synchronize financial data from QuickBooks to company dashboards and generate reports",
       type: "data-sync",
       status: "active",
       trigger: {
         type: "Scheduled",
-        description: "Every day at 6:00 AM"
+        description: "Every day at 6:00 AM",
       },
       actions: [
-        { type: "Data Sync", description: "Import financial data", target: "QuickBooks API" },
-        { type: "Update KPIs", description: "Refresh company metrics", target: "Company Dashboards" },
-        { type: "Generate Report", description: "Create daily financial summary", target: "Finance Department" }
+        {
+          type: "Data Sync",
+          description: "Import financial data",
+          target: "QuickBooks API",
+        },
+        {
+          type: "Update KPIs",
+          description: "Refresh company metrics",
+          target: "Company Dashboards",
+        },
+        {
+          type: "Generate Report",
+          description: "Create daily financial summary",
+          target: "Finance Department",
+        },
       ],
       integrations: ["QuickBooks", "Company Dashboards", "Finance Module"],
       lastRun: "6 hours ago",
@@ -129,22 +159,35 @@ export default function WorkflowsPage() {
       createdBy: "Robert Martinez",
       createdDate: "2024-12-01",
       schedule: "Daily at 6:00 AM",
-      averageRunTime: "45s"
+      averageRunTime: "45s",
     },
     {
       id: "WF-003",
       name: "Project Deadline Alerts",
-      description: "Send alerts and escalate when project milestones are approaching or overdue",
+      description:
+        "Send alerts and escalate when project milestones are approaching or overdue",
       type: "notification",
       status: "active",
       trigger: {
         type: "Time-based",
-        description: "Check milestones every 4 hours"
+        description: "Check milestones every 4 hours",
       },
       actions: [
-        { type: "Send Alert", description: "Notify project lead", target: "Project Managers" },
-        { type: "Create Escalation", description: "Alert department head if overdue", target: "Department Heads" },
-        { type: "Update Status", description: "Mark milestone as at-risk", target: "Project Dashboard" }
+        {
+          type: "Send Alert",
+          description: "Notify project lead",
+          target: "Project Managers",
+        },
+        {
+          type: "Create Escalation",
+          description: "Alert department head if overdue",
+          target: "Department Heads",
+        },
+        {
+          type: "Update Status",
+          description: "Mark milestone as at-risk",
+          target: "Project Dashboard",
+        },
       ],
       integrations: ["Project Management", "Email System", "SMS Gateway"],
       lastRun: "30 minutes ago",
@@ -155,24 +198,41 @@ export default function WorkflowsPage() {
       createdBy: "Sarah Johnson",
       createdDate: "2024-10-20",
       schedule: "Every 4 hours",
-      averageRunTime: "3.4s"
+      averageRunTime: "3.4s",
     },
     {
       id: "WF-004",
       name: "Security Audit Automation",
-      description: "Automated security audits and compliance reporting for document access and system usage",
+      description:
+        "Automated security audits and compliance reporting for document access and system usage",
       type: "automation",
       status: "active",
       trigger: {
         type: "Scheduled",
-        description: "Weekly on Sundays at 2:00 AM"
+        description: "Weekly on Sundays at 2:00 AM",
       },
       actions: [
-        { type: "Scan Systems", description: "Audit document access logs", target: "Encrypted Security" },
-        { type: "Generate Report", description: "Create compliance report", target: "Security Team" },
-        { type: "Flag Issues", description: "Identify security risks", target: "Management Dashboard" }
+        {
+          type: "Scan Systems",
+          description: "Audit document access logs",
+          target: "Encrypted Security",
+        },
+        {
+          type: "Generate Report",
+          description: "Create compliance report",
+          target: "Security Team",
+        },
+        {
+          type: "Flag Issues",
+          description: "Identify security risks",
+          target: "Management Dashboard",
+        },
       ],
-      integrations: ["Encrypted Security", "Document Control", "Compliance Module"],
+      integrations: [
+        "Encrypted Security",
+        "Document Control",
+        "Compliance Module",
+      ],
       lastRun: "2 days ago",
       totalRuns: 12,
       successRate: 100,
@@ -181,22 +241,35 @@ export default function WorkflowsPage() {
       createdBy: "Security Team",
       createdDate: "2025-01-05",
       schedule: "Weekly (Sunday 2:00 AM)",
-      averageRunTime: "2m 15s"
+      averageRunTime: "2m 15s",
     },
     {
       id: "WF-005",
       name: "Customer Service Integration",
-      description: "Route customer inquiries to appropriate departments and track resolution",
+      description:
+        "Route customer inquiries to appropriate departments and track resolution",
       type: "integration",
       status: "error",
       trigger: {
         type: "API Call",
-        description: "When new support ticket is created"
+        description: "When new support ticket is created",
       },
       actions: [
-        { type: "Route Ticket", description: "Assign to appropriate team", target: "Support Teams" },
-        { type: "Send Confirmation", description: "Notify customer", target: "Customer Email" },
-        { type: "Track Progress", description: "Monitor resolution time", target: "Service Dashboard" }
+        {
+          type: "Route Ticket",
+          description: "Assign to appropriate team",
+          target: "Support Teams",
+        },
+        {
+          type: "Send Confirmation",
+          description: "Notify customer",
+          target: "Customer Email",
+        },
+        {
+          type: "Track Progress",
+          description: "Monitor resolution time",
+          target: "Service Dashboard",
+        },
       ],
       integrations: ["HubSpot CRM", "Email System", "Customer Service"],
       lastRun: "1 day ago",
@@ -207,22 +280,35 @@ export default function WorkflowsPage() {
       createdBy: "Alex Chen",
       createdDate: "2024-12-10",
       schedule: "Event-triggered",
-      averageRunTime: "2.8s"
+      averageRunTime: "2.8s",
     },
     {
       id: "WF-006",
       name: "Budget Threshold Monitoring",
-      description: "Monitor company budgets and send alerts when thresholds are exceeded",
+      description:
+        "Monitor company budgets and send alerts when thresholds are exceeded",
       type: "notification",
       status: "active",
       trigger: {
         type: "Data Change",
-        description: "When budget utilization exceeds 80%"
+        description: "When budget utilization exceeds 80%",
       },
       actions: [
-        { type: "Send Alert", description: "Notify finance team", target: "Finance Department" },
-        { type: "Create Report", description: "Generate budget analysis", target: "Management" },
-        { type: "Log Event", description: "Record threshold breach", target: "Audit System" }
+        {
+          type: "Send Alert",
+          description: "Notify finance team",
+          target: "Finance Department",
+        },
+        {
+          type: "Create Report",
+          description: "Generate budget analysis",
+          target: "Management",
+        },
+        {
+          type: "Log Event",
+          description: "Record threshold breach",
+          target: "Audit System",
+        },
       ],
       integrations: ["QuickBooks", "Email System", "Finance Dashboard"],
       lastRun: "5 hours ago",
@@ -233,425 +319,98 @@ export default function WorkflowsPage() {
       createdBy: "Robert Martinez",
       createdDate: "2024-12-20",
       schedule: "Real-time monitoring",
-      averageRunTime: "0.8s"
-    }
-  ]
+      averageRunTime: "0.8s",
+    },
+  ];
 
   const availableIntegrations = [
-    { name: "QuickBooks", icon: Database, status: "connected", type: "Finance", description: "Financial data synchronization" },
-    { name: "HubSpot CRM", icon: Users, status: "connected", type: "Customer Management", description: "Customer relationship management" },
-    { name: "Encrypted Security", icon: Settings, status: "connected", type: "Security", description: "Hardware security platform" },
-    { name: "Email System", icon: Mail, status: "connected", type: "Communication", description: "SMTP email services" },
-    { name: "SMS Gateway", icon: Phone, status: "connected", type: "Communication", description: "SMS messaging service" },
-    { name: "Telus IoT", icon: Cloud, status: "available", type: "IoT & Sensors", description: "IoT device monitoring" },
-    { name: "Avigilon Security", icon: Eye, status: "available", type: "Video Security", description: "Video surveillance system" },
-    { name: "Basecamp", icon: GitBranch, status: "available", type: "Project Management", description: "Project collaboration platform" },
-    { name: "Trello", icon: CheckCircle, status: "available", type: "Task Management", description: "Visual task boards" },
-    { name: "Jira", icon: Code, status: "available", type: "Development", description: "Issue and project tracking" }
-  ]
+    {
+      name: "QuickBooks",
+      icon: Database,
+      status: "connected",
+      type: "Finance",
+      description: "Financial data synchronization",
+    },
+    {
+      name: "HubSpot CRM",
+      icon: Users,
+      status: "connected",
+      type: "Customer Management",
+      description: "Customer relationship management",
+    },
+    {
+      name: "Encrypted Security",
+      icon: Settings,
+      status: "connected",
+      type: "Security",
+      description: "Hardware security platform",
+    },
+    {
+      name: "Email System",
+      icon: Mail,
+      status: "connected",
+      type: "Communication",
+      description: "SMTP email services",
+    },
+    {
+      name: "SMS Gateway",
+      icon: Phone,
+      status: "connected",
+      type: "Communication",
+      description: "SMS messaging service",
+    },
+    {
+      name: "Telus IoT",
+      icon: Cloud,
+      status: "available",
+      type: "IoT & Sensors",
+      description: "IoT device monitoring",
+    },
+    {
+      name: "Avigilon Security",
+      icon: Eye,
+      status: "available",
+      type: "Video Security",
+      description: "Video surveillance system",
+    },
+    {
+      name: "Basecamp",
+      icon: GitBranch,
+      status: "available",
+      type: "Project Management",
+      description: "Project collaboration platform",
+    },
+    {
+      name: "Trello",
+      icon: CheckCircle,
+      status: "available",
+      type: "Task Management",
+      description: "Visual task boards",
+    },
+    {
+      name: "Jira",
+      icon: Code,
+      status: "available",
+      type: "Development",
+      description: "Issue and project tracking",
+    },
+  ];
 
-  const filteredWorkflows = workflows.filter(workflow => {
-    const matchesSearch = workflow.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         workflow.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         workflow.integrations.some(integration => 
-                           integration.toLowerCase().includes(searchTerm.toLowerCase())
-                         )
-    
-    const matchesFilter = selectedFilter === "all" || 
-                         workflow.status === selectedFilter ||
-                         workflow.type === selectedFilter
-    
-    return matchesSearch && matchesFilter
-  })
+  const filteredWorkflows = workflows.filter((workflow) => {
+    const matchesSearch =
+      workflow.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      workflow.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      workflow.integrations.some((integration) =>
+        integration.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active": return "bg-green-100 text-green-800"
-      case "inactive": return "bg-gray-100 text-gray-800"
-      case "error": return "bg-red-100 text-red-800"
-      case "pending": return "bg-yellow-100 text-yellow-800"
-      default: return "bg-gray-100 text-gray-800"
-    }
-  }
+    const matchesFilter =
+      selectedFilter === "all" ||
+      workflow.status === selectedFilter ||
+      workflow.type === selectedFilter;
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "automation": return "bg-blue-100 text-blue-800"
-      case "integration": return "bg-purple-100 text-purple-800"
-      case "notification": return "bg-orange-100 text-orange-800"
-      case "data-sync": return "bg-green-100 text-green-800"
-      default: return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "active": return <CheckCircle className="w-4 h-4 text-green-600" />
-      case "inactive": return <Pause className="w-4 h-4 text-gray-600" />
-      case "error": return <AlertTriangle className="w-4 h-4 text-red-600" />
-      case "pending": return <Clock className="w-4 h-4 text-yellow-600" />
-      default: return <Workflow className="w-4 h-4 text-gray-600" />
-    }
-  }
-
-  const WorkflowCard = ({ workflow }: { workflow: WorkflowIntegration }) => (
-    <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedWorkflow(workflow)}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Workflow className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">{workflow.name}</CardTitle>
-              <p className="text-sm text-gray-600">{workflow.trigger.type} trigger</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            {getStatusIcon(workflow.status)}
-            <Badge className={getStatusColor(workflow.status)}>
-              {workflow.status}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-gray-600 mb-4 line-clamp-2">{workflow.description}</p>
-        
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Badge className={getTypeColor(workflow.type)}>
-              {workflow.type}
-            </Badge>
-            <span className="text-sm text-gray-600">{workflow.totalRuns} runs</span>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600">Success Rate:</span>
-              <div className="font-medium text-green-600">{workflow.successRate}%</div>
-            </div>
-            <div>
-              <span className="text-gray-600">Last Run:</span>
-              <div className="font-medium">{workflow.lastRun}</div>
-            </div>
-          </div>
-          
-          <div>
-            <span className="text-xs text-gray-600">Integrations:</span>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {workflow.integrations.slice(0, 3).map((integration, index) => (
-                <Badge key={index} variant="outline" className="text-xs">
-                  {integration}
-                </Badge>
-              ))}
-              {workflow.integrations.length > 3 && (
-                <Badge variant="outline" className="text-xs">
-                  +{workflow.integrations.length - 3}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-
-  const WorkflowDetails = ({ workflow }: { workflow: WorkflowIntegration }) => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => setSelectedWorkflow(null)}>
-          ← Back to Workflows
-        </Button>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Edit className="w-4 h-4 mr-2" />
-            Edit Workflow
-          </Button>
-          <Button variant="outline">
-            <Activity className="w-4 h-4 mr-2" />
-            View Logs
-          </Button>
-          <Button variant="outline">
-            <Copy className="w-4 h-4 mr-2" />
-            Duplicate
-          </Button>
-          {workflow.status === "active" ? (
-            <Button variant="outline">
-              <Pause className="w-4 h-4 mr-2" />
-              Pause
-            </Button>
-          ) : (
-            <Button>
-              <Play className="w-4 h-4 mr-2" />
-              Activate
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Workflow Header */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-start gap-6 mb-6">
-            <div className="w-20 h-20 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Workflow className="w-10 h-10 text-blue-600" />
-            </div>
-            
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900">{workflow.name}</h1>
-                {getStatusIcon(workflow.status)}
-                <Badge className={getStatusColor(workflow.status)}>
-                  {workflow.status}
-                </Badge>
-                <Badge className={getTypeColor(workflow.type)}>
-                  {workflow.type}
-                </Badge>
-              </div>
-              
-              <p className="text-gray-600 mb-4">{workflow.description}</p>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Created By:</span>
-                  <div className="font-medium">{workflow.createdBy}</div>
-                </div>
-                <div>
-                  <span className="text-gray-600">Created:</span>
-                  <div className="font-medium">{new Date(workflow.createdDate).toLocaleDateString()}</div>
-                </div>
-                <div>
-                  <span className="text-gray-600">Schedule:</span>
-                  <div className="font-medium">{workflow.schedule}</div>
-                </div>
-                <div>
-                  <span className="text-gray-600">Avg Runtime:</span>
-                  <div className="font-medium">{workflow.averageRunTime}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{workflow.successRate}%</div>
-                <div className="text-sm text-gray-600">Success Rate</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <RefreshCw className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{workflow.totalRuns}</div>
-                <div className="text-sm text-gray-600">Total Runs</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Timer className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{workflow.averageRunTime}</div>
-                <div className="text-sm text-gray-600">Avg Runtime</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{workflow.lastRun}</div>
-                <div className="text-sm text-gray-600">Last Run</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Workflow Flow */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <GitBranch className="w-5 h-5" />
-            Workflow Flow
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Trigger */}
-            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Zap className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <div className="font-medium text-gray-900">Trigger: {workflow.trigger.type}</div>
-                <div className="text-sm text-gray-600">{workflow.trigger.description}</div>
-              </div>
-              <Badge variant="outline" className="text-xs">
-                TRIGGER
-              </Badge>
-            </div>
-            
-            {/* Actions */}
-            {workflow.actions.map((action, index) => (
-              <div key={index}>
-                <div className="flex items-center justify-center py-2">
-                  <ArrowRight className="w-5 h-5 text-gray-400" />
-                </div>
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border-l-4 border-gray-300">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-600">{index + 1}</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{action.type}</div>
-                    <div className="text-sm text-gray-600">{action.description}</div>
-                    <div className="text-xs text-blue-600 mt-1">Target: {action.target}</div>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    ACTION
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Configuration & Scope */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Integrations Used
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {workflow.integrations.map((integration, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Code className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <span className="font-medium text-gray-900 flex-1">{integration}</span>
-                  <Badge variant="outline" className="text-xs">
-                    Connected
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              Scope & Coverage
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <span className="text-sm font-medium text-gray-600">Companies:</span>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {workflow.companies.map((company, index) => (
-                  <Badge key={index} variant="secondary">
-                    {company}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <span className="text-sm font-medium text-gray-600">Departments:</span>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {workflow.departments.map((dept, index) => (
-                  <Badge key={index} variant="secondary">
-                    {dept}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            
-            <div className="pt-3 border-t border-gray-200">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-600">Total Runs:</span>
-                <span className="font-medium">{workflow.totalRuns}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Success Rate:</span>
-                <span className="font-medium text-green-600">{workflow.successRate}%</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5" />
-            Recent Execution History
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[
-              { time: "2 hours ago", status: "success", duration: "1.2s", trigger: "Contract uploaded by John Smith" },
-              { time: "6 hours ago", status: "success", duration: "0.9s", trigger: "Contract uploaded by Legal Team" },
-              { time: "1 day ago", status: "success", duration: "1.5s", trigger: "Contract uploaded by Sarah Johnson" },
-              { time: "2 days ago", status: "failed", duration: "0.3s", trigger: "Email service unavailable" },
-              { time: "3 days ago", status: "success", duration: "1.1s", trigger: "Contract uploaded by Mike Chen" }
-            ].map((run, index) => (
-              <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                <div className={`w-3 h-3 rounded-full ${
-                  run.status === "success" ? "bg-green-500" : "bg-red-500"
-                }`}></div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">{run.trigger}</div>
-                  <div className="text-xs text-gray-600">Completed in {run.duration}</div>
-                </div>
-                <div className="text-xs text-gray-500">{run.time}</div>
-                <Badge 
-                  variant={run.status === "success" ? "default" : "destructive"}
-                  className="text-xs"
-                >
-                  {run.status}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <div className="space-y-6">
@@ -660,8 +419,12 @@ export default function WorkflowsPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Workflows & Integrations</h1>
-              <p className="text-gray-600">Automate processes and connect systems across your organization</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Workflows & Integrations
+              </h1>
+              <p className="text-gray-600">
+                Automate processes and connect systems across your organization
+              </p>
             </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
@@ -681,7 +444,9 @@ export default function WorkflowsPage() {
                     <div className="text-2xl font-bold text-gray-900">
                       {workflows.reduce((sum, w) => sum + w.totalRuns, 0)}
                     </div>
-                    <div className="text-sm text-gray-600">Total Executions</div>
+                    <div className="text-sm text-gray-600">
+                      Total Executions
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -695,9 +460,15 @@ export default function WorkflowsPage() {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-gray-900">
-                      {availableIntegrations.filter(i => i.status === "connected").length}
+                      {
+                        availableIntegrations.filter(
+                          (i) => i.status === "connected"
+                        ).length
+                      }
                     </div>
-                    <div className="text-sm text-gray-600">Connected Integrations</div>
+                    <div className="text-sm text-gray-600">
+                      Connected Integrations
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -708,16 +479,23 @@ export default function WorkflowsPage() {
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-md">
               <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-              <Input 
-                placeholder="Search workflows..." 
+              <Input
+                placeholder="Search workflows..."
                 className="pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
+
             <div className="flex gap-2">
-              {["all", "active", "inactive", "error", "automation", "integration"].map((filter) => (
+              {[
+                "all",
+                "active",
+                "inactive",
+                "error",
+                "automation",
+                "integration",
+              ].map((filter) => (
                 <Button
                   key={filter}
                   variant={selectedFilter === filter ? "default" : "outline"}
@@ -734,18 +512,28 @@ export default function WorkflowsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Workflows List */}
             <div className="lg:col-span-2 space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Active Workflows</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Active Workflows
+              </h3>
               <div className="grid grid-cols-1 gap-4">
                 {filteredWorkflows.map((workflow) => (
-                  <WorkflowCard key={workflow.id} workflow={workflow} />
+                  <WorkflowCard
+                    key={workflow.id}
+                    workflow={workflow}
+                    onClick={setSelectedWorkflow}
+                  />
                 ))}
               </div>
 
               {filteredWorkflows.length === 0 && (
                 <div className="text-center py-12">
                   <Workflow className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No workflows found</h3>
-                  <p className="text-gray-600 mb-4">Try adjusting your search criteria or create a new workflow</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No workflows found
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Try adjusting your search criteria or create a new workflow
+                  </p>
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
                     Create First Workflow
@@ -756,32 +544,47 @@ export default function WorkflowsPage() {
 
             {/* Available Integrations Sidebar */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Integrations</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Available Integrations
+              </h3>
               <Card>
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     {availableIntegrations.map((integration, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
                         <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
                           <integration.icon className="w-4 h-4 text-gray-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 text-sm">{integration.name}</div>
-                          <div className="text-xs text-gray-600 truncate">{integration.description}</div>
+                          <div className="font-medium text-gray-900 text-sm">
+                            {integration.name}
+                          </div>
+                          <div className="text-xs text-gray-600 truncate">
+                            {integration.description}
+                          </div>
                         </div>
                         <div className="flex flex-col items-end">
-                          <Badge 
-                            variant={integration.status === "connected" ? "default" : "secondary"}
+                          <Badge
+                            variant={
+                              integration.status === "connected"
+                                ? "default"
+                                : "secondary"
+                            }
                             className="text-xs mb-1"
                           >
                             {integration.status}
                           </Badge>
-                          <span className="text-xs text-gray-500">{integration.type}</span>
+                          <span className="text-xs text-gray-500">
+                            {integration.type}
+                          </span>
                         </div>
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <Button variant="outline" className="w-full" size="sm">
                       <Plus className="w-4 h-4 mr-2" />
@@ -799,21 +602,46 @@ export default function WorkflowsPage() {
                 <CardContent>
                   <div className="space-y-3">
                     {[
-                      { name: "Document Approval", description: "Automate document review and approval process", type: "automation" },
-                      { name: "Employee Onboarding", description: "Streamline new employee setup", type: "automation" },
-                      { name: "Invoice Processing", description: "Automated invoice handling and payments", type: "data-sync" },
-                      { name: "Incident Response", description: "Security incident notification and escalation", type: "notification" }
+                      {
+                        name: "Document Approval",
+                        description:
+                          "Automate document review and approval process",
+                        type: "automation",
+                      },
+                      {
+                        name: "Employee Onboarding",
+                        description: "Streamline new employee setup",
+                        type: "automation",
+                      },
+                      {
+                        name: "Invoice Processing",
+                        description: "Automated invoice handling and payments",
+                        type: "data-sync",
+                      },
+                      {
+                        name: "Incident Response",
+                        description:
+                          "Security incident notification and escalation",
+                        type: "notification",
+                      },
                     ].map((template, index) => (
-                      <div key={index} className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                        <div className="font-medium text-gray-900 text-sm mb-1">{template.name}</div>
-                        <div className="text-xs text-gray-600 mb-2">{template.description}</div>
+                      <div
+                        key={index}
+                        className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <div className="font-medium text-gray-900 text-sm mb-1">
+                          {template.name}
+                        </div>
+                        <div className="text-xs text-gray-600 mb-2">
+                          {template.description}
+                        </div>
                         <Badge variant="outline" className="text-xs">
                           {template.type}
                         </Badge>
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="mt-4">
                     <Button variant="outline" className="w-full" size="sm">
                       <ExternalLink className="w-4 h-4 mr-2" />
@@ -831,15 +659,21 @@ export default function WorkflowsPage() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Overall Success Rate</span>
+                      <span className="text-sm text-gray-600">
+                        Overall Success Rate
+                      </span>
                       <span className="font-medium text-green-600">96.8%</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Avg Execution Time</span>
+                      <span className="text-sm text-gray-600">
+                        Avg Execution Time
+                      </span>
                       <span className="font-medium">2.1s</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Executions Today</span>
+                      <span className="text-sm text-gray-600">
+                        Executions Today
+                      </span>
                       <span className="font-medium">47</span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -847,7 +681,7 @@ export default function WorkflowsPage() {
                       <span className="font-medium text-red-600">3.2%</span>
                     </div>
                   </div>
-                  
+
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <Button variant="outline" className="w-full" size="sm">
                       <BarChart3 className="w-4 h-4 mr-2" />
@@ -860,8 +694,11 @@ export default function WorkflowsPage() {
           </div>
         </>
       ) : (
-        <WorkflowDetails workflow={selectedWorkflow} />
+        <WorkflowDetails
+          workflow={selectedWorkflow}
+          onBack={() => setSelectedWorkflow(null)}
+        />
       )}
     </div>
-  )
+  );
 }

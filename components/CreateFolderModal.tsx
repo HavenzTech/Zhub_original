@@ -1,12 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { X, Folder } from 'lucide-react';
+import React, { useState } from "react";
+import { X, Folder } from "lucide-react";
 
 interface CreateFolderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (name: string, description?: string, parentFolderId?: string) => Promise<void>;
+  onSubmit: (
+    name: string,
+    description?: string,
+    parentFolderId?: string
+  ) => Promise<void>;
   parentFolderId?: string;
   parentFolderName?: string;
 }
@@ -16,31 +20,35 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
   onClose,
   onSubmit,
   parentFolderId,
-  parentFolderName
+  parentFolderName,
 }) => {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!name.trim()) {
-      setError('Folder name is required');
+      setError("Folder name is required");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await onSubmit(name.trim(), description.trim() || undefined, parentFolderId);
+      await onSubmit(
+        name.trim(),
+        description.trim() || undefined,
+        parentFolderId
+      );
       // Reset form
-      setName('');
-      setDescription('');
+      setName("");
+      setDescription("");
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to create folder');
+      setError(err.message || "Failed to create folder");
     } finally {
       setIsSubmitting(false);
     }
@@ -48,9 +56,9 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setName('');
-      setDescription('');
-      setError('');
+      setName("");
+      setDescription("");
+      setError("");
       onClose();
     }
   };
@@ -65,7 +73,7 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
           <div className="flex items-center gap-2">
             <Folder className="h-5 w-5 text-blue-500" />
             <h2 className="text-lg font-semibold">
-              {parentFolderId ? 'Create Subfolder' : 'Create Folder'}
+              {parentFolderId ? "Create Subfolder" : "Create Folder"}
             </h2>
           </div>
           <button
@@ -82,13 +90,17 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
           {/* Parent Folder Info */}
           {parentFolderId && parentFolderName && (
             <div className="text-sm text-muted-foreground bg-muted p-2 rounded">
-              Creating subfolder in: <span className="font-medium">{parentFolderName}</span>
+              Creating subfolder in:{" "}
+              <span className="font-medium">{parentFolderName}</span>
             </div>
           )}
 
           {/* Folder Name */}
           <div>
-            <label htmlFor="folderName" className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="folderName"
+              className="block text-sm font-medium mb-1"
+            >
               Folder Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -106,7 +118,10 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
 
           {/* Description (Optional) */}
           <div>
-            <label htmlFor="folderDescription" className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="folderDescription"
+              className="block text-sm font-medium mb-1"
+            >
               Description (Optional)
             </label>
             <textarea
@@ -146,7 +161,7 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
               disabled={isSubmitting || !name.trim()}
               className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Creating...' : 'Create Folder'}
+              {isSubmitting ? "Creating..." : "Create Folder"}
             </button>
           </div>
         </form>

@@ -36,7 +36,7 @@ class AuthService {
   }
 
   /**
-   * Store auth data in localStorage
+   * Store auth data in localStorage and cookies
    */
   storeAuth(authData: LoginResponse): void {
     const authState: AuthState = {
@@ -50,7 +50,17 @@ class AuthService {
       expiresAt: authData.expiresAt,
     };
 
+    // Store in localStorage for client-side access
     localStorage.setItem("auth", JSON.stringify(authState));
+
+    // Also store token in cookie for server-side middleware access
+    if (typeof document !== "undefined") {
+      const expiresDate = authData.expiresAt
+        ? new Date(authData.expiresAt)
+        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days default
+
+      document.cookie = `auth-token=${authData.token}; path=/; expires=${expiresDate.toUTCString()}; SameSite=Lax`;
+    }
   }
 
   /**
@@ -110,6 +120,11 @@ class AuthService {
   clearAuth(): void {
     if (typeof window === "undefined") return;
     localStorage.removeItem("auth");
+
+    // Also clear the auth cookie
+    if (typeof document !== "undefined") {
+      document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+    }
   }
 
   /**

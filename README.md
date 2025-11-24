@@ -201,6 +201,8 @@ Comprehensive documentation is available for developers:
 | **Frontend API Reference** | Complete API endpoints and usage | `docs/FRONTEND_API_REFERENCE.md` |
 | **Backend Integration** | How to integrate with backend APIs | `docs/BACKEND_API_INTEGRATION_GUIDE.md` |
 | **Permission Matrix** | Role-based access control rules | `docs/PERMISSION_MATRIX.md` |
+| **Refactoring Plan** | Comprehensive codebase refactoring roadmap | `REFACTORING_PLAN.md` 🔧 |
+| **Refactoring Checklist** | Quick reference for daily refactoring | `REFACTORING_CHECKLIST.md` |
 
 ### Quick Links
 
@@ -208,6 +210,7 @@ Comprehensive documentation is available for developers:
 - 🔓 [**Dev Mode Guide**](docs/DEV_MODE.md) - Bypass authentication for quick development ⭐
 - 🔌 [**API Reference**](docs/FRONTEND_API_REFERENCE.md) - All API endpoints and request/response formats
 - 🔐 [**Permissions**](docs/PERMISSION_MATRIX.md) - Role-based access control matrix
+- 🔧 [**Refactoring Plan**](REFACTORING_PLAN.md) - Complete refactoring roadmap and progress tracker
 
 ## 🤖 AI-Assisted Development
 

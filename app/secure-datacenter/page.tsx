@@ -7,9 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
-import { AccessLog, IotMetric } from "@/types/bms";
-import { toast } from "sonner";
+import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
+import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
+import { useDatacenter } from "@/lib/hooks/useDatacenter";
+import { DatacenterStats } from "@/features/secure-datacenter/components/DatacenterStats";
+import {
+  formatDate,
+  getAccessTypeColor,
+  getVerificationIcon,
+  getAlertSeverityColor,
+  getMetricIcon,
+} from "@/features/secure-datacenter/utils/datacenterHelpers";
+import type { AccessLog, IotMetric } from "@/types/bms";
 import {
   Server,
   Shield,
@@ -24,7 +33,6 @@ import {
   Gauge,
   Database,
   Lock,
-  Loader2,
   RefreshCw,
   Fingerprint,
   UserCheck,
@@ -36,115 +44,13 @@ import {
 } from "lucide-react";
 
 export default function SecureDataCenterPage() {
-  const [accessLogs, setAccessLogs] = useState<AccessLog[]>([]);
-  const [iotMetrics, setIotMetrics] = useState<IotMetric[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { accessLogs, iotMetrics, loading, error, loadData } = useDatacenter();
   const [activeTab, setActiveTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [logsData, metricsData] = await Promise.all([
-        bmsApi.accessLogs.getAll(),
-        bmsApi.iotMetrics.getAll(),
-      ]);
-
-      setAccessLogs(logsData as AccessLog[]);
-      setIotMetrics(metricsData as IotMetric[]);
-    } catch (err) {
-      const errorMessage =
-        err instanceof BmsApiError
-          ? err.message
-          : "Failed to load datacenter data";
-      setError(errorMessage);
-      toast.error(errorMessage);
-      console.error("Error loading data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-CA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-
-  const getAccessTypeColor = (type: string) => {
-    switch (type) {
-      case "entry":
-        return "bg-green-100 text-green-800";
-      case "exit":
-        return "bg-blue-100 text-blue-800";
-      case "denied":
-        return "bg-red-100 text-red-800";
-      case "tailgate":
-        return "bg-orange-100 text-orange-800";
-      case "forced":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getVerificationIcon = (method: string) => {
-    switch (method) {
-      case "facial-recognition":
-        return <Fingerprint className="w-4 h-4" />;
-      case "RfidCard":
-        return <Shield className="w-4 h-4" />;
-      case "PinCode":
-        return <Lock className="w-4 h-4" />;
-      case "QrCode":
-        return <Activity className="w-4 h-4" />;
-      default:
-        return <UserCheck className="w-4 h-4" />;
-    }
-  };
-
-  const getAlertSeverityColor = (severity?: string) => {
-    if (!severity) return "bg-gray-100 text-gray-800";
-    switch (severity) {
-      case "critical":
-        return "bg-red-100 text-red-800";
-      case "warning":
-        return "bg-yellow-100 text-yellow-800";
-      case "info":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getMetricIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case "temperature":
-        return <Thermometer className="w-5 h-5" />;
-      case "humidity":
-        return <Droplets className="w-5 h-5" />;
-      case "power":
-        return <Zap className="w-5 h-5" />;
-      case "airflow":
-        return <Wind className="w-5 h-5" />;
-      case "network":
-        return <Wifi className="w-5 h-5" />;
-      default:
-        return <Gauge className="w-5 h-5" />;
-    }
-  };
+  }, [loadData]);
 
   // Calculate statistics
   const stats = {
@@ -186,34 +92,16 @@ export default function SecureDataCenterPage() {
   });
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Loading datacenter monitoring...
-          </h3>
-          <p className="text-gray-600">Please wait while we fetch live data</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinnerCentered text="Loading datacenter monitoring..." />;
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Server className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Error loading datacenter data
-          </h3>
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={loadData}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
+      <ErrorDisplayCentered
+        title="Error loading datacenter data"
+        message={error.message}
+        onRetry={loadData}
+      />
     );
   }
 
@@ -236,71 +124,7 @@ export default function SecureDataCenterPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {stats.granted}
-                </div>
-                <div className="text-sm text-gray-600">Access Granted</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <XCircle className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {stats.denied}
-                </div>
-                <div className="text-sm text-gray-600">Access Denied</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {stats.anomalies}
-                </div>
-                <div className="text-sm text-gray-600">Anomalies</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Activity className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {stats.alerts}
-                </div>
-                <div className="text-sm text-gray-600">IoT Alerts</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <DatacenterStats stats={stats} />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
