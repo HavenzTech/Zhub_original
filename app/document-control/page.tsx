@@ -1,4 +1,3 @@
-// app/document-control/page.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -8,13 +7,10 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
 import { useDocuments } from "@/lib/hooks/useDocuments";
-import { formatFileSize } from "@/features/documents/utils/documentHelpers";
 import { DocumentDetails } from "@/features/documents/components/DocumentDetails";
 import { DocumentStats } from "@/features/documents/components/DocumentStats";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import {
@@ -26,8 +22,8 @@ import {
 } from "@/types/bms";
 import { toast } from "sonner";
 import FolderTreeView from "@/components/FolderTreeView";
+import { Upload, Plus, RefreshCw } from "lucide-react";
 
-// Dynamic imports for modals - only loaded when needed
 const UploadDocumentModal = dynamic(
   () =>
     import("@/features/documents/components/UploadDocumentModal").then(
@@ -47,63 +43,41 @@ const DocumentViewModal = dynamic(
   () => import("@/components/DocumentViewModal"),
   { ssr: false }
 );
-import {
-  FileText,
-  Upload,
-  Search,
-  Download,
-  Eye,
-  Edit,
-  Trash2,
-  Plus,
-  Lock,
-  Unlock,
-  History,
-  Calendar,
-  User,
-  Building2,
-  Shield,
-  CheckCircle,
-  Clock,
-  Loader2,
-  RefreshCw,
-  File,
-  FolderOpen,
-  X,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+
+interface DocumentFormData {
+  name: string;
+  status: DocumentStatus;
+  accessLevel: DocumentAccessLevel;
+  category: DocumentCategory | "";
+  tags: string;
+  folderId: string | null;
+  projectId: string | null;
+  departmentId: string | null;
+  gcpFolderPath: string;
+}
+
+const initialFormData: DocumentFormData = {
+  name: "",
+  status: "draft" as DocumentStatus,
+  accessLevel: "private" as DocumentAccessLevel,
+  category: "" as DocumentCategory | "",
+  tags: "",
+  folderId: null,
+  projectId: null,
+  departmentId: null,
+  gcpFolderPath: "",
+};
 
 export default function DocumentControlPage() {
   const router = useRouter();
-
-  // Use custom hook for document management
   const { documents, loading, error, loadDocuments, setDocuments } =
     useDocuments();
 
   const [folders, setFolders] = useState<Folder[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [departments, setDepartments] = useState<any[]>([]);
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(
-    null
-  );
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [selectedDocumentForModal, setSelectedDocumentForModal] =
     useState<Document | null>(null);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -115,25 +89,22 @@ export default function DocumentControlPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showEditMetadataModal, setShowEditMetadataModal] = useState(false);
-  const [editingDocumentId, setEditingDocumentId] = useState<string | null>(
-    null
-  );
-  const [formData, setFormData] = useState({
-    name: "",
-    status: "draft" as DocumentStatus,
-    accessLevel: "private" as DocumentAccessLevel,
-    category: "" as DocumentCategory | "",
-    tags: "",
-    folderId: null as string | null,
-    projectId: null as string | null,
-    departmentId: null as string | null,
-    gcpFolderPath: "",
-  });
+  const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
+  const [formData, setFormData] = useState<DocumentFormData>(initialFormData);
+
+  const loadFolders = useCallback(async () => {
+    try {
+      const data = await bmsApi.folders.getTree();
+      setFolders(data as Folder[]);
+    } catch (err) {
+      console.error("Error loading folders:", err);
+    }
+  }, []);
 
   const loadProjects = useCallback(async () => {
     try {
       const data = await bmsApi.projects.getAll();
-      setProjects(data as any[]);
+      setProjects(data as { id: string; name: string }[]);
     } catch (err) {
       console.error("Error loading projects:", err);
     }
@@ -142,13 +113,12 @@ export default function DocumentControlPage() {
   const loadDepartments = useCallback(async () => {
     try {
       const data = await bmsApi.departments.getAll();
-      setDepartments(data as any[]);
+      setDepartments(data as { id: string; name: string }[]);
     } catch (err) {
       console.error("Error loading departments:", err);
     }
   }, []);
 
-  // Initialize auth on mount
   useEffect(() => {
     const auth = authService.getAuth();
     if (!auth) {
@@ -166,18 +136,25 @@ export default function DocumentControlPage() {
     loadFolders();
     loadProjects();
     loadDepartments();
-  }, [router, loadDocuments, loadProjects, loadDepartments]);
+  }, [router, loadDocuments, loadFolders, loadProjects, loadDepartments]);
 
-  // loadDocuments is now provided by useDocuments hook
-
-  const loadFolders = async () => {
-    try {
-      const data = await bmsApi.folders.getTree();
-      setFolders(data as Folder[]);
-    } catch (err) {
-      console.error("Error loading folders:", err);
-      // Don't show error toast for folders, just log it
+  const findFolderById = (
+    folderId: string,
+    folderList: Folder[] = folders
+  ): Folder | null => {
+    for (const folder of folderList) {
+      if (folder.id === folderId) return folder;
+      if (folder.childFolders && folder.childFolders.length > 0) {
+        const found = findFolderById(folderId, folder.childFolders);
+        if (found) return found;
+      }
     }
+    return null;
+  };
+
+  const handleOpenCreateFolderModal = (parentFolderId?: string) => {
+    setParentFolderForCreation(parentFolderId || null);
+    setShowCreateFolderModal(true);
   };
 
   const handleCreateFolder = async (
@@ -200,26 +177,6 @@ export default function DocumentControlPage() {
         err instanceof BmsApiError ? err.message : "Failed to create folder";
       throw new Error(errorMessage);
     }
-  };
-
-  const handleOpenCreateFolderModal = (parentFolderId?: string) => {
-    setParentFolderForCreation(parentFolderId || null);
-    setShowCreateFolderModal(true);
-  };
-
-  // Helper to find folder by ID (for getting parent folder name)
-  const findFolderById = (
-    folderId: string,
-    folderList: Folder[] = folders
-  ): Folder | null => {
-    for (const folder of folderList) {
-      if (folder.id === folderId) return folder;
-      if (folder.childFolders && folder.childFolders.length > 0) {
-        const found = findFolderById(folderId, folder.childFolders);
-        if (found) return found;
-      }
-    }
-    return null;
   };
 
   const handleFolderDelete = async (folderId: string) => {
@@ -248,7 +205,7 @@ export default function DocumentControlPage() {
       await bmsApi.documents.softDelete(documentId);
       toast.success("Document deleted successfully");
       setDocuments((prev) => prev.filter((d) => d.id !== documentId));
-      await loadFolders(); // Refresh folder tree to update counts
+      await loadFolders();
     } catch (err) {
       const errorMessage =
         err instanceof BmsApiError ? err.message : "Failed to delete document";
@@ -264,7 +221,6 @@ export default function DocumentControlPage() {
       const document = documents.find((d) => d.id === documentId);
       if (!document) throw new Error("Document not found");
 
-      // Only send the fields that can be updated (exclude navigation properties)
       const cleanUpdatedDoc = {
         id: document.id,
         companyId: document.companyId,
@@ -287,14 +243,12 @@ export default function DocumentControlPage() {
       };
 
       await bmsApi.documents.update(documentId, cleanUpdatedDoc);
-
       toast.success("Metadata updated successfully");
 
-      // Update local state with the cleaned document
       setDocuments((prev) =>
         prev.map((d) => (d.id === documentId ? { ...document, ...updates } : d))
       );
-      await loadFolders(); // Refresh tree
+      await loadFolders();
       setShowEditMetadataModal(false);
       setEditingDocumentId(null);
     } catch (err) {
@@ -308,7 +262,6 @@ export default function DocumentControlPage() {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      // Auto-populate the document name from filename if not set
       if (!formData.name) {
         const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
         setFormData({ ...formData, name: nameWithoutExt });
@@ -331,14 +284,12 @@ export default function DocumentControlPage() {
 
     setIsUploading(true);
     try {
-      // Step 1: Upload the actual file to storage
       const formDataUpload = new FormData();
       formDataUpload.append("file", selectedFile);
       if (formData.folderId && formData.folderId !== "root") {
         formDataUpload.append("folderId", formData.folderId);
       }
 
-      // Add project/department context for access control
       if (formData.projectId) {
         formDataUpload.append("context", `project:${formData.projectId}`);
       }
@@ -346,12 +297,10 @@ export default function DocumentControlPage() {
         formDataUpload.append("context", `dept:${formData.departmentId}`);
       }
 
-      // Add GCP folder path for cloud storage organization
       if (formData.gcpFolderPath && formData.gcpFolderPath.trim()) {
         formDataUpload.append("folderPath", formData.gcpFolderPath.trim());
       }
 
-      // Get auth token and company ID
       const token = authService.getToken();
       const companyId = authService.getCurrentCompanyId();
 
@@ -387,10 +336,8 @@ export default function DocumentControlPage() {
 
       const uploadResult = await uploadResponse.json();
 
-      // Step 2: Save document metadata to database
-      // IMPORTANT: Use documentId from upload response to ensure filename UUID matches database ID
-      const payload: any = {
-        documentId: uploadResult.documentId, // UUID from upload endpoint (matches filename)
+      const payload: Record<string, unknown> = {
+        documentId: uploadResult.documentId,
         name: formData.name,
         fileType: uploadResult.fileType || selectedFile.type || "unknown",
         fileSizeBytes: uploadResult.fileSizeBytes || selectedFile.size,
@@ -401,16 +348,13 @@ export default function DocumentControlPage() {
         folderId: formData.folderId === "root" ? null : formData.folderId,
       };
 
-      // Only add optional fields if they have values
       if (formData.category) payload.category = formData.category;
 
-      // Tags: Convert to JSON string array for backend JSONB storage
       if (formData.tags?.trim()) {
         const tagsArray = formData.tags.split(",").map((t) => t.trim());
         payload.tags = JSON.stringify(tagsArray);
       }
 
-      // Metadata: Convert to JSON string for backend JSONB storage
       payload.metadata = JSON.stringify({
         originalFileName: selectedFile.name,
         uploadDate: new Date().toISOString(),
@@ -421,24 +365,9 @@ export default function DocumentControlPage() {
       setDocuments((prev) => [...prev, newDocument as Document]);
       toast.success("Document uploaded successfully!");
 
-      // Refresh folders to update document counts in tree
       await loadFolders();
-
       setShowUploadModal(false);
-
-      // Reset form
-      setSelectedFile(null);
-      setFormData({
-        name: "",
-        status: "draft" as DocumentStatus,
-        accessLevel: "private" as DocumentAccessLevel,
-        category: "" as DocumentCategory | "",
-        tags: "",
-        folderId: selectedFolderId,
-        projectId: null,
-        departmentId: null,
-        gcpFolderPath: "",
-      });
+      resetForm();
     } catch (err) {
       const errorMessage =
         err instanceof BmsApiError ? err.message : "Failed to upload document";
@@ -449,20 +378,18 @@ export default function DocumentControlPage() {
     }
   };
 
-  const filteredDocuments = documents.filter((doc) => {
-    // Filter by selected folder
-    const folderMatch =
-      selectedFolderId === null || doc.folderId === selectedFolderId;
+  const resetForm = () => {
+    setSelectedFile(null);
+    setFormData({
+      ...initialFormData,
+      folderId: selectedFolderId,
+    });
+  };
 
-    // Filter by search term
-    const searchMatch =
-      !searchTerm ||
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.fileType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.category?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return folderMatch && searchMatch;
-  });
+  const handleRefresh = () => {
+    loadDocuments();
+    loadFolders();
+  };
 
   if (loading) {
     return <LoadingSpinnerCentered text="Loading documents..." />;
@@ -494,13 +421,7 @@ export default function DocumentControlPage() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    loadDocuments();
-                    loadFolders();
-                  }}
-                >
+                <Button variant="outline" onClick={handleRefresh}>
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Refresh
                 </Button>
@@ -561,7 +482,7 @@ export default function DocumentControlPage() {
           />
         )}
 
-        {/* Upload Document Modal */}
+        {/* Modals */}
         <UploadDocumentModal
           open={showUploadModal}
           onOpenChange={setShowUploadModal}
@@ -577,7 +498,6 @@ export default function DocumentControlPage() {
           onFileChange={handleFileChange}
         />
 
-        {/* Create Folder Modal */}
         <CreateFolderModal
           isOpen={showCreateFolderModal}
           onClose={() => {
@@ -593,7 +513,6 @@ export default function DocumentControlPage() {
           }
         />
 
-        {/* Edit Metadata Modal */}
         <EditMetadataModal
           isOpen={showEditMetadataModal}
           onClose={() => {
@@ -608,7 +527,6 @@ export default function DocumentControlPage() {
           onSave={handleSaveMetadata}
         />
 
-        {/* Document View Modal */}
         <DocumentViewModal
           document={selectedDocumentForModal}
           open={showDocumentModal}
