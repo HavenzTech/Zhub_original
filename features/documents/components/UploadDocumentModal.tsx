@@ -18,18 +18,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Upload, Loader2 } from "lucide-react";
 import { formatFileSize } from "../utils/documentHelpers";
-import type {
-  DocumentStatus,
-  DocumentAccessLevel,
-  DocumentCategory,
-  Folder,
-} from "@/types/bms";
+import type { Folder } from "@/types/bms";
 
 interface UploadFormData {
   name: string;
-  status: DocumentStatus;
-  accessLevel: DocumentAccessLevel;
-  category: DocumentCategory | "";
+  status: string;
+  accessLevel: string;
+  category: string;
   tags: string;
   folderId: string | null;
   projectId: string | null;
@@ -138,7 +133,7 @@ export function UploadDocumentModal({
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      status: value as DocumentStatus,
+                      status: value,
                     })
                   }
                 >
@@ -161,7 +156,7 @@ export function UploadDocumentModal({
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      accessLevel: value as DocumentAccessLevel,
+                      accessLevel: value,
                     })
                   }
                 >
@@ -186,7 +181,7 @@ export function UploadDocumentModal({
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      category: value as DocumentCategory,
+                      category: value,
                     })
                   }
                 >
@@ -221,8 +216,8 @@ export function UploadDocumentModal({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="root">Root (No Folder)</SelectItem>
-                    {folders.map((folder) => (
-                      <SelectItem key={folder.id} value={folder.id}>
+                    {Array.isArray(folders) && folders.filter(f => f.id).map((folder) => (
+                      <SelectItem key={folder.id} value={folder.id!}>
                         {folder.path}
                       </SelectItem>
                     ))}
@@ -249,7 +244,7 @@ export function UploadDocumentModal({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
-                    {projects.map((project) => (
+                    {Array.isArray(projects) && projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name}
                       </SelectItem>
@@ -277,7 +272,7 @@ export function UploadDocumentModal({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
-                    {departments.map((dept) => (
+                    {Array.isArray(departments) && departments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {dept.name}
                       </SelectItem>

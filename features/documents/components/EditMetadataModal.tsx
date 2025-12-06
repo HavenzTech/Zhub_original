@@ -21,39 +21,31 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
     name: "",
     category: "" as DocumentCategory | "",
     tags: "",
-    accessLevel: "private" as "public" | "private" | "restricted",
+    accessLevel: "private" as string,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (document) {
-      // Parse tags from JSON string or handle array/string directly
+      // Parse tags - can be a JSON string array, plain string, or null
       let tagsString = "";
-      if (document.tags) {
-        try {
-          if (typeof document.tags === "string") {
-            const parsedTags = JSON.parse(document.tags);
+      const tags = document.tags as unknown;
+      if (tags) {
+        if (typeof tags === "string") {
+          try {
+            const parsedTags = JSON.parse(tags);
             if (Array.isArray(parsedTags)) {
               tagsString = parsedTags.join(", ");
-            } else if (typeof parsedTags === "string") {
-              tagsString = parsedTags;
             } else {
-              tagsString = "";
+              tagsString = tags;
             }
-          } else if (Array.isArray(document.tags)) {
-            tagsString = document.tags.join(", ");
-          } else {
-            tagsString = String(document.tags);
+          } catch {
+            // Not valid JSON, use as-is
+            tagsString = tags;
           }
-        } catch {
-          // If parsing fails and tags is a string, use it directly; if it's an array, join it
-          tagsString =
-            typeof document.tags === "string"
-              ? document.tags
-              : Array.isArray(document.tags)
-              ? document.tags.join(", ")
-              : String(document.tags);
+        } else if (Array.isArray(tags)) {
+          tagsString = tags.join(", ");
         }
       }
 
@@ -70,7 +62,7 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
     e.preventDefault();
     setError("");
 
-    if (!document || !formData.name.trim()) {
+    if (!document?.id || !formData.name.trim()) {
       setError("Document name is required");
       return;
     }
@@ -83,15 +75,15 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
         accessLevel: formData.accessLevel,
       };
 
-      // Convert tags to string[] array
+      // Convert tags to JSON string array for backend
       if (formData.tags?.trim()) {
         const tagsArray = formData.tags
           .split(",")
           .map((t) => t.trim())
           .filter((t) => t);
-        updates.tags = tagsArray;
+        updates.tags = JSON.stringify(tagsArray);
       } else {
-        updates.tags = undefined;
+        updates.tags = null;
       }
 
       await onSave(document.id, updates);
@@ -248,7 +240,7 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
             </div>
             <div>
               <strong>Uploaded:</strong>{" "}
-              {new Date(document.createdAt).toLocaleDateString()}
+              {document.createdAt ? new Date(document.createdAt).toLocaleDateString() : "N/A"}
             </div>
           </div>
 

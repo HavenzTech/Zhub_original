@@ -77,12 +77,12 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   };
 
   const handleSelect = () => {
-    onSelect(folder.id);
+    if (folder.id) onSelect(folder.id);
   };
 
   const handleCreateSubfolder = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onFolderCreate) {
+    if (onFolderCreate && folder.id) {
       onFolderCreate(folder.id);
     }
   };
@@ -221,19 +221,19 @@ const FolderNode: React.FC<FolderNodeProps> = ({
 
               {/* Edit and Delete Icons */}
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                {onDocumentEdit && (
+                {onDocumentEdit && doc.id && (
                   <button
-                    onClick={(e) => handleDocumentEdit(e, doc.id)}
+                    onClick={(e) => handleDocumentEdit(e, doc.id!)}
                     className="p-1 hover:bg-blue-100 rounded transition-colors"
                     title="Edit metadata"
                   >
                     <Edit className="h-3 w-3 text-blue-600" />
                   </button>
                 )}
-                {onDocumentDelete && (
+                {onDocumentDelete && doc.id && (
                   <button
                     onClick={(e) =>
-                      handleDocumentDeleteClick(e, doc.id, doc.name)
+                      handleDocumentDeleteClick(e, doc.id!, doc.name ?? "")
                     }
                     className="p-1 hover:bg-red-100 rounded transition-colors"
                     title="Delete document"

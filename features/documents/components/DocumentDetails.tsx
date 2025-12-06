@@ -80,7 +80,7 @@ export function DocumentDetails({ document, onBack }: DocumentDetailsProps) {
                 <div>
                   <span className="text-gray-600">Document ID:</span>
                   <div className="font-medium font-mono text-xs">
-                    {document.id.slice(0, 8)}...
+                    {document.id ? `${document.id.slice(0, 8)}...` : "N/A"}
                   </div>
                 </div>
               </div>
@@ -192,13 +192,13 @@ export function DocumentDetails({ document, onBack }: DocumentDetailsProps) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Company ID</span>
               <Badge variant="secondary" className="font-mono text-xs">
-                {document.companyId.slice(0, 8)}...
+                {document.companyId ? `${document.companyId.slice(0, 8)}...` : "N/A"}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Uploaded By</span>
               <Badge variant="secondary" className="font-mono text-xs">
-                {document.uploadedByUserId.slice(0, 8)}...
+                {document.uploadedByUserId ? `${document.uploadedByUserId.slice(0, 8)}...` : "N/A"}
               </Badge>
             </div>
           </CardContent>

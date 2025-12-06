@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { PermissionMatrixDemo } from "@/components/PermissionMatrixDemo";
+import { PermissionMatrixDemo } from "@/features/settings/components/PermissionMatrixDemo";
 import {
   Settings,
   Users,

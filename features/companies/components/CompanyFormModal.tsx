@@ -17,12 +17,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Loader2, Edit } from "lucide-react"
-import type { CompanyStatus } from "@/types/bms"
-
 interface CompanyFormData {
   name: string
   industry: string
-  status: CompanyStatus
+  status: string
   locationAddress: string
   locationCity: string
   locationProvince: string
@@ -110,7 +108,7 @@ export function CompanyFormModal({
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      status: value as CompanyStatus,
+                      status: value,
                     })
                   }
                 >

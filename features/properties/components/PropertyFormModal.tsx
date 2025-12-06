@@ -19,14 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PropertyType, PropertyStatus } from "@/types/bms";
 import { Plus, Edit, Loader2 } from "lucide-react";
 
 export interface PropertyFormData {
   name: string;
   description: string;
-  type: PropertyType | "";
-  status: PropertyStatus;
+  type: string;
+  status: string;
   locationAddress: string;
   locationCity: string;
   locationProvince: string;
@@ -111,7 +110,7 @@ export function PropertyFormModal({
                 <Select
                   value={formData.type}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, type: value as PropertyType })
+                    setFormData({ ...formData, type: value })
                   }
                 >
                   <SelectTrigger>
@@ -133,7 +132,7 @@ export function PropertyFormModal({
                 <Select
                   value={formData.status}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, status: value as PropertyStatus })
+                    setFormData({ ...formData, status: value })
                   }
                 >
                   <SelectTrigger>

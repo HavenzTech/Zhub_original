@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { authService } from "@/lib/services/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

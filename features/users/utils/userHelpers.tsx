@@ -1,4 +1,4 @@
-export const getRoleBadgeColor = (role?: string) => {
+export const getRoleBadgeColor = (role?: string | null) => {
   switch (role) {
     case "super_admin":
       return "bg-purple-100 text-purple-800"
@@ -11,7 +11,7 @@ export const getRoleBadgeColor = (role?: string) => {
   }
 }
 
-export const getRoleLabel = (role?: string) => {
+export const getRoleLabel = (role?: string | null) => {
   switch (role) {
     case "super_admin":
       return "Super Admin"
@@ -24,7 +24,8 @@ export const getRoleLabel = (role?: string) => {
   }
 }
 
-export const formatDate = (dateString: string) => {
+export const formatDate = (dateString?: string | null) => {
+  if (!dateString) return "N/A"
   return new Date(dateString).toLocaleDateString("en-CA", {
     year: "numeric",
     month: "short",
@@ -32,7 +33,8 @@ export const formatDate = (dateString: string) => {
   })
 }
 
-export const getInitials = (name: string) => {
+export const getInitials = (name?: string | null) => {
+  if (!name) return "?"
   return name
     .split(" ")
     .map((n) => n[0])

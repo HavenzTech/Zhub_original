@@ -5,8 +5,8 @@
 /**
  * Format number as Canadian currency
  */
-export const formatCurrency = (value?: number) => {
-  if (!value) return "N/A"
+export const formatCurrency = (value?: number | null) => {
+  if (value === undefined || value === null) return "N/A"
   return new Intl.NumberFormat("en-CA", {
     style: "currency",
     currency: "CAD",
@@ -18,7 +18,7 @@ export const formatCurrency = (value?: number) => {
 /**
  * Format date string to readable format
  */
-export const formatDate = (dateString?: string) => {
+export const formatDate = (dateString?: string | null) => {
   if (!dateString) return "N/A"
   return new Date(dateString).toLocaleDateString("en-CA", {
     year: "numeric",
@@ -30,7 +30,7 @@ export const formatDate = (dateString?: string) => {
 /**
  * Get badge color based on project status
  */
-export const getStatusColor = (status: string) => {
+export const getStatusColor = (status?: string | null) => {
   switch (status) {
     case "active":
       return "bg-green-100 text-green-800"
@@ -50,7 +50,7 @@ export const getStatusColor = (status: string) => {
 /**
  * Get badge color based on project priority
  */
-export const getPriorityColor = (priority: string) => {
+export const getPriorityColor = (priority?: string | null) => {
   switch (priority) {
     case "critical":
       return "bg-red-100 text-red-800"

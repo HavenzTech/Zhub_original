@@ -86,7 +86,7 @@ export default function SecureDataCenterPage() {
   const latestMetrics = Object.entries(metricsByType).map(([type, metrics]) => {
     const latest = metrics.sort(
       (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
     )[0];
     return { type, ...latest };
   });
@@ -232,7 +232,7 @@ export default function SecureDataCenterPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-gray-500">
-                        {formatDate(log.timestamp)}
+                        {log.timestamp ? formatDate(log.timestamp) : "N/A"}
                       </div>
                       {log.verificationDurationMs && (
                         <div className="text-xs text-gray-400">
@@ -347,7 +347,7 @@ export default function SecureDataCenterPage() {
                         </div>
                       </div>
                       <div className="text-right text-xs text-gray-500">
-                        {formatDate(log.timestamp)}
+                        {log.timestamp ? formatDate(log.timestamp) : "N/A"}
                       </div>
                     </div>
                   </CardContent>
@@ -478,7 +478,7 @@ export default function SecureDataCenterPage() {
                         </div>
                       </div>
                       <div className="text-right text-xs text-gray-500">
-                        {formatDate(metric.timestamp)}
+                        {metric.timestamp ? formatDate(metric.timestamp) : "N/A"}
                       </div>
                     </div>
                   ))}
@@ -522,7 +522,7 @@ export default function SecureDataCenterPage() {
                         </div>
                       </div>
                       <div className="text-right text-xs text-gray-500">
-                        {formatDate(log.timestamp)}
+                        {log.timestamp ? formatDate(log.timestamp) : "N/A"}
                       </div>
                     </div>
                   ))}

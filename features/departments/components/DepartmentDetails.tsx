@@ -33,8 +33,8 @@ export function DepartmentDetails({
   onEdit,
 }: DepartmentDetailsProps) {
   const utilization = getBudgetUtilization(
-    department.budgetAllocated,
-    department.budgetSpent
+    department.budgetAllocated ?? undefined,
+    department.budgetSpent ?? undefined
   );
 
   return (
@@ -70,13 +70,13 @@ export function DepartmentDetails({
                 <div>
                   <span className="text-gray-600">Department ID:</span>
                   <div className="font-medium font-mono text-xs">
-                    {department.id.slice(0, 8)}...
+                    {department.id ? `${department.id.slice(0, 8)}...` : "N/A"}
                   </div>
                 </div>
                 <div>
                   <span className="text-gray-600">Company ID:</span>
                   <div className="font-medium font-mono text-xs">
-                    {department.companyId.slice(0, 8)}...
+                    {department.companyId ? `${department.companyId.slice(0, 8)}...` : "N/A"}
                   </div>
                 </div>
               </div>
@@ -102,7 +102,7 @@ export function DepartmentDetails({
               </div>
               <div>
                 <div className="text-lg font-bold text-gray-900">
-                  {formatCurrency(department.budgetAllocated)}
+                  {formatCurrency(department.budgetAllocated ?? undefined)}
                 </div>
                 <div className="text-sm text-gray-600">Total Budget</div>
                 <div className="text-xs text-gray-500">
@@ -125,7 +125,7 @@ export function DepartmentDetails({
               </div>
               <div>
                 <div className="text-lg font-bold text-gray-900">
-                  {formatCurrency(department.budgetSpent)}
+                  {formatCurrency(department.budgetSpent ?? undefined)}
                 </div>
                 <div className="text-sm text-gray-600">Budget Spent</div>
                 <div className="text-xs text-gray-500">
@@ -144,11 +144,11 @@ export function DepartmentDetails({
               </div>
               <div>
                 <div className="text-lg font-bold text-gray-900">
-                  {formatDate(department.createdAt)}
+                  {department.createdAt ? formatDate(department.createdAt) : "N/A"}
                 </div>
                 <div className="text-sm text-gray-600">Created</div>
                 <div className="text-xs text-gray-500">
-                  Updated {getTimeAgo(department.updatedAt)}
+                  Updated {department.updatedAt ? getTimeAgo(department.updatedAt) : "N/A"}
                 </div>
               </div>
             </div>
@@ -205,25 +205,25 @@ export function DepartmentDetails({
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Department ID</span>
               <Badge variant="secondary" className="font-mono text-xs">
-                {department.id.slice(0, 8)}...
+                {department.id ? `${department.id.slice(0, 8)}...` : "N/A"}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Company ID</span>
               <Badge variant="secondary" className="font-mono text-xs">
-                {department.companyId.slice(0, 8)}...
+                {department.companyId ? `${department.companyId.slice(0, 8)}...` : "N/A"}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Created At</span>
               <span className="text-sm font-medium">
-                {formatDate(department.createdAt)}
+                {department.createdAt ? formatDate(department.createdAt) : "N/A"}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Last Updated</span>
               <span className="text-sm font-medium">
-                {formatDate(department.updatedAt)}
+                {department.updatedAt ? formatDate(department.updatedAt) : "N/A"}
               </span>
             </div>
           </CardContent>

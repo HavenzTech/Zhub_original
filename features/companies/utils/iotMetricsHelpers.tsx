@@ -66,12 +66,12 @@ export function groupMetricsByType(metrics: IotMetric[]) {
 
 export function getLatestMetricByType(metrics: IotMetric[], type: string) {
   const filtered = metrics.filter((m) =>
-    m.metricType.toLowerCase().includes(type.toLowerCase())
+    m.metricType?.toLowerCase().includes(type.toLowerCase())
   );
   if (filtered.length === 0) return null;
   return filtered.sort(
     (a, b) =>
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
   )[0];
 }
 
@@ -80,11 +80,11 @@ export function prepareChartData(metrics: IotMetric[], metricType: string) {
     .filter((m) => m.metricType === metricType)
     .sort(
       (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
     )
     .slice(-20)
     .map((m) => ({
-      time: new Date(m.timestamp).toLocaleTimeString("en-US", {
+      time: new Date(m.timestamp || 0).toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
       }),

@@ -1,5 +1,6 @@
 import { useState, useCallback, Dispatch, SetStateAction } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type { Project } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -31,7 +32,7 @@ export function useProjects(): UseProjectsReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.projects.getAll()
-      setProjects(data as Project[])
+      setProjects(extractArray<Project>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load projects")
       setError(error)

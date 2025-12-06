@@ -29,7 +29,7 @@ export const DocumentCard = memo(function DocumentCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              {getFileTypeIcon(document.fileType)}
+              {getFileTypeIcon(document.fileType ?? undefined)}
             </div>
             <div className="min-w-0 flex-1">
               <CardTitle className="text-base truncate">
@@ -56,7 +56,7 @@ export const DocumentCard = memo(function DocumentCard({
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Size:</span>
             <span className="font-medium">
-              {formatFileSize(document.fileSizeBytes)}
+              {formatFileSize(document.fileSizeBytes ?? undefined)}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">

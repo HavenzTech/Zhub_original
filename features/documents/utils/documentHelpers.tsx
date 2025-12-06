@@ -4,7 +4,7 @@ import { File, FileText, Lock, Shield, Unlock } from "lucide-react";
 /**
  * Format file size in bytes to human-readable format
  */
-export const formatFileSize = (bytes?: number): string => {
+export const formatFileSize = (bytes?: number | null): string => {
   if (bytes === undefined || bytes === null) return "N/A";
   const mb = bytes / (1024 * 1024);
   if (mb < 1) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -14,7 +14,8 @@ export const formatFileSize = (bytes?: number): string => {
 /**
  * Format date string to localized format
  */
-export const formatDate = (dateString: string): string => {
+export const formatDate = (dateString?: string | null): string => {
+  if (!dateString) return "N/A";
   return new Date(dateString).toLocaleDateString("en-CA", {
     year: "numeric",
     month: "short",
@@ -27,7 +28,7 @@ export const formatDate = (dateString: string): string => {
 /**
  * Get badge color classes for document status
  */
-export const getStatusColor = (status: string): string => {
+export const getStatusColor = (status?: string | null): string => {
   switch (status) {
     case "approved":
       return "bg-green-100 text-green-800";
@@ -45,7 +46,7 @@ export const getStatusColor = (status: string): string => {
 /**
  * Get badge color classes for access level
  */
-export const getAccessLevelColor = (level: string): string => {
+export const getAccessLevelColor = (level?: string | null): string => {
   switch (level) {
     case "public":
       return "bg-blue-100 text-blue-800";
@@ -61,7 +62,7 @@ export const getAccessLevelColor = (level: string): string => {
 /**
  * Get icon component for access level
  */
-export const getAccessLevelIcon = (level: string): React.ReactElement => {
+export const getAccessLevelIcon = (level?: string | null): React.ReactElement => {
   switch (level) {
     case "public":
       return <Unlock className="w-4 h-4" />;
@@ -77,7 +78,7 @@ export const getAccessLevelIcon = (level: string): React.ReactElement => {
 /**
  * Get icon component for file type
  */
-export const getFileTypeIcon = (type?: string): React.ReactElement => {
+export const getFileTypeIcon = (type?: string | null): React.ReactElement => {
   const lowerType = type?.toLowerCase() || "";
   if (lowerType.includes("pdf"))
     return <FileText className="w-6 h-6 text-red-600" />;

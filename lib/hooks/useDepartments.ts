@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type { Department } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -31,7 +32,7 @@ export function useDepartments(): UseDepartmentsReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.departments.getAll()
-      setDepartments(data as Department[])
+      setDepartments(extractArray<Department>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load departments")
       setError(error)

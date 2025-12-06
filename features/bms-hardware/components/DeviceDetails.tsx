@@ -151,7 +151,7 @@ export function DeviceDetails({ device, onBack }: DeviceDetailsProps) {
               </div>
               <div>
                 <div className="text-sm font-bold text-gray-900">
-                  {formatDate(device.lastHeartbeat)}
+                  {formatDate(device.lastHeartbeat ?? undefined)}
                 </div>
                 <div className="text-sm text-gray-600">Last Heartbeat</div>
               </div>

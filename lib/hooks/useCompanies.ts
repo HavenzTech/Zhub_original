@@ -1,6 +1,7 @@
 import { useState, useCallback, Dispatch, SetStateAction } from "react"
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi"
 import { authService } from "@/lib/services/auth"
+import { extractArray } from "@/lib/utils/api"
 import type { Company } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -36,17 +37,17 @@ export function useCompanies(): UseCompaniesReturn {
       // Try to get all companies - if 403, try getting user's companies instead
       try {
         const data = await bmsApi.companies.getAll()
-        setCompanies(data as Company[])
+        setCompanies(extractArray<Company>(data))
       } catch (getAllError) {
         // If getAll fails with 403, try getting companies by user
         if (getAllError instanceof BmsApiError && getAllError.status === 403) {
           console.log(
-            "⚠️ GET /company returned 403, trying to get user companies..."
+            "⚠️ GET /companies returned 403, trying to get user companies..."
           )
           const auth = authService.getAuth()
           if (auth?.userId) {
             const data = await bmsApi.companies.getByUser(auth.userId)
-            setCompanies(data as Company[])
+            setCompanies(extractArray<Company>(data))
           } else {
             throw getAllError
           }

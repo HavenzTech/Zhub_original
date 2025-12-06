@@ -38,6 +38,7 @@ export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
   const [loadingMetrics, setLoadingMetrics] = useState(false);
 
   const loadIotMetrics = async () => {
+    if (!company.id) return;
     try {
       setLoadingMetrics(true);
       const data = await bmsApi.iotMetrics.getByCompany(company.id);
@@ -100,7 +101,7 @@ export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <DollarSign className="w-8 h-8 text-green-600 mx-auto mb-2" />
               <div className="text-2xl font-bold text-gray-900">
-                {formatCurrency(company.annualRevenue)}
+                {formatCurrency(company.annualRevenue ?? undefined)}
               </div>
               <div className="text-sm text-gray-600">Annual Revenue</div>
             </div>
@@ -116,7 +117,7 @@ export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <Calendar className="w-8 h-8 text-purple-600 mx-auto mb-2" />
               <div className="text-xl font-bold text-gray-900">
-                {formatDate(company.createdAt)}
+                {company.createdAt ? formatDate(company.createdAt) : "N/A"}
               </div>
               <div className="text-sm text-gray-600">Created</div>
             </div>
@@ -124,7 +125,7 @@ export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <TrendingUp className="w-8 h-8 text-orange-600 mx-auto mb-2" />
               <div className="text-xl font-bold text-gray-900">
-                {getTimeAgo(company.updatedAt)}
+                {company.updatedAt ? getTimeAgo(company.updatedAt) : "N/A"}
               </div>
               <div className="text-sm text-gray-600">Last Updated</div>
             </div>
@@ -184,7 +185,7 @@ export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Company ID</span>
               <Badge variant="secondary" className="font-mono text-xs">
-                {company.id.slice(0, 8)}...
+                {company.id ? `${company.id.slice(0, 8)}...` : "N/A"}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
@@ -196,13 +197,13 @@ export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Created At</span>
               <span className="text-sm font-medium">
-                {formatDate(company.createdAt)}
+                {company.createdAt ? formatDate(company.createdAt) : "N/A"}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Last Updated</span>
               <span className="text-sm font-medium">
-                {formatDate(company.updatedAt)}
+                {company.updatedAt ? formatDate(company.updatedAt) : "N/A"}
               </span>
             </div>
           </CardContent>

@@ -67,7 +67,7 @@ export function UserFormModal({
               <Input
                 id="edit-email"
                 type="email"
-                value={editingUser.email}
+                value={editingUser.email ?? ""}
                 disabled
                 className="bg-muted"
               />
@@ -201,7 +201,7 @@ export function UserFormModal({
               id="pictureUrl"
               type="url"
               placeholder="https://example.com/photo.jpg"
-              value={formData.pictureUrl}
+              value={formData.pictureUrl ?? ""}
               onChange={(e) =>
                 setFormData({ ...formData, pictureUrl: e.target.value })
               }
