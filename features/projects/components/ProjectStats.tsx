@@ -20,7 +20,7 @@ export function ProjectStats({ projects }: ProjectStatsProps) {
   const avgProgress =
     projects.length > 0
       ? Math.round(
-          projects.reduce((sum, p) => sum + p.progress, 0) / projects.length
+          projects.reduce((sum, p) => sum + (p.progress ?? 0), 0) / projects.length
         )
       : 0;
 

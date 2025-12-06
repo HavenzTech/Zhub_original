@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type {
   Company,
   Department,
@@ -60,12 +61,12 @@ export function useDashboard(): UseDashboardReturn {
         bmsApi.accessLogs.getAll(),
       ])
 
-      setCompanies(companiesData as Company[])
-      setDepartments(departmentsData as Department[])
-      setProjects(projectsData as Project[])
-      setProperties(propertiesData as Property[])
-      setBmsDevices(devicesData as BmsDevice[])
-      setAccessLogs(logsData as AccessLog[])
+      setCompanies(extractArray<Company>(companiesData))
+      setDepartments(extractArray<Department>(departmentsData))
+      setProjects(extractArray<Project>(projectsData))
+      setProperties(extractArray<Property>(propertiesData))
+      setBmsDevices(extractArray<BmsDevice>(devicesData))
+      setAccessLogs(extractArray<AccessLog>(logsData))
     } catch (err) {
       const error =
         err instanceof Error ? err : new Error("Failed to load dashboard data")

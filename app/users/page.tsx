@@ -114,7 +114,7 @@ export default function UsersPage() {
   const handleEdit = (user: UserResponse) => {
     setEditingUser(user);
     setEditFormData({
-      name: user.name,
+      name: user.name || "",
       pictureUrl: user.pictureUrl || "",
     });
     setShowEditForm(true);
@@ -122,7 +122,7 @@ export default function UsersPage() {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingUser || !editFormData.name.trim()) {
+    if (!editingUser?.id || !editFormData.name.trim()) {
       toast.error("Name is required");
       return;
     }
@@ -151,7 +151,7 @@ export default function UsersPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deletingUser) return;
+    if (!deletingUser?.id) return;
 
     setIsSubmitting(true);
     try {
@@ -168,8 +168,8 @@ export default function UsersPage() {
 
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.role?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

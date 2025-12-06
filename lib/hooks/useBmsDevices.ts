@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type { BmsDevice } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -31,8 +32,9 @@ export function useBmsDevices(): UseBmsDevicesReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.bmsDevices.getAll()
-      setDevices(data as BmsDevice[])
-      toast.success(`Loaded ${(data as BmsDevice[]).length} devices`)
+      const devices = extractArray<BmsDevice>(data)
+      setDevices(devices)
+      toast.success(`Loaded ${devices.length} devices`)
     } catch (err) {
       const error =
         err instanceof Error ? err : new Error("Failed to load BMS devices")

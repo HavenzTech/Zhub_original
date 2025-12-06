@@ -82,7 +82,7 @@ export function ProjectDetails({
                 <div>
                   <span className="text-gray-600">Project ID:</span>
                   <div className="font-medium font-mono text-xs">
-                    {project.id.slice(0, 8)}...
+                    {project.id ? `${project.id.slice(0, 8)}...` : "N/A"}
                   </div>
                 </div>
               </div>
@@ -194,13 +194,13 @@ export function ProjectDetails({
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Project ID</span>
               <Badge variant="secondary" className="font-mono text-xs">
-                {project.id.slice(0, 8)}...
+                {project.id ? `${project.id.slice(0, 8)}...` : "N/A"}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Company ID</span>
               <Badge variant="secondary" className="font-mono text-xs">
-                {project.companyId.slice(0, 8)}...
+                {project.companyId ? `${project.companyId.slice(0, 8)}...` : "N/A"}
               </Badge>
             </div>
             <div className="flex items-center justify-between">

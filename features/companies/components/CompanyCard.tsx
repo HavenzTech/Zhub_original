@@ -55,7 +55,7 @@ export const CompanyCard = memo(function CompanyCard({ company, onViewDetails }:
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center">
             <div className="text-xl font-bold text-gray-900">
-              {formatCurrency(company.annualRevenue)}
+              {formatCurrency(company.annualRevenue ?? undefined)}
             </div>
             <div className="text-xs text-gray-600">Revenue</div>
           </div>
@@ -78,13 +78,13 @@ export const CompanyCard = memo(function CompanyCard({ company, onViewDetails }:
           )}
           <div className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            Created {formatDate(company.createdAt)}
+            Created {company.createdAt ? formatDate(company.createdAt) : "N/A"}
           </div>
         </div>
 
         <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
           <div className="text-xs text-gray-500">
-            Updated: {getTimeAgo(company.updatedAt)}
+            Updated: {company.updatedAt ? getTimeAgo(company.updatedAt) : "N/A"}
           </div>
           <div className="flex gap-2">
             <Button

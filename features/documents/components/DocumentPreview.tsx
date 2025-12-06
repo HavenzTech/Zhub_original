@@ -1,4 +1,4 @@
-// components/DocumentPreview.tsx
+// features/documents/components/DocumentPreview.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -238,7 +238,7 @@ export default function DocumentPreview({
       <CardHeader className="pb-3 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            {getFileTypeIcon(document.fileType)}
+            {getFileTypeIcon(document.fileType ?? undefined)}
             <div className="min-w-0 flex-1">
               <CardTitle className="text-base truncate">
                 {document.name}

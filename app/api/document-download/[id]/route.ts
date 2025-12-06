@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 
-const BMS_API_BASE = process.env.NEXT_PUBLIC_BMS_API_BASE_URL || 'http://localhost:5087'
+const BMS_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5087'
 
 export async function GET(
   request: NextRequest,

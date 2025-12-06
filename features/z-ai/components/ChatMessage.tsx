@@ -82,7 +82,7 @@ export const ChatMessage = memo(function ChatMessage({ message, onDocumentPrevie
                   // Extract just the filename from path (handle both / and \ separators)
                   const filename =
                     img.image_path.split(/[/\\]/).pop() || img.image_path
-                  const imageUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/images/${filename}`
+                  const imageUrl = `${process.env.NEXT_PUBLIC_API_URL}/images/${filename}`
                   return (
                     <div
                       key={i}

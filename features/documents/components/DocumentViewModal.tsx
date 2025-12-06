@@ -2,8 +2,8 @@
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import DocumentPreview from "@/components/DocumentPreview";
-import DocumentChatPanel from "@/components/DocumentChatPanel";
+import DocumentPreview from "@/features/documents/components/DocumentPreview";
+import DocumentChatPanel from "@/features/documents/components/DocumentChatPanel";
 import type { Document } from "@/types/bms";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";

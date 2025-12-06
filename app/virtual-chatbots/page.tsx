@@ -56,7 +56,7 @@ import {
 } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { ChatbotConfig } from '../../types'
-import { EntityCard, StatsGrid, SearchAndFilter, CompanyLogo, EmptyState } from '../../components/shared/index'
+import { EntityCard, StatsGrid, SearchAndFilter, CompanyLogo, EmptyState } from '@/components/common/SharedComponents'
 
 export default function VirtualChatbotsPage() {
   const [searchTerm, setSearchTerm] = useState("")

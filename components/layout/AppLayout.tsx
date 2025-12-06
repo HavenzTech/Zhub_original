@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserProfile } from "@/components/UserProfile";
+import { UserProfile } from "@/features/users/components/UserProfile";
 import { Sidebar } from "./Sidebar";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 

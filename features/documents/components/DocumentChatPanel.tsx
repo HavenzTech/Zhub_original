@@ -1,18 +1,16 @@
-// components/DocumentChatPanel.tsx
+// features/documents/components/DocumentChatPanel.tsx
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import { Document } from "@/types/bms";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   MessageCircle,
   Send,
   Sparkles,
-  FileText,
   Loader2,
   User,
   Bot,
@@ -95,8 +93,8 @@ export default function DocumentChatPanel({
       // Call the Python API with the file path
       const pythonApiUrl =
         process.env.NEXT_PUBLIC_PYTHON_API ||
-        process.env.NEXT_PUBLIC_API_BASE_URL ||
-        "http://localhost:8001";
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://localhost:5087";
       const response = await fetch(`${pythonApiUrl}/analyze-document`, {
         method: "POST",
         headers: {

@@ -1,12 +1,12 @@
 import { ApiResponse, ApiError } from '@/types/bms';
 
 // Environment variables - configured in .env.local
-const BASE_URL = process.env.NEXT_PUBLIC_BMS_API_BASE_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const API_PREFIX = '/api/havenzhub';
 const TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
 
 if (!BASE_URL) {
-  throw new Error('NEXT_PUBLIC_BMS_API_BASE_URL is not defined in environment variables');
+  throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
 }
 
 class BmsApiError extends Error {
@@ -157,6 +157,71 @@ class BmsApiService {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
 
+  // FormData post for file uploads
+  async postFormData<T>(endpoint: string, data: FormData, options?: RequestOptions): Promise<T> {
+    const { timeout = TIMEOUT, skipAuth = false, ...fetchOptions } = options || {};
+    const url = `${this.baseUrl}${API_PREFIX}${endpoint}`;
+
+    const headers: Record<string, string> = {};
+
+    if (!skipAuth && this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    if (!skipAuth && this.companyId) {
+      headers['X-Company-Id'] = this.companyId;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        method: 'POST',
+        headers,
+        body: data,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.status === 204) {
+        return undefined as T;
+      }
+
+      const contentType = response.headers.get('content-type');
+      const isJson = contentType?.includes('application/json');
+
+      if (!response.ok) {
+        const errorData = isJson ? await response.json() : { message: response.statusText };
+        throw new BmsApiError(
+          errorData.message || 'API request failed',
+          response.status,
+          errorData.code,
+          errorData.details
+        );
+      }
+
+      return isJson ? await response.json() : (response as any);
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (error instanceof BmsApiError) {
+        throw error;
+      }
+
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new BmsApiError('Request timeout', 408);
+        }
+        throw new BmsApiError(error.message, 500);
+      }
+
+      throw new BmsApiError('Unknown error occurred', 500);
+    }
+  }
+
   // Health endpoints (note: health endpoint is at root, not under /api/havenzhub)
   async healthCheck() {
     const url = `${this.baseUrl}/health`;
@@ -170,158 +235,165 @@ class BmsApiService {
     return response.json();
   }
 
-  // User endpoints
+  // User endpoints (Note: No user endpoints in Swagger - users are managed via Auth)
   users = {
-    getAll: () => this.get('/user'),
-    getById: (id: string) => this.get(`/user/${id}`),
-    getByEmail: (email: string) => this.get(`/user/email/${encodeURIComponent(email)}`),
-    getByCompany: (companyId: string) => this.get(`/user/company/${companyId}`),
-    create: (data: any) => this.post('/user', data),
-    update: (id: string, data: any) => this.put(`/user/${id}`, data),
-    delete: (id: string) => this.delete(`/user/${id}`),
+    getAll: () => this.get('/users'),
+    getById: (id: string) => this.get(`/users/${id}`),
+    getByEmail: (email: string) => this.get(`/users/email/${encodeURIComponent(email)}`),
+    getByCompany: (companyId: string) => this.get(`/users/company/${companyId}`),
+    create: (data: any) => this.post('/users', data),
+    update: (id: string, data: any) => this.put(`/users/${id}`, data),
+    delete: (id: string) => this.delete(`/users/${id}`),
   };
 
-  // Company endpoints
+  // Company endpoints - Swagger: /api/havenzhub/companies
   companies = {
-    getAll: () => this.get('/company'),
-    getById: (id: string) => this.get(`/company/${id}`),
-    getByStatus: (status: string) => this.get(`/company/status/${status}`),
-    getByUser: (userId: string) => this.get(`/company/user/${userId}`),
-    getByIndustry: (industry: string) => this.get(`/company/industry/${encodeURIComponent(industry)}`),
-    create: (data: any) => this.post('/company', data),
-    update: (id: string, data: any) => this.put(`/company/${id}`, data),
-    delete: (id: string) => this.delete(`/company/${id}`),
+    getAll: () => this.get('/companies'),
+    getById: (id: string) => this.get(`/companies/${id}`),
+    getByStatus: (status: string) => this.get(`/companies/status/${status}`),
+    getByUser: (userId: string) => this.get(`/companies/user/${userId}`),
+    getByIndustry: (industry: string) => this.get(`/companies/industry/${encodeURIComponent(industry)}`),
+    create: (data: any) => this.post('/companies', data),
+    update: (id: string, data: any) => this.put(`/companies/${id}`, data),
+    delete: (id: string) => this.delete(`/companies/${id}`),
   };
 
-  // Department endpoints
+  // Department endpoints - Swagger: /api/havenzhub/departments
   departments = {
-    getAll: () => this.get('/department'),
-    getById: (id: string) => this.get(`/department/${id}`),
-    getByCompany: (companyId: string) => this.get(`/department/company/${companyId}`),
-    search: (name: string) => this.get(`/department/search/${encodeURIComponent(name)}`),
-    create: (data: any) => this.post('/department', data),
-    update: (id: string, data: any) => this.put(`/department/${id}`, data),
-    delete: (id: string) => this.delete(`/department/${id}`),
+    getAll: () => this.get('/departments'),
+    getById: (id: string) => this.get(`/departments/${id}`),
+    getByCompany: (companyId: string) => this.get(`/departments/company/${companyId}`),
+    search: (name: string) => this.get(`/departments/search/${encodeURIComponent(name)}`),
+    create: (data: any) => this.post('/departments', data),
+    update: (id: string, data: any) => this.put(`/departments/${id}`, data),
+    delete: (id: string) => this.delete(`/departments/${id}`),
+    // Member management - Swagger: /api/havenzhub/departments/{departmentId}/members
+    addMember: (departmentId: string, data: any) => this.post(`/departments/${departmentId}/members`, data),
+    getMembers: (departmentId: string) => this.get(`/departments/${departmentId}/members`),
+    removeMember: (departmentId: string, userId: string) => this.delete(`/departments/${departmentId}/members/${userId}`),
+    updateMemberRole: (departmentId: string, userId: string, data: any) => this.put(`/departments/${departmentId}/members/${userId}/role`, data),
   };
 
-  // Project endpoints
+  // Project endpoints - Swagger: /api/havenzhub/projects
   projects = {
-    getAll: () => this.get('/project'),
-    getById: (id: string) => this.get(`/project/${id}`),
-    getByStatus: (status: string) => this.get(`/project/status/${status}`),
-    getByCompany: (companyId: string) => this.get(`/project/company/${companyId}`),
-    getByPriority: (priority: string) => this.get(`/project/priority/${priority}`),
+    getAll: () => this.get('/projects'),
+    getById: (id: string) => this.get(`/projects/${id}`),
+    getByStatus: (status: string) => this.get(`/projects/status/${status}`),
+    getByCompany: (companyId: string) => this.get(`/projects/company/${companyId}`),
+    getByPriority: (priority: string) => this.get(`/projects/priority/${priority}`),
     getByDateRange: (startDate: string, endDate: string) =>
-      this.get(`/project/daterange?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
-    create: (data: any) => this.post('/project', data),
-    update: (id: string, data: any) => this.put(`/project/${id}`, data),
-    delete: (id: string) => this.delete(`/project/${id}`),
+      this.get(`/projects/daterange?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+    create: (data: any) => this.post('/projects', data),
+    update: (id: string, data: any) => this.put(`/projects/${id}`, data),
+    delete: (id: string) => this.delete(`/projects/${id}`),
   };
 
-  // Property endpoints
+  // Property endpoints (Note: Not found in Swagger - may need backend update)
   properties = {
-    getAll: () => this.get('/property'),
-    getById: (id: string) => this.get(`/property/${id}`),
-    getByCompany: (companyId: string) => this.get(`/property/company/${companyId}`),
-    getByType: (type: string) => this.get(`/property/type/${type}`),
-    getByStatus: (status: string) => this.get(`/property/status/${status}`),
+    getAll: () => this.get('/properties'),
+    getById: (id: string) => this.get(`/properties/${id}`),
+    getByCompany: (companyId: string) => this.get(`/properties/company/${companyId}`),
+    getByType: (type: string) => this.get(`/properties/type/${type}`),
+    getByStatus: (status: string) => this.get(`/properties/status/${status}`),
     getByLocation: (params: { city?: string; province?: string; country?: string }) => {
       const query = new URLSearchParams(params as any).toString();
-      return this.get(`/property/location?${query}`);
+      return this.get(`/properties/location?${query}`);
     },
-    create: (data: any) => this.post('/property', data),
-    update: (id: string, data: any) => this.put(`/property/${id}`, data),
-    delete: (id: string) => this.delete(`/property/${id}`),
+    create: (data: any) => this.post('/properties', data),
+    update: (id: string, data: any) => this.put(`/properties/${id}`, data),
+    delete: (id: string) => this.delete(`/properties/${id}`),
   };
 
-  // Document endpoints
+  // Document endpoints - Swagger: /api/havenzhub/documents
   documents = {
-    getAll: () => this.get('/document'),
-    getById: (id: string) => this.get(`/document/${id}`),
-    getByCompany: (companyId: string) => this.get(`/document/company/${companyId}`),
-    getByStatus: (status: string) => this.get(`/document/status/${status}`),
-    getByUploader: (uploadedByUserId: string) => this.get(`/document/uploader/${uploadedByUserId}`),
-    getByCategory: (category: string) => this.get(`/document/category/${category}`),
-    getByAccessLevel: (accessLevel: string) => this.get(`/document/accesslevel/${accessLevel}`),
-    search: (name: string) => this.get(`/document/search/${encodeURIComponent(name)}`),
-    create: (data: any) => this.post('/document', data),
-    update: (id: string, data: any) => this.put(`/document/${id}`, data),
-    softDelete: (id: string) => this.delete(`/document/${id}`),
-    hardDelete: (id: string) => this.delete(`/document/${id}/hard`),
+    getAll: () => this.get('/documents'),
+    getById: (id: string) => this.get(`/documents/${id}`),
+    getByCompany: (companyId: string) => this.get(`/documents/company/${companyId}`),
+    getByStatus: (status: string) => this.get(`/documents/status/${status}`),
+    getByUploader: (uploadedByUserId: string) => this.get(`/documents/uploader/${uploadedByUserId}`),
+    getByCategory: (category: string) => this.get(`/documents/category/${category}`),
+    getByAccessLevel: (accessLevel: string) => this.get(`/documents/accesslevel/${accessLevel}`),
+    search: (name: string) => this.get(`/documents/search/${encodeURIComponent(name)}`),
+    upload: (data: FormData) => this.postFormData('/documents/upload', data),
+    create: (data: any) => this.post('/documents', data),
+    update: (id: string, data: any) => this.put(`/documents/${id}`, data),
+    approve: (id: string) => this.post(`/documents/${id}/approve`, {}),
+    reject: (id: string) => this.post(`/documents/${id}/reject`, {}),
+    delete: (id: string) => this.delete(`/documents/${id}`),
   };
 
-  // Folder endpoints
+  // Folder endpoints - Swagger: /api/havenzhub/folders
   folders = {
-    getAll: () => this.get('/folder'),
-    getTree: () => this.get('/folder/tree'),
-    getById: (id: string) => this.get(`/folder/${id}`),
-    getChildren: (id: string) => this.get(`/folder/${id}/children`),
-    getDocuments: (id: string) => this.get(`/folder/${id}/documents`),
-    create: (data: any) => this.post('/folder', data),
-    update: (id: string, data: any) => this.put(`/folder/${id}`, data),
-    delete: (id: string) => this.delete(`/folder/${id}`),
+    getAll: () => this.get('/folders'),
+    getTree: () => this.get('/folders/tree'),
+    getById: (id: string) => this.get(`/folders/${id}`),
+    getChildren: (id: string) => this.get(`/folders/${id}/children`),
+    getDocuments: (id: string) => this.get(`/folders/${id}/documents`),
+    create: (data: any) => this.post('/folders', data),
+    update: (id: string, data: any) => this.put(`/folders/${id}`, data),
+    delete: (id: string, cascade?: boolean) => this.delete(`/folders/${id}${cascade ? '?cascade=true' : ''}`),
   };
 
-  // BMS Device endpoints
+  // BMS Device endpoints - Swagger: /api/havenzhub/BmsDevice
   bmsDevices = {
-    getAll: () => this.get('/bmsdevice'),
-    getById: (id: string) => this.get(`/bmsdevice/${id}`),
-    getByProperty: (propertyId: string) => this.get(`/bmsdevice/property/${propertyId}`),
-    getByType: (type: string) => this.get(`/bmsdevice/type/${type}`),
-    getByStatus: (status: string) => this.get(`/bmsdevice/status/${status}`),
-    getByCompany: (companyId: string) => this.get(`/bmsdevice/company/${companyId}`),
-    getMaintenanceRequired: () => this.get('/bmsdevice/maintenance/required'),
-    create: (data: any) => this.post('/bmsdevice', data),
-    update: (id: string, data: any) => this.put(`/bmsdevice/${id}`, data),
-    delete: (id: string) => this.delete(`/bmsdevice/${id}`),
+    getAll: () => this.get('/BmsDevice'),
+    getById: (id: string) => this.get(`/BmsDevice/${id}`),
+    getByProperty: (propertyId: string) => this.get(`/BmsDevice/property/${propertyId}`),
+    getByType: (type: string) => this.get(`/BmsDevice/type/${type}`),
+    getByStatus: (status: string) => this.get(`/BmsDevice/status/${status}`),
+    getByCompany: (companyId: string) => this.get(`/BmsDevice/company/${companyId}`),
+    getMaintenanceRequired: () => this.get('/BmsDevice/maintenance/required'),
+    create: (data: any) => this.post('/BmsDevice', data),
+    update: (id: string, data: any) => this.put(`/BmsDevice/${id}`, data),
+    delete: (id: string) => this.delete(`/BmsDevice/${id}`),
   };
 
-  // Access Log endpoints
+  // Access Log endpoints - Swagger: /api/havenzhub/AccessLog
   accessLogs = {
-    getAll: () => this.get('/accesslog'),
-    getById: (id: number) => this.get(`/accesslog/${id}`),
-    getByUser: (userId: string) => this.get(`/accesslog/user/${userId}`),
-    getByProperty: (propertyId: string) => this.get(`/accesslog/property/${propertyId}`),
-    getByDevice: (deviceId: string) => this.get(`/accesslog/device/${deviceId}`),
-    getByCompany: (companyId: string) => this.get(`/accesslog/company/${companyId}`),
-    getByType: (accessType: string) => this.get(`/accesslog/type/${accessType}`),
+    getAll: () => this.get('/AccessLog'),
+    getById: (id: number) => this.get(`/AccessLog/${id}`),
+    getByUser: (userId: string) => this.get(`/AccessLog/user/${userId}`),
+    getByProperty: (propertyId: string) => this.get(`/AccessLog/property/${propertyId}`),
+    getByDevice: (deviceId: string) => this.get(`/AccessLog/device/${deviceId}`),
+    getByCompany: (companyId: string) => this.get(`/AccessLog/company/${companyId}`),
+    getByType: (accessType: string) => this.get(`/AccessLog/type/${accessType}`),
     getByDateRange: (startDate: string, endDate: string) =>
-      this.get(`/accesslog/daterange?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
-    getAnomalous: () => this.get('/accesslog/anomalous'),
-    getDenied: () => this.get('/accesslog/denied'),
-    create: (data: any) => this.post('/accesslog', data),
-    update: (id: number, data: any) => this.put(`/accesslog/${id}`, data),
-    delete: (id: number) => this.delete(`/accesslog/${id}`),
+      this.get(`/AccessLog/daterange?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+    getAnomalous: () => this.get('/AccessLog/anomalous'),
+    getDenied: () => this.get('/AccessLog/denied'),
+    create: (data: any) => this.post('/AccessLog', data),
+    update: (id: number, data: any) => this.put(`/AccessLog/${id}`, data),
+    delete: (id: number) => this.delete(`/AccessLog/${id}`),
   };
 
-  // IoT Metric endpoints
+  // IoT Metric endpoints - Swagger: /api/havenzhub/IotMetric
   iotMetrics = {
-    getAll: () => this.get('/iotmetric'),
-    getById: (id: number) => this.get(`/iotmetric/${id}`),
-    getByDevice: (deviceId: string) => this.get(`/iotmetric/device/${deviceId}`),
-    getByProperty: (propertyId: string) => this.get(`/iotmetric/property/${propertyId}`),
-    getByCompany: (companyId: string) => this.get(`/iotmetric/company/${companyId}`),
-    getByType: (metricType: string) => this.get(`/iotmetric/type/${metricType}`),
+    getAll: () => this.get('/IotMetric'),
+    getById: (id: number) => this.get(`/IotMetric/${id}`),
+    getByDevice: (deviceId: string) => this.get(`/IotMetric/device/${deviceId}`),
+    getByProperty: (propertyId: string) => this.get(`/IotMetric/property/${propertyId}`),
+    getByCompany: (companyId: string) => this.get(`/IotMetric/company/${companyId}`),
+    getByType: (metricType: string) => this.get(`/IotMetric/type/${metricType}`),
     getByDateRange: (startDate: string, endDate: string) =>
-      this.get(`/iotmetric/daterange?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
-    getAlerts: () => this.get('/iotmetric/alerts'),
-    getBySeverity: (severity: string) => this.get(`/iotmetric/severity/${severity}`),
-    create: (data: any) => this.post('/iotmetric', data),
-    update: (id: number, data: any) => this.put(`/iotmetric/${id}`, data),
-    delete: (id: number) => this.delete(`/iotmetric/${id}`),
+      this.get(`/IotMetric/daterange?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+    getAlerts: () => this.get('/IotMetric/alerts'),
+    getBySeverity: (severity: string) => this.get(`/IotMetric/severity/${severity}`),
+    create: (data: any) => this.post('/IotMetric', data),
+    update: (id: number, data: any) => this.put(`/IotMetric/${id}`, data),
+    delete: (id: number) => this.delete(`/IotMetric/${id}`),
   };
 
-  // Facial Recognition endpoints
+  // Facial Recognition endpoints - Swagger: /api/havenzhub/FacialRecognition
   facialRecognition = {
-    getAll: () => this.get('/facialrecognition'),
-    getById: (id: string) => this.get(`/facialrecognition/${id}`),
-    getByUser: (userId: string) => this.get(`/facialrecognition/user/${userId}`),
-    getByCompany: (companyId: string) => this.get(`/facialrecognition/company/${companyId}`),
-    getByStatus: (status: string) => this.get(`/facialrecognition/status/${status}`),
-    getExpired: () => this.get('/facialrecognition/expired'),
-    create: (data: any) => this.post('/facialrecognition', data),
-    update: (id: string, data: any) => this.put(`/facialrecognition/${id}`, data),
-    delete: (id: string) => this.delete(`/facialrecognition/${id}`),
+    getAll: () => this.get('/FacialRecognition'),
+    getById: (id: string) => this.get(`/FacialRecognition/${id}`),
+    getByUser: (userId: string) => this.get(`/FacialRecognition/user/${userId}`),
+    getByCompany: (companyId: string) => this.get(`/FacialRecognition/company/${companyId}`),
+    getByStatus: (status: string) => this.get(`/FacialRecognition/status/${status}`),
+    getExpired: () => this.get('/FacialRecognition/expired'),
+    create: (data: any) => this.post('/FacialRecognition', data),
+    update: (id: string, data: any) => this.put(`/FacialRecognition/${id}`, data),
+    delete: (id: string) => this.delete(`/FacialRecognition/${id}`),
   };
 }
 

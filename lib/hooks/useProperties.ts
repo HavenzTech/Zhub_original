@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type { Property, PropertyType, PropertyStatus } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -27,7 +28,7 @@ export function useProperties(): UsePropertiesReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.properties.getAll()
-      setProperties(data as Property[])
+      setProperties(extractArray<Property>(data))
     } catch (err) {
       const errorMessage =
         err instanceof BmsApiError ? err.message : "Failed to load properties"

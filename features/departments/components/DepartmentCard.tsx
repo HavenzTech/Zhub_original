@@ -13,7 +13,7 @@ interface DepartmentCardProps {
 }
 
 export function DepartmentCard({ department, onViewDetails }: DepartmentCardProps) {
-  const utilization = getBudgetUtilization(department.budgetAllocated, department.budgetSpent)
+  const utilization = getBudgetUtilization(department.budgetAllocated ?? undefined, department.budgetSpent ?? undefined)
 
   return (
     <Card
@@ -43,7 +43,7 @@ export function DepartmentCard({ department, onViewDetails }: DepartmentCardProp
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center">
             <div className="text-xl font-bold text-gray-900">
-              {formatCurrency(department.budgetAllocated)}
+              {formatCurrency(department.budgetAllocated ?? undefined)}
             </div>
             <div className="text-xs text-gray-600">Budget Allocated</div>
           </div>
@@ -56,7 +56,7 @@ export function DepartmentCard({ department, onViewDetails }: DepartmentCardProp
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Budget Spent:</span>
-            <span className="font-medium">{formatCurrency(department.budgetSpent)}</span>
+            <span className="font-medium">{formatCurrency(department.budgetSpent ?? undefined)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Remaining:</span>
@@ -68,7 +68,7 @@ export function DepartmentCard({ department, onViewDetails }: DepartmentCardProp
 
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="text-xs text-gray-500">
-            Updated: {getTimeAgo(department.updatedAt)}
+            Updated: {department.updatedAt ? getTimeAgo(department.updatedAt) : "N/A"}
           </div>
         </div>
       </CardContent>

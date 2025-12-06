@@ -1,5 +1,6 @@
 import { useState, useCallback, Dispatch, SetStateAction } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type { Document } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -31,7 +32,7 @@ export function useDocuments(): UseDocumentsReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.documents.getAll()
-      setDocuments(data as Document[])
+      setDocuments(extractArray<Document>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load documents")
       setError(error)
@@ -87,7 +88,7 @@ export function useDocuments(): UseDocumentsReturn {
 
   const deleteDocument = useCallback(async (id: string): Promise<boolean> => {
     try {
-      await bmsApi.documents.softDelete(id)
+      await bmsApi.documents.delete(id)
       setDocuments((prev) => prev.filter((doc) => doc.id !== id))
       toast.success("Document deleted successfully")
       return true

@@ -18,13 +18,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Loader2, Edit } from "lucide-react"
-import type { ProjectStatus, ProjectPriority } from "@/types/bms"
-
 interface ProjectFormData {
   name: string
   description: string
-  status: ProjectStatus
-  priority: ProjectPriority
+  status: string
+  priority: string
   progress: number
   startDate: string
   endDate: string
@@ -112,7 +110,7 @@ export function ProjectFormModal({
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      status: value as ProjectStatus,
+                      status: value,
                     })
                   }
                 >
@@ -138,7 +136,7 @@ export function ProjectFormModal({
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
-                      priority: value as ProjectPriority,
+                      priority: value,
                     })
                   }
                 >

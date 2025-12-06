@@ -50,7 +50,7 @@ export function PropertyDetails({ property, onBack, onEdit }: PropertyDetailsPro
                 </div>
                 <div>
                   <span className="text-gray-600">Property ID:</span>
-                  <div className="font-medium font-mono text-xs">{property.id.slice(0, 8)}...</div>
+                  <div className="font-medium font-mono text-xs">{property.id ? `${property.id.slice(0, 8)}...` : "N/A"}</div>
                 </div>
               </div>
             </div>
@@ -185,11 +185,11 @@ export function PropertyDetails({ property, onBack, onEdit }: PropertyDetailsPro
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Property ID</span>
-              <Badge variant="secondary" className="font-mono text-xs">{property.id.slice(0, 8)}...</Badge>
+              <Badge variant="secondary" className="font-mono text-xs">{property.id ? `${property.id.slice(0, 8)}...` : "N/A"}</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Company ID</span>
-              <Badge variant="secondary" className="font-mono text-xs">{property.companyId.slice(0, 8)}...</Badge>
+              <Badge variant="secondary" className="font-mono text-xs">{property.companyId ? `${property.companyId.slice(0, 8)}...` : "N/A"}</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Type</span>

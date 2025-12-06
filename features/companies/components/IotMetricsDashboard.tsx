@@ -247,7 +247,7 @@ export function IotMetricsDashboard({
                       {type} - Gauge Meter
                     </CardTitle>
                     <p className="text-sm text-gray-600">
-                      Current value: {latest.value.toFixed(1)} {latest.unit}
+                      Current value: {latest.value.toFixed(1)} {latest.unit ?? ""}
                     </p>
                   </CardHeader>
                   <CardContent>
@@ -256,7 +256,7 @@ export function IotMetricsDashboard({
                         value={latest.value}
                         max={max}
                         label="Current Value"
-                        unit={latest.unit}
+                        unit={latest.unit ?? undefined}
                         color={color}
                       />
                     </div>
@@ -359,7 +359,7 @@ function MetricCard({
           {metric.metricType}
         </div>
         <div className="text-xs text-gray-500 mt-2">
-          Last Updated: {getTimeAgo(metric.timestamp)}
+          Last Updated: {metric.timestamp ? getTimeAgo(metric.timestamp) : "N/A"}
         </div>
       </CardContent>
     </Card>
@@ -497,18 +497,18 @@ function MetricsTable({ metrics }: { metrics: IotMetric[] }) {
                                 : "bg-yellow-100 text-yellow-700 border-yellow-300"
                             }
                           >
-                            {getSeverityIcon(metric.alertSeverity)}
+                            {getSeverityIcon(metric.alertSeverity ?? undefined)}
                             <span className="ml-1 uppercase text-xs">
-                              {metric.alertSeverity}
+                              {metric.alertSeverity ?? ""}
                             </span>
                           </Badge>
                         )}
                       </div>
                       <div className="text-sm text-gray-600 mt-1">
                         <span className="font-medium">Device ID:</span>{" "}
-                        {metric.deviceId.slice(0, 8)}... •{" "}
+                        {metric.deviceId?.slice(0, 8) ?? "N/A"}... •{" "}
                         <span className="font-medium">Recorded:</span>{" "}
-                        {getTimeAgo(metric.timestamp)}
+                        {metric.timestamp ? getTimeAgo(metric.timestamp) : "N/A"}
                       </div>
                     </div>
                   </div>

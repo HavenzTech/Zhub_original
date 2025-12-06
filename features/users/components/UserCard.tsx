@@ -28,7 +28,7 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
             {user.pictureUrl ? (
               <Image
                 src={user.pictureUrl}
-                alt={user.name}
+                alt={user.name ?? "User"}
                 className="rounded-full object-cover"
                 height={48}
                 width={48}

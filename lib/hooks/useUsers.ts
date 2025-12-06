@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type { UserResponse, CreateUserRequest, CreateUserResponse } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -28,7 +29,7 @@ export function useUsers(): UseUsersReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.users.getAll()
-      setUsers(data as UserResponse[])
+      setUsers(extractArray<UserResponse>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load users")
       setError(error)

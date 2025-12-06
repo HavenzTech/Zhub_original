@@ -13,15 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
-import {
-  Document,
-  DocumentStatus,
-  DocumentAccessLevel,
-  DocumentCategory,
-  Folder,
-} from "@/types/bms";
+import { Document, Folder } from "@/types/bms";
 import { toast } from "sonner";
-import FolderTreeView from "@/components/FolderTreeView";
+import FolderTreeView from "@/features/documents/components/FolderTreeView";
 import { Upload, Plus, RefreshCw } from "lucide-react";
 
 const UploadDocumentModal = dynamic(
@@ -32,23 +26,23 @@ const UploadDocumentModal = dynamic(
   { ssr: false }
 );
 const CreateFolderModal = dynamic(
-  () => import("@/components/CreateFolderModal"),
+  () => import("@/features/documents/components/CreateFolderModal"),
   { ssr: false }
 );
 const EditMetadataModal = dynamic(
-  () => import("@/components/EditMetadataModal"),
+  () => import("@/features/documents/components/EditMetadataModal"),
   { ssr: false }
 );
 const DocumentViewModal = dynamic(
-  () => import("@/components/DocumentViewModal"),
+  () => import("@/features/documents/components/DocumentViewModal"),
   { ssr: false }
 );
 
 interface DocumentFormData {
   name: string;
-  status: DocumentStatus;
-  accessLevel: DocumentAccessLevel;
-  category: DocumentCategory | "";
+  status: string;
+  accessLevel: string;
+  category: string;
   tags: string;
   folderId: string | null;
   projectId: string | null;
@@ -58,9 +52,9 @@ interface DocumentFormData {
 
 const initialFormData: DocumentFormData = {
   name: "",
-  status: "draft" as DocumentStatus,
-  accessLevel: "private" as DocumentAccessLevel,
-  category: "" as DocumentCategory | "",
+  status: "draft",
+  accessLevel: "private",
+  category: "",
   tags: "",
   folderId: null,
   projectId: null,
@@ -75,9 +69,13 @@ export default function DocumentControlPage() {
 
   const [folders, setFolders] = useState<Folder[]>([]);
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
-  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [departments, setDepartments] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(
+    null
+  );
   const [selectedDocumentForModal, setSelectedDocumentForModal] =
     useState<Document | null>(null);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -89,7 +87,9 @@ export default function DocumentControlPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showEditMetadataModal, setShowEditMetadataModal] = useState(false);
-  const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
+  const [editingDocumentId, setEditingDocumentId] = useState<string | null>(
+    null
+  );
   const [formData, setFormData] = useState<DocumentFormData>(initialFormData);
 
   const loadFolders = useCallback(async () => {
@@ -202,7 +202,7 @@ export default function DocumentControlPage() {
 
   const handleDocumentDelete = async (documentId: string) => {
     try {
-      await bmsApi.documents.softDelete(documentId);
+      await bmsApi.documents.delete(documentId);
       toast.success("Document deleted successfully");
       setDocuments((prev) => prev.filter((d) => d.id !== documentId));
       await loadFolders();
@@ -308,10 +308,10 @@ export default function DocumentControlPage() {
         throw new Error("Authentication required. Please log in again.");
       }
 
-      const BMS_API_BASE = process.env.NEXT_PUBLIC_BMS_API_BASE_URL;
+      const BMS_API_BASE = process.env.NEXT_PUBLIC_API_URL;
       if (!BMS_API_BASE) {
         throw new Error(
-          "API configuration error: NEXT_PUBLIC_BMS_API_BASE_URL not set"
+          "API configuration error: NEXT_PUBLIC_API_URL not set"
         );
       }
 
@@ -391,20 +391,6 @@ export default function DocumentControlPage() {
     loadFolders();
   };
 
-  if (loading) {
-    return <LoadingSpinnerCentered text="Loading documents..." />;
-  }
-
-  if (error) {
-    return (
-      <ErrorDisplayCentered
-        title="Error loading documents"
-        message={error.message}
-        onRetry={loadDocuments}
-      />
-    );
-  }
-
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -456,21 +442,50 @@ export default function DocumentControlPage() {
                   <CardTitle className="text-base">Folders</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <FolderTreeView
-                    folders={folders}
-                    selectedFolderId={selectedFolderId}
-                    selectedDocumentId={selectedDocumentForModal?.id}
-                    onFolderSelect={setSelectedFolderId}
-                    onDocumentSelect={(doc) => {
-                      setSelectedDocumentForModal(doc);
-                      setShowDocumentModal(true);
-                    }}
-                    onFolderCreate={handleOpenCreateFolderModal}
-                    onFolderDelete={handleFolderDelete}
-                    onDocumentEdit={handleDocumentEdit}
-                    onDocumentDelete={handleDocumentDelete}
-                    showDocuments={true}
-                  />
+                  {loading ? (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-sm text-gray-600">Loading documents...</p>
+                      </div>
+                    </div>
+                  ) : error ? (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <span className="text-red-600 text-xl">!</span>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Unable to load documents
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-4 max-w-md">
+                          {error.message === "Failed to fetch"
+                            ? "Could not connect to the server. Please check your connection and try again."
+                            : error.message}
+                        </p>
+                        <Button variant="outline" onClick={handleRefresh}>
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Try Again
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <FolderTreeView
+                      folders={folders}
+                      selectedFolderId={selectedFolderId}
+                      selectedDocumentId={selectedDocumentForModal?.id}
+                      onFolderSelect={setSelectedFolderId}
+                      onDocumentSelect={(doc) => {
+                        setSelectedDocumentForModal(doc);
+                        setShowDocumentModal(true);
+                      }}
+                      onFolderCreate={handleOpenCreateFolderModal}
+                      onFolderDelete={handleFolderDelete}
+                      onDocumentEdit={handleDocumentEdit}
+                      onDocumentDelete={handleDocumentDelete}
+                      showDocuments={true}
+                    />
+                  )}
                 </CardContent>
               </Card>
             </div>
