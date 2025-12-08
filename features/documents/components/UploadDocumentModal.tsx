@@ -166,6 +166,7 @@ export function UploadDocumentModal({
                   <SelectContent>
                     <SelectItem value="public">Public</SelectItem>
                     <SelectItem value="private">Private</SelectItem>
+                    <SelectItem value="internal">Internal</SelectItem>
                     <SelectItem value="restricted">Restricted</SelectItem>
                   </SelectContent>
                 </Select>

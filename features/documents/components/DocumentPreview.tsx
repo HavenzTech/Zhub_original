@@ -2,11 +2,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Document } from "@/types/bms";
+import { Document, DocumentDownloadResponse } from "@/types/bms";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { authService } from "@/lib/services/auth";
+import { bmsApi } from "@/lib/services/bmsApi";
 import Image from "next/image";
 import {
   Download,
@@ -33,44 +33,50 @@ export default function DocumentPreview({
   const [previewError, setPreviewError] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
-  // Fetch document with authentication and create blob URL
+  // Fetch document directly from backend API and then from GCS
   useEffect(() => {
-    if (!document) return;
+    if (!document || !document.id) return;
+
+    // Track the current blob URL for cleanup
+    let currentBlobUrl: string | null = null;
+    let cancelled = false;
 
     const fetchDocument = async () => {
       try {
         setLoading(true);
+        setPreviewError(false);
         console.log("[DocumentPreview] Document object:", document);
         console.log("[DocumentPreview] Document ID:", document.id);
-        const token = authService.getToken();
-        const companyId = authService.getCurrentCompanyId();
 
-        const response = await fetch(`/api/document-download/${document.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "X-Company-Id": companyId || "",
-          },
-        });
+        // Get signed URL from backend API
+        const downloadData: DocumentDownloadResponse = await bmsApi.documents.getDownloadUrl(document.id!);
+        console.log("[DocumentPreview] Download response:", downloadData);
+
+        if (!downloadData.downloadUrl) {
+          console.error("[DocumentPreview] No download URL in response");
+          if (!cancelled) setPreviewError(true);
+          return;
+        }
+
+        // Fetch the file directly from GCS using the signed URL
+        const response = await fetch(downloadData.downloadUrl);
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error(
-            "[DocumentPreview] Failed to fetch document:",
-            errorText
-          );
-          console.error("[DocumentPreview] Status:", response.status);
-          setPreviewError(true);
+          console.error("[DocumentPreview] Failed to fetch from GCS:", response.status);
+          if (!cancelled) setPreviewError(true);
           return;
         }
 
         const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setBlobUrl(url);
+        if (!cancelled) {
+          currentBlobUrl = URL.createObjectURL(blob);
+          setBlobUrl(currentBlobUrl);
+        }
       } catch (error) {
-        console.error("Error fetching document:", error);
-        setPreviewError(true);
+        console.error("[DocumentPreview] Error fetching document:", error);
+        if (!cancelled) setPreviewError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
@@ -78,11 +84,12 @@ export default function DocumentPreview({
 
     // Cleanup blob URL when component unmounts or document changes
     return () => {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
+      cancelled = true;
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
       }
     };
-  }, [document, blobUrl]);
+  }, [document?.id]);
 
   if (!document) {
     return (
@@ -105,6 +112,21 @@ export default function DocumentPreview({
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 25, 200));
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 25, 50));
   const handleResetZoom = () => setZoom(100);
+
+  const handleDownload = () => {
+    if (blobUrl && document) {
+      // Create a temporary link to trigger download
+      const link = window.document.createElement("a");
+      link.href = blobUrl;
+      link.download = document.name;
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+    } else if (onDownload && document) {
+      // Fallback to provided onDownload handler
+      onDownload(document);
+    }
+  };
 
   const getFileTypeIcon = (type?: string) => {
     const lowerType = type?.toLowerCase() || "";
@@ -143,7 +165,7 @@ export default function DocumentPreview({
             <p className="text-sm text-gray-500 mb-4">
               Unable to load the document preview
             </p>
-            <Button onClick={() => onDownload?.(document)}>
+            <Button onClick={handleDownload}>
               <Download className="w-4 h-4 mr-2" />
               Download file
             </Button>
@@ -204,7 +226,7 @@ export default function DocumentPreview({
             <p className="text-sm text-gray-500 mb-4">
               Excel preview coming soon
             </p>
-            <Button onClick={() => onDownload?.(document)}>
+            <Button onClick={handleDownload}>
               <Download className="w-4 h-4 mr-2" />
               Download to view
             </Button>
@@ -224,7 +246,7 @@ export default function DocumentPreview({
           <p className="text-sm text-gray-500 mb-4">
             This file type cannot be previewed in the browser
           </p>
-          <Button onClick={() => onDownload?.(document)}>
+          <Button onClick={handleDownload}>
             <Download className="w-4 h-4 mr-2" />
             Download file
           </Button>
@@ -280,7 +302,7 @@ export default function DocumentPreview({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDownload?.(document)}
+              onClick={handleDownload}
             >
               <Download className="w-4 h-4 mr-2" />
               Download

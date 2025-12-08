@@ -1,7 +1,6 @@
 // API route to download documents from BMS backend with authentication
+// Uses GCS signed URLs from backend endpoint
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
 
 const BMS_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5087'
 
@@ -27,12 +26,12 @@ export async function GET(
       return NextResponse.json({ error: 'Company ID required' }, { status: 400 })
     }
 
-    // First, get document metadata to get the storage path
-    console.log(`[Document Download] Fetching document metadata for ID: ${id}`)
+    // Call the backend download endpoint to get signed URL
+    console.log(`[Document Download] Fetching signed URL for document ID: ${id}`)
     console.log(`[Document Download] Company ID: ${companyId}`)
-    console.log(`[Document Download] Using BMS API: ${BMS_API_BASE}/api/havenzhub/document/${id}`)
+    console.log(`[Document Download] Using BMS API: ${BMS_API_BASE}/api/havenzhub/documents/${id}/download`)
 
-    const metadataResponse = await fetch(`${BMS_API_BASE}/api/havenzhub/document/${id}`, {
+    const downloadResponse = await fetch(`${BMS_API_BASE}/api/havenzhub/documents/${id}/download`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'X-Company-Id': companyId,
@@ -40,45 +39,55 @@ export async function GET(
       }
     })
 
-    if (!metadataResponse.ok) {
-      const errorText = await metadataResponse.text()
-      console.error(`[Document Download] Failed to fetch metadata: ${metadataResponse.status} - ${errorText}`)
+    if (!downloadResponse.ok) {
+      const errorText = await downloadResponse.text()
+      console.error(`[Document Download] Failed to get download URL: ${downloadResponse.status}`)
+      console.error(`[Document Download] Response body: ${errorText}`)
+      console.error(`[Document Download] Response headers:`, Object.fromEntries(downloadResponse.headers.entries()))
       return NextResponse.json(
-        { error: 'Document not found', details: errorText },
-        { status: metadataResponse.status }
+        {
+          error: `Backend returned ${downloadResponse.status}`,
+          details: errorText,
+          endpoint: `${BMS_API_BASE}/api/havenzhub/documents/${id}/download`
+        },
+        { status: downloadResponse.status || 500 }
       )
     }
 
-    const document = await metadataResponse.json()
-    console.log(`[Document Download] Document metadata:`, document)
+    const downloadData = await downloadResponse.json()
+    console.log(`[Document Download] Download response:`, downloadData)
 
-    // The storage path is like "/uploads/{companyId}/{filename}"
-    // We need to read the file from the backend's file system
-    const storagePath = document.storagePath
+    // downloadData contains: { downloadUrl, fileName, fileType, expiresInMinutes }
+    const { downloadUrl, fileName, fileType } = downloadData
 
-    // Construct the full file path on the backend
-    // The backend stores files at: c:/repositories/HavenzBMS/WebApp/uploads/{companyId}/{filename}
-    const backendRoot = 'c:/repositories/HavenzBMS/WebApp'
-    const filePath = path.join(backendRoot, storagePath.replace(/^\//, ''))
-
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      console.error('File not found at path:', filePath)
+    if (!downloadUrl) {
+      console.error('[Document Download] No download URL in response')
       return NextResponse.json(
-        { error: 'File not found on server', path: filePath },
-        { status: 404 }
+        { error: 'No download URL available' },
+        { status: 500 }
       )
     }
 
-    // Read file buffer
-    const fileBuffer = fs.readFileSync(filePath)
+    // Fetch the actual file from GCS using the signed URL
+    console.log(`[Document Download] Fetching file from GCS: ${downloadUrl.substring(0, 100)}...`)
+    const fileResponse = await fetch(downloadUrl)
+
+    if (!fileResponse.ok) {
+      console.error(`[Document Download] Failed to fetch from GCS: ${fileResponse.status}`)
+      return NextResponse.json(
+        { error: 'Failed to download file from storage' },
+        { status: fileResponse.status }
+      )
+    }
+
+    const fileBuffer = await fileResponse.arrayBuffer()
 
     // Return file with proper headers
     return new NextResponse(fileBuffer, {
       headers: {
-        'Content-Type': document.fileType || 'application/octet-stream',
-        'Content-Disposition': `inline; filename="${document.name}"`,
-        'Cache-Control': 'public, max-age=31536000'
+        'Content-Type': fileType || 'application/octet-stream',
+        'Content-Disposition': `inline; filename="${fileName}"`,
+        'Cache-Control': 'public, max-age=3600' // Cache for 1 hour (signed URLs expire in 60 min)
       }
     })
   } catch (error) {

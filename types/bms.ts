@@ -498,6 +498,13 @@ export interface FileUploadResponse {
   originalFileName?: string | null;
 }
 
+export interface DocumentDownloadResponse {
+  downloadUrl?: string | null;
+  fileName?: string | null;
+  fileType?: string | null;
+  expiresInMinutes?: number;
+}
+
 // ============================================
 // Folder Types
 // ============================================

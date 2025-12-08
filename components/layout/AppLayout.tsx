@@ -67,7 +67,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const [todosPanelCollapsed, setTodosPanelCollapsed] = useState(false);
+  const [todosPanelCollapsed, setTodosPanelCollapsed] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
