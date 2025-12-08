@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { bmsApi } from "@/lib/services/bmsApi";
 import {
   MessageCircle,
   Send,
@@ -80,28 +81,27 @@ export default function DocumentChatPanel({
         document.id
       );
 
-      // Send the document's storage path to Python so it can read from BMS storage directly
-      // The storagePath is like: "/uploads/{companyId}/{uniqueFileName}.pdf"
-      const storagePath = (document as any).storagePath || "";
+      // Get signed GCS URL from ASP.NET backend (same as DocumentPreview)
+      console.log("[Chat] Getting signed URL for document:", document.id);
+      const downloadData = await bmsApi.documents.getDownloadUrl(document.id!);
 
-      // Construct the full file path for Python to access
-      // Python will read from: c:/repositories/HavenzBMS/WebApp/uploads/{companyId}/{file}
-      const fullPath = `c:/repositories/HavenzBMS/WebApp${storagePath}`;
+      if (!downloadData.downloadUrl) {
+        throw new Error("Could not get document download URL");
+      }
 
-      console.log("[Chat] Document storage path:", fullPath);
+      console.log("[Chat] Got signed GCS URL:", downloadData.downloadUrl.substring(0, 100) + "...");
 
-      // Call the Python API with the file path
+      // Call the Python AI Backend API with the GCS signed URL
       const pythonApiUrl =
-        process.env.NEXT_PUBLIC_PYTHON_API ||
-        process.env.NEXT_PUBLIC_API_URL ||
-        "http://localhost:5087";
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8001";
+      console.log("[Chat] Using Python API URL:", pythonApiUrl);
       const response = await fetch(`${pythonApiUrl}/analyze-document`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          document_id: fullPath,
+          document_id: downloadData.downloadUrl, // Pass the signed GCS URL
           query: input,
           page_num: -1, // -1 means analyze all pages
         }),

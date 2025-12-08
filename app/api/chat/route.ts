@@ -1,11 +1,15 @@
 // app/api/chat/route.ts - Proxy endpoint to RAG backend
 import { NextRequest, NextResponse } from 'next/server'
 
+// Python AI Backend URL - uses env variable or falls back to localhost
+const RAG_BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
     console.log('Sending to RAG backend:', JSON.stringify(body, null, 2))
+    console.log('RAG backend URL:', RAG_BACKEND_URL)
 
     // Prepare request for HavenzHub-AI backend (matches BACKEND_API.md spec)
     const ragRequest = {
@@ -27,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call your RAG backend
-    const response = await fetch('http://localhost:8001/chat/agent', {
+    const response = await fetch(`${RAG_BACKEND_URL}/chat/agent`, {
       method: 'POST',
       headers,
       body: JSON.stringify(ragRequest)
