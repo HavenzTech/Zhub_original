@@ -316,7 +316,7 @@ export default function DocumentControlPage() {
       }
 
       const uploadResponse = await fetch(
-        `${BMS_API_BASE}/api/havenzhub/document/upload`,
+        `${BMS_API_BASE}/api/havenzhub/documents/upload`,
         {
           method: "POST",
           headers: {
@@ -335,14 +335,16 @@ export default function DocumentControlPage() {
       }
 
       const uploadResult = await uploadResponse.json();
+      console.log("📤 Upload result from /documents/upload:", uploadResult);
 
+      // Map upload response fields to document payload
+      // Upload returns: fileId, fileType, fileSizeBytes, contentHash, originalFileName
       const payload: Record<string, unknown> = {
-        documentId: uploadResult.documentId,
         name: formData.name,
         fileType: uploadResult.fileType || selectedFile.type || "unknown",
         fileSizeBytes: uploadResult.fileSizeBytes || selectedFile.size,
         contentHash: uploadResult.contentHash,
-        storagePath: uploadResult.storagePath,
+        storagePath: uploadResult.fileId, // fileId is the GCS path
         version: 1,
         accessLevel: formData.accessLevel,
         folderId: formData.folderId === "root" ? null : formData.folderId,
@@ -359,6 +361,8 @@ export default function DocumentControlPage() {
         originalFileName: selectedFile.name,
         uploadDate: new Date().toISOString(),
       });
+
+      console.log("📝 Payload being sent to POST /documents:", JSON.stringify(payload, null, 2));
 
       const newDocument = await bmsApi.documents.create(payload);
 

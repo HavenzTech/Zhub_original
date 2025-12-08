@@ -153,14 +153,6 @@ export default function PropertiesPage() {
       property.locationCity?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
-    return <LoadingSpinnerCentered text="Loading properties..." />;
-  }
-
-  if (error) {
-    return <ErrorDisplayCentered message={error} onRetry={loadProperties} />;
-  }
-
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -186,55 +178,87 @@ export default function PropertiesPage() {
           </div>
         </div>
 
-        {/* Stats Overview */}
-        <PropertyStats properties={properties} />
-
-        {/* Search */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-            <Input
-              placeholder="Search properties..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-sm text-gray-600">Loading properties...</p>
+            </div>
           </div>
-          <Badge variant="secondary">
-            {filteredProperties.length}{" "}
-            {filteredProperties.length === 1 ? "property" : "properties"}
-          </Badge>
-        </div>
-
-        {/* Properties Grid */}
-        {filteredProperties.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredProperties.map((property) => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                onClick={handleViewDetails}
-              />
-            ))}
+        ) : error ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-red-600 text-xl">!</span>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Unable to load properties
+              </h3>
+              <p className="text-sm text-gray-600 mb-4 max-w-md">
+                {typeof error === "string" && error === "Failed to fetch"
+                  ? "Could not connect to the server. Please check your connection and try again."
+                  : error}
+              </p>
+              <Button variant="outline" onClick={loadProperties}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="text-center py-12">
-            <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No properties found
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm
-                ? "Try adjusting your search criteria"
-                : "Get started by adding your first property"}
-            </p>
-            {authService.hasPermission("create", "property") && (
-              <Button onClick={() => setShowAddForm(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add First Property
-              </Button>
+          <>
+            {/* Stats Overview */}
+            <PropertyStats properties={properties} />
+
+            {/* Search */}
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                <Input
+                  placeholder="Search properties..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Badge variant="secondary">
+                {filteredProperties.length}{" "}
+                {filteredProperties.length === 1 ? "property" : "properties"}
+              </Badge>
+            </div>
+
+            {/* Properties Grid */}
+            {filteredProperties.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredProperties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    onClick={handleViewDetails}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Home className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No properties found
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {searchTerm
+                    ? "Try adjusting your search criteria"
+                    : "Get started by adding your first property"}
+                </p>
+                {authService.hasPermission("create", "property") && (
+                  <Button onClick={() => setShowAddForm(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add First Property
+                  </Button>
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
 
         {/* Add Property Modal */}

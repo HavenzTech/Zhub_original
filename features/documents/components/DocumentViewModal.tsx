@@ -48,10 +48,8 @@ export default function DocumentViewModal({
                 <DocumentPreview
                   document={document}
                   onDownload={(doc) => {
-                    window.open(
-                      `http://localhost:5087/api/havenzhub/document/${doc.id}/download`,
-                      "_blank"
-                    );
+                    // Use our proxy route which handles auth and fetches signed URL
+                    window.open(`/api/document-download/${doc.id}`, "_blank");
                   }}
                 />
               </div>

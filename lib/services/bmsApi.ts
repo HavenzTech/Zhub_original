@@ -1,4 +1,4 @@
-import { ApiResponse, ApiError } from '@/types/bms';
+import { ApiResponse, ApiError, DocumentDownloadResponse } from '@/types/bms';
 
 // Environment variables - configured in .env.local
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -320,6 +320,8 @@ class BmsApiService {
     approve: (id: string) => this.post(`/documents/${id}/approve`, {}),
     reject: (id: string) => this.post(`/documents/${id}/reject`, {}),
     delete: (id: string) => this.delete(`/documents/${id}`),
+    // Get signed download URL for GCS-stored documents
+    getDownloadUrl: (id: string) => this.get<DocumentDownloadResponse>(`/documents/${id}/download`),
   };
 
   // Folder endpoints - Swagger: /api/havenzhub/folders

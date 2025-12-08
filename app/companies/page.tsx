@@ -131,20 +131,6 @@ export default function CompaniesPage() {
       company.industry?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
-    return <LoadingSpinnerCentered text="Loading companies..." />;
-  }
-
-  if (error) {
-    return (
-      <ErrorDisplayCentered
-        title="Error loading companies"
-        message={error.message}
-        onRetry={loadCompanies}
-      />
-    );
-  }
-
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -170,25 +156,55 @@ export default function CompaniesPage() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-            <Input
-              placeholder="Search companies..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-sm text-gray-600">Loading companies...</p>
+            </div>
           </div>
-          <Badge variant="secondary">
-            {filteredCompanies.length}{" "}
-            {filteredCompanies.length === 1 ? "company" : "companies"}
-          </Badge>
-        </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-red-600 text-xl">!</span>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Unable to load companies
+              </h3>
+              <p className="text-sm text-gray-600 mb-4 max-w-md">
+                {error.message === "Failed to fetch"
+                  ? "Could not connect to the server. Please check your connection and try again."
+                  : error.message}
+              </p>
+              <Button variant="outline" onClick={loadCompanies}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Search */}
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                <Input
+                  placeholder="Search companies..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <Badge variant="secondary">
+                {filteredCompanies.length}{" "}
+                {filteredCompanies.length === 1 ? "company" : "companies"}
+              </Badge>
+            </div>
 
-        {/* Companies Grid */}
-        {filteredCompanies.length > 0 ? (
+            {/* Companies Grid */}
+            {filteredCompanies.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredCompanies.map((company) => (
               <CompanyCard
@@ -216,6 +232,8 @@ export default function CompaniesPage() {
               </Button>
             )}
           </div>
+        )}
+          </>
         )}
 
         {/* Add Company Modal */}
