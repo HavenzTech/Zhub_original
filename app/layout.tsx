@@ -1,7 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter, Geist_Mono as GeistMono } from "next/font/google"
-import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 // Use Inter for better readability and modern look
@@ -23,7 +22,6 @@ export const metadata: Metadata = {
   keywords: ["organizational management", "business intelligence", "document control", "workflow automation"],
   authors: [{ name: "Havenz Hub Team" }],
   robots: "index, follow",
-  themeColor: "#00C49A",
 }
 
 // Separate viewport export (required for Next.js 14+)
@@ -32,6 +30,7 @@ export function generateViewport() {
     width: 'device-width',
     initialScale: 1,
     colorScheme: 'light',
+    themeColor: '#00C49A',
   }
 }
 
@@ -49,7 +48,6 @@ export default function RootLayout({
         <div className="min-h-screen bg-gradient-to-br from-background to-muted/10">
           {children}
         </div>
-        <Toaster position="top-right" richColors closeButton />
 
         {/* Optional: Add a global loading indicator or other global components */}
         <div id="toast-container" className="fixed top-4 right-4 z-50 space-y-2" />
