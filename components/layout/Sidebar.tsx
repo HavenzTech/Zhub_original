@@ -85,23 +85,25 @@ export function Sidebar() {
       <div className="p-4 h-full flex flex-col">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8">
-          {!sidebarCollapsed ? (
-            <Image
-              src="/logo.png"
-              alt="Havenz Hub"
-              width={120}
-              height={32}
-              className="h-8 object-contain"
-            />
-          ) : (
-            <Image
-              src="/logo.png"
-              alt="Havenz Hub"
-              width={32}
-              height={32}
-              className="w-8 h-8 object-contain mx-auto"
-            />
-          )}
+          <Link href="/">
+            {!sidebarCollapsed ? (
+              <Image
+                src="/logo.png"
+                alt="Havenz Hub"
+                width={120}
+                height={32}
+                className="h-8 object-contain"
+              />
+            ) : (
+              <Image
+                src="/logo.png"
+                alt="Havenz Hub"
+                width={32}
+                height={32}
+                className="w-8 h-8 object-contain mx-auto"
+              />
+            )}
+          </Link>
           <Button
             variant="ghost"
             size="icon"

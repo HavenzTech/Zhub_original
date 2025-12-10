@@ -17,6 +17,16 @@ import { authService } from "@/lib/services/auth";
 import { Project } from "@/types/bms";
 import { toast } from "sonner";
 import { FolderOpen, Plus, Search, RefreshCw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ProjectFormModal = dynamic(
   () =>
@@ -47,6 +57,7 @@ export default function ProjectsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
+  const [deleteProject, setDeleteProject] = useState<Project | null>(null);
 
   useEffect(() => {
     const auth = authService.getAuth();
@@ -92,6 +103,27 @@ export default function ProjectsPage() {
 
   const handleViewDetails = (project: Project) => {
     router.push(`/projects/${project.id}`);
+  };
+
+  const handleDeleteClick = (project: Project) => {
+    setDeleteProject(project);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteProject) return;
+
+    try {
+      await bmsApi.projects.delete(deleteProject.id!);
+      setProjects((prev) => prev.filter((p) => p.id !== deleteProject.id));
+      toast.success(`Project "${deleteProject.name}" deleted successfully`);
+    } catch (err) {
+      const errorMessage =
+        err instanceof BmsApiError ? err.message : "Failed to delete project";
+      toast.error(errorMessage);
+      console.error("Error deleting project:", err);
+    } finally {
+      setDeleteProject(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -210,6 +242,7 @@ export default function ProjectsPage() {
                     key={project.id}
                     project={project}
                     onViewDetails={handleViewDetails}
+                    onDelete={handleDeleteClick}
                   />
                 ))}
               </div>
@@ -245,6 +278,34 @@ export default function ProjectsPage() {
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
         />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog
+          open={!!deleteProject}
+          onOpenChange={(open) => !open && setDeleteProject(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Project</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete{" "}
+                <strong>{deleteProject?.name}</strong>? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteProject(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="!bg-red-600 hover:!bg-red-700 !text-white focus:ring-red-600"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );

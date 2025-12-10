@@ -99,11 +99,11 @@ export function useUsers(): UseUsersReturn {
       setUsers((prev: UserResponse[]) =>
         prev.filter((user: UserResponse) => user.id !== id)
       )
-      toast.success("User deleted successfully")
+      toast.success("User deactivated successfully")
       return true
     } catch (err) {
-      const error = err instanceof Error ? err : new Error("Failed to delete user")
-      toast.error("Failed to delete user", {
+      const error = err instanceof Error ? err : new Error("Failed to deactivate user")
+      toast.error("Failed to deactivate user", {
         description: error.message,
       })
       return false

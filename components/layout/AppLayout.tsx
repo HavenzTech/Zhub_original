@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Bot,
   Bell,
@@ -22,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserProfile } from "@/features/users/components/UserProfile";
 import { Sidebar } from "./Sidebar";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { BreadcrumbProvider, useBreadcrumb } from "@/contexts/BreadcrumbContext";
 
 // Mock todos data - in production this would come from API
 const recentTodos = [
@@ -66,28 +68,40 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+// Route to base title mapping
+const routeTitles: Record<string, { title: string; href: string }> = {
+  companies: { title: "Companies", href: "/companies" },
+  departments: { title: "Departments", href: "/departments" },
+  projects: { title: "Projects", href: "/projects" },
+  properties: { title: "Properties", href: "/properties" },
+  "document-control": { title: "Document Control", href: "/document-control" },
+  users: { title: "User Management", href: "/users" },
+  workflows: { title: "Workflows", href: "/workflows" },
+  "virtual-chatbots": { title: "Virtual Chatbots", href: "/virtual-chatbots" },
+  "secure-datacenter": { title: "Secure Data Center", href: "/secure-datacenter" },
+  "bms-hardware": { title: "BMS Hardware", href: "/bms-hardware" },
+  "z-ai": { title: "Z AI Assistant", href: "/z-ai" },
+  settings: { title: "Settings", href: "/settings" },
+};
+
+function AppLayoutContent({ children }: AppLayoutProps) {
   const [todosPanelCollapsed, setTodosPanelCollapsed] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
+  const { breadcrumbs } = useBreadcrumb();
 
-  // Get page title based on pathname
-  const getPageTitle = () => {
-    if (pathname === "/") return "Global Dashboard";
-    if (pathname === "/companies") return "Companies";
-    if (pathname === "/departments") return "Departments";
-    if (pathname === "/projects") return "Projects";
-    if (pathname === "/properties") return "Properties";
-    if (pathname === "/document-control") return "Document Control";
-    if (pathname === "/users") return "User Management";
-    if (pathname === "/workflows") return "Workflows";
-    if (pathname === "/virtual-chatbots") return "Virtual Chatbots";
-    if (pathname === "/secure-datacenter") return "Secure Data Center";
-    if (pathname === "/bms-hardware") return "BMS Hardware";
-    if (pathname === "/z-ai") return "Z AI Assistant";
-    if (pathname === "/settings") return "Settings";
-    return "Havenz Hub";
+  // Get base route info from pathname
+  const getRouteInfo = () => {
+    if (pathname === "/") return { title: "Global Dashboard", href: "/" };
+
+    const segments = pathname.split("/").filter(Boolean);
+    const baseRoute = segments[0];
+
+    return routeTitles[baseRoute] || { title: "Havenz Hub", href: "/" };
   };
+
+  const routeInfo = getRouteInfo();
+  const isDetailPage = pathname.split("/").filter(Boolean).length > 1;
 
   return (
     <div className="h-screen flex bg-gray-50">
@@ -100,20 +114,39 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="flex-1 flex flex-col">
           {/* Enhanced Header */}
           <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-            <div className="flex items-center gap-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {getPageTitle()}
-              </h2>
-
-              {/* Breadcrumb indicators */}
-              {pathname !== "/" && (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <ChevronRight className="w-4 h-4" />
-                  <span className="capitalize">
-                    {pathname.replace("/", "").replace("-", " ")}
-                  </span>
-                </div>
+            <div className="flex items-center gap-2 text-sm">
+              {/* Base route - always a link on detail pages */}
+              {isDetailPage ? (
+                <Link
+                  href={routeInfo.href}
+                  className="text-lg font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  {routeInfo.title}
+                </Link>
+              ) : (
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {routeInfo.title}
+                </h2>
               )}
+
+              {/* Dynamic breadcrumbs from context */}
+              {breadcrumbs.map((crumb, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  {crumb.href ? (
+                    <Link
+                      href={crumb.href}
+                      className="text-lg font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+                    >
+                      {crumb.label}
+                    </Link>
+                  ) : (
+                    <span className="text-lg font-semibold text-gray-900">
+                      {crumb.label}
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
 
             <div className="flex items-center gap-4">
@@ -249,5 +282,14 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrapper component that provides the BreadcrumbContext
+export function AppLayout({ children }: AppLayoutProps) {
+  return (
+    <BreadcrumbProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </BreadcrumbProvider>
   );
 }

@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
 import { DepartmentDetails } from "@/features/departments/components/DepartmentDetails";
+import { MembersAssignment } from "@/components/common/MembersAssignment";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
+import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { Department } from "@/types/bms";
 import { toast } from "sonner";
 
@@ -41,6 +43,12 @@ export default function DepartmentDetailPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
+
+  // Memoize breadcrumb items to prevent unnecessary re-renders
+  const breadcrumbItems = useMemo(
+    () => (department?.name ? [{ label: department.name }] : []),
+    [department?.name]
+  );
 
   const loadDepartment = useCallback(async () => {
     if (!departmentId) return;
@@ -163,9 +171,19 @@ export default function DepartmentDetailPage() {
 
   return (
     <AppLayout>
+      {/* Set breadcrumb inside AppLayout where provider exists */}
+      {breadcrumbItems.length > 0 && <SetBreadcrumb items={breadcrumbItems} />}
+
       <div className="space-y-6">
         {/* Department Details */}
         <DepartmentDetails department={department} onBack={handleBack} onEdit={handleEdit} />
+
+        {/* Members Assignment */}
+        <MembersAssignment
+          entityType="department"
+          entityId={department.id!}
+          entityName={department.name || "this department"}
+        />
 
         {/* Edit Modal */}
         <DepartmentFormModal

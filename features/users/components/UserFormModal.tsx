@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { UserResponse, CreateUserRequest, UserRole } from "@/types/bms";
-import { UserPlus, Check, Loader2 } from "lucide-react";
+import { UserPlus, Check, Loader2, Upload, X, User } from "lucide-react";
 import { getRoleBadgeColor, getRoleLabel } from "../utils/userHelpers";
 
 interface UserFormModalProps {
@@ -34,6 +35,8 @@ interface UserFormModalProps {
   setEditFormData?: (data: { name: string; pictureUrl: string }) => void;
   isSubmitting: boolean;
   onSubmit: (e: React.FormEvent) => void;
+  avatarFile?: File | null;
+  setAvatarFile?: (file: File | null) => void;
 }
 
 export function UserFormModal({
@@ -47,8 +50,40 @@ export function UserFormModal({
   setEditFormData,
   isSubmitting,
   onSubmit,
+  avatarFile,
+  setAvatarFile,
 }: UserFormModalProps) {
   const isEdit = mode === "edit";
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size must be less than 5MB");
+        return;
+      }
+      setAvatarFile?.(file);
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatarFile?.(null);
+    setAvatarPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const currentAvatarUrl = isEdit ? editingUser?.pictureUrl : formData.pictureUrl;
+  const displayAvatarUrl = avatarPreview || currentAvatarUrl;
 
   if (isEdit && editingUser && editFormData && setEditFormData) {
     return (
@@ -95,20 +130,61 @@ export function UserFormModal({
                 </span>
               </div>
             </div>
+            {/* Avatar Upload */}
             <div className="space-y-2">
-              <Label htmlFor="edit-pictureUrl">Picture URL (optional)</Label>
-              <Input
-                id="edit-pictureUrl"
-                type="url"
-                placeholder="https://example.com/photo.jpg"
-                value={editFormData.pictureUrl}
-                onChange={(e) =>
-                  setEditFormData({
-                    ...editFormData,
-                    pictureUrl: e.target.value,
-                  })
-                }
-              />
+              <Label>Profile Picture</Label>
+              <div className="flex items-start gap-4">
+                <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center overflow-hidden bg-gray-50">
+                  {displayAvatarUrl ? (
+                    <img
+                      src={displayAvatarUrl}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="edit-avatar"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {displayAvatarUrl ? "Change" : "Upload"}
+                    </Button>
+                    {(avatarFile || avatarPreview) && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveAvatar}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  {avatarFile && (
+                    <p className="text-xs text-gray-500">
+                      Selected: {avatarFile.name}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    PNG, JPG up to 5MB
+                  </p>
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -195,17 +271,61 @@ export function UserFormModal({
               </SelectContent>
             </Select>
           </div>
+          {/* Avatar Upload */}
           <div className="space-y-2">
-            <Label htmlFor="pictureUrl">Picture URL (optional)</Label>
-            <Input
-              id="pictureUrl"
-              type="url"
-              placeholder="https://example.com/photo.jpg"
-              value={formData.pictureUrl ?? ""}
-              onChange={(e) =>
-                setFormData({ ...formData, pictureUrl: e.target.value })
-              }
-            />
+            <Label>Profile Picture (optional)</Label>
+            <div className="flex items-start gap-4">
+              <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center overflow-hidden bg-gray-50">
+                {displayAvatarUrl ? (
+                  <img
+                    src={displayAvatarUrl}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-8 h-8 text-gray-400" />
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="add-avatar"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {displayAvatarUrl ? "Change" : "Upload"}
+                  </Button>
+                  {(avatarFile || avatarPreview) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveAvatar}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                {avatarFile && (
+                  <p className="text-xs text-gray-500">
+                    Selected: {avatarFile.name}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500">
+                  PNG, JPG up to 5MB. Avatar can be uploaded after user is created.
+                </p>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button

@@ -13,10 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
-import { Document, Folder } from "@/types/bms";
+import { Document, Folder, UserResponse } from "@/types/bms";
 import { toast } from "sonner";
 import FolderTreeView from "@/features/documents/components/FolderTreeView";
 import { Upload, Plus, RefreshCw } from "lucide-react";
+import type { UploadFormData, UserAccess } from "@/features/documents/components/UploadDocumentModal";
 
 const UploadDocumentModal = dynamic(
   () =>
@@ -38,19 +39,7 @@ const DocumentViewModal = dynamic(
   { ssr: false }
 );
 
-interface DocumentFormData {
-  name: string;
-  status: string;
-  accessLevel: string;
-  category: string;
-  tags: string;
-  folderId: string | null;
-  projectId: string | null;
-  departmentId: string | null;
-  gcpFolderPath: string;
-}
-
-const initialFormData: DocumentFormData = {
+const initialFormData: UploadFormData = {
   name: "",
   status: "draft",
   accessLevel: "private",
@@ -58,7 +47,9 @@ const initialFormData: DocumentFormData = {
   tags: "",
   folderId: null,
   projectId: null,
-  departmentId: null,
+  propertyId: null,
+  departmentIds: [],
+  userAccess: [],
   gcpFolderPath: "",
 };
 
@@ -72,6 +63,8 @@ export default function DocumentControlPage() {
   const [departments, setDepartments] = useState<
     { id: string; name: string }[]
   >([]);
+  const [users, setUsers] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(
     null
@@ -90,7 +83,7 @@ export default function DocumentControlPage() {
   const [editingDocumentId, setEditingDocumentId] = useState<string | null>(
     null
   );
-  const [formData, setFormData] = useState<DocumentFormData>(initialFormData);
+  const [formData, setFormData] = useState<UploadFormData>(initialFormData);
 
   const loadFolders = useCallback(async () => {
     try {
@@ -103,7 +96,11 @@ export default function DocumentControlPage() {
 
   const loadProjects = useCallback(async () => {
     try {
-      const data = await bmsApi.projects.getAll();
+      const response = await bmsApi.projects.getAll();
+      // Handle both array and paginated response formats
+      const data = Array.isArray(response)
+        ? response
+        : (response as any)?.items || (response as any)?.data || [];
       setProjects(data as { id: string; name: string }[]);
     } catch (err) {
       console.error("Error loading projects:", err);
@@ -112,10 +109,46 @@ export default function DocumentControlPage() {
 
   const loadDepartments = useCallback(async () => {
     try {
-      const data = await bmsApi.departments.getAll();
+      const response = await bmsApi.departments.getAll();
+      // Handle both array and paginated response formats
+      const data = Array.isArray(response)
+        ? response
+        : (response as any)?.items || (response as any)?.data || [];
       setDepartments(data as { id: string; name: string }[]);
     } catch (err) {
       console.error("Error loading departments:", err);
+    }
+  }, []);
+
+  const loadUsers = useCallback(async () => {
+    try {
+      const response = await bmsApi.users.getAll();
+      // Handle both array and paginated response formats
+      const data = Array.isArray(response)
+        ? response
+        : (response as any)?.items || (response as any)?.data || [];
+      setUsers(
+        data.map((u: UserResponse) => ({
+          id: u.id || "",
+          name: u.name || "",
+          email: u.email || "",
+        }))
+      );
+    } catch (err) {
+      console.error("Error loading users:", err);
+    }
+  }, []);
+
+  const loadProperties = useCallback(async () => {
+    try {
+      const response = await bmsApi.properties.getAll();
+      // Handle both array and paginated response formats
+      const data = Array.isArray(response)
+        ? response
+        : (response as any)?.items || (response as any)?.data || [];
+      setProperties(data as { id: string; name: string }[]);
+    } catch (err) {
+      console.error("Error loading properties:", err);
     }
   }, []);
 
@@ -136,7 +169,9 @@ export default function DocumentControlPage() {
     loadFolders();
     loadProjects();
     loadDepartments();
-  }, [router, loadDocuments, loadFolders, loadProjects, loadDepartments]);
+    loadUsers();
+    loadProperties();
+  }, [router, loadDocuments, loadFolders, loadProjects, loadDepartments, loadUsers, loadProperties]);
 
   const findFolderById = (
     folderId: string,
@@ -225,7 +260,10 @@ export default function DocumentControlPage() {
         id: document.id,
         companyId: document.companyId,
         uploadedByUserId: document.uploadedByUserId,
-        folderId: document.folderId,
+        folderId: updates.folderId !== undefined ? updates.folderId : document.folderId,
+        projectId: updates.projectId !== undefined ? updates.projectId : document.projectId,
+        departmentId: updates.departmentId !== undefined ? updates.departmentId : document.departmentId,
+        propertyId: updates.propertyId !== undefined ? updates.propertyId : document.propertyId,
         name: updates.name || document.name,
         fileType: document.fileType,
         fileSizeBytes: document.fileSizeBytes,
@@ -293,8 +331,9 @@ export default function DocumentControlPage() {
       if (formData.projectId) {
         formDataUpload.append("context", `project:${formData.projectId}`);
       }
-      if (formData.departmentId) {
-        formDataUpload.append("context", `dept:${formData.departmentId}`);
+      // Add first department to context if any selected (for GCS organization)
+      if (formData.departmentIds.length > 0) {
+        formDataUpload.append("context", `dept:${formData.departmentIds[0]}`);
       }
 
       if (formData.gcpFolderPath && formData.gcpFolderPath.trim()) {
@@ -337,19 +376,27 @@ export default function DocumentControlPage() {
       const uploadResult = await uploadResponse.json();
       console.log("📤 Upload result from /documents/upload:", uploadResult);
 
+      // Generate a new UUID for the document
+      const documentId = crypto.randomUUID();
+
       // Map upload response fields to document payload
       // Upload returns: fileId, fileType, fileSizeBytes, contentHash, originalFileName
+      // Backend CreateDocumentRequest requires: documentId, storagePath, name
       const payload: Record<string, unknown> = {
+        documentId: documentId,
+        storagePath: uploadResult.fileId, // fileId is the GCS path (gs://...)
         name: formData.name,
         fileType: uploadResult.fileType || selectedFile.type || "unknown",
         fileSizeBytes: uploadResult.fileSizeBytes || selectedFile.size,
         contentHash: uploadResult.contentHash,
-        storagePath: uploadResult.fileId, // fileId is the GCS path
         version: 1,
         accessLevel: formData.accessLevel,
         folderId: formData.folderId === "root" ? null : formData.folderId,
       };
 
+      // Optional fields
+      if (formData.projectId) payload.projectId = formData.projectId;
+      if (formData.propertyId) payload.propertyId = formData.propertyId;
       if (formData.category) payload.category = formData.category;
 
       if (formData.tags?.trim()) {
@@ -365,6 +412,31 @@ export default function DocumentControlPage() {
       console.log("📝 Payload being sent to POST /documents:", JSON.stringify(payload, null, 2));
 
       const newDocument = await bmsApi.documents.create(payload);
+      const docId = (newDocument as Document).id;
+
+      // Step 3 (optional): Assign departments if selected
+      if (formData.departmentIds.length > 0 && docId) {
+        for (const deptId of formData.departmentIds) {
+          try {
+            await bmsApi.documents.assignDepartment(docId, deptId);
+            console.log(`✅ Department ${deptId} assigned to document`);
+          } catch (deptErr) {
+            console.warn(`Failed to assign department ${deptId}:`, deptErr);
+          }
+        }
+      }
+
+      // Step 4 (optional): Grant user access if selected
+      if (formData.userAccess.length > 0 && docId) {
+        for (const user of formData.userAccess) {
+          try {
+            await bmsApi.documents.grantUserAccess(docId, user.userId, user.accessLevel);
+            console.log(`✅ User ${user.userName} granted ${user.accessLevel} access`);
+          } catch (userErr) {
+            console.warn(`Failed to grant access to user ${user.userName}:`, userErr);
+          }
+        }
+      }
 
       setDocuments((prev) => [...prev, newDocument as Document]);
       toast.success("Document uploaded successfully!");
@@ -425,7 +497,8 @@ export default function DocumentControlPage() {
                 {authService.hasPermission("create", "document") && (
                   <Button
                     onClick={() => {
-                      setFormData({ ...formData, folderId: selectedFolderId });
+                      setFormData({ ...initialFormData, folderId: selectedFolderId });
+                      setSelectedFile(null);
                       setShowUploadModal(true);
                     }}
                   >
@@ -513,6 +586,8 @@ export default function DocumentControlPage() {
           folders={folders}
           projects={projects}
           departments={departments}
+          properties={properties}
+          users={users}
           onSubmit={handleSubmit}
           onFileChange={handleFileChange}
         />
@@ -544,6 +619,10 @@ export default function DocumentControlPage() {
               : null
           }
           onSave={handleSaveMetadata}
+          folders={folders}
+          projects={projects}
+          departments={departments}
+          properties={properties}
         />
 
         <DocumentViewModal

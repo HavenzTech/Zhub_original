@@ -36,6 +36,7 @@ interface CompanyDetailsProps {
 export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
   const [iotMetrics, setIotMetrics] = useState<IotMetric[]>([]);
   const [loadingMetrics, setLoadingMetrics] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const loadIotMetrics = async () => {
     if (!company.id) return;
@@ -64,13 +65,14 @@ export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              {company.logoUrl ? (
+              {company.logoUrl && !imageError ? (
                 <Image
                   src={company.logoUrl}
                   alt={company.name}
                   className="rounded-xl object-cover"
                   width={64}
                   height={64}
+                  onError={() => setImageError(true)}
                 />
               ) : (
                 <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center">

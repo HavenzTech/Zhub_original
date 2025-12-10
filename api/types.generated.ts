@@ -121,12 +121,16 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description OK */
-                200: {
+                /** @description Method Not Allowed */
+                405: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
                 };
             };
         };
@@ -460,6 +464,428 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/equipment/{equipmentId}/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                };
+                header?: never;
+                path: {
+                    equipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AlertsResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/properties/{propertyId}/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                    alertType?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path: {
+                    propertyId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AlertsResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/alerts/{id}/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipmentAlertDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/alerts/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipmentAlertDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/properties/{propertyId}/areas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    areaType?: string;
+                    floorLevel?: number;
+                    includeInactive?: boolean;
+                };
+                header?: never;
+                path: {
+                    propertyId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AreaDto"][];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    propertyId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateAreaRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AreaDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/properties/{propertyId}/areas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    propertyId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AreaDetailDto"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    propertyId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateAreaRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AreaDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    propertyId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1237,15 +1663,439 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Not Implemented */
-                501: {
+                /** @description No Content */
+                204: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/companies/{id}/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateCompanyLogoRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CompanyDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/havenzhub/companies/{id}/logo/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                    "application/json": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CompanyDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/companies/{id}/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserSummaryDto"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/definitions/property-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TypeDefinition"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/definitions/area-types/{propertyType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    propertyType: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/definitions/equipment-types/{propertyType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    propertyType: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/definitions/metric-definitions/{equipmentType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    equipmentType: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipmentMetricDefinitionDto"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/definitions/equipment-types-with-metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1855,6 +2705,8 @@ export interface paths {
                     status?: string;
                     category?: string;
                     search?: string;
+                    departmentId?: string;
+                    projectId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -2263,6 +3115,554 @@ export interface paths {
                 };
                 /** @description Forbidden */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/documents/{id}/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    accessLevel?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DocumentActionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/documents/{id}/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DocumentUserAccessDto"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/documents/{id}/departments/{departmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    departmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DocumentActionResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    departmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/documents/{id}/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DocumentDepartmentDto"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/equipment/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipmentDetailDto"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateEquipmentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipmentDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/areas/{areaId}/equipment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    areaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateEquipmentRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipmentDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3453,6 +4853,146 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/havenzhub/equipment/{equipmentId}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    equipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipmentMetricDto"][];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    equipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateMetricsRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EquipmentMetricDto"][];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/equipment/{equipmentId}/metrics/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    metricKey?: string;
+                    from?: string;
+                    to?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    equipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MetricHistoryResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/havenzhub/projects": {
         parameters: {
             query?: never;
@@ -3949,6 +5489,184 @@ export interface paths {
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/projects/{projectId}/departments/{departmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    departmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DepartmentAssignmentResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                    departmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MemberActionResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/projects/{projectId}/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectDepartmentDto"][];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -4995,6 +6713,255 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/havenzhub/users/me/avatar/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                    "application/json": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/users/{id}/avatar/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                    "application/json": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UserResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/webhooks/iot-metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["IotMetricsWebhookRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebhookResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/webhooks/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebhookResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5084,6 +7051,108 @@ export interface components {
             /** Format: uuid */
             userId: string;
             role: string;
+        };
+        AlertsResponse: {
+            alerts?: components["schemas"]["EquipmentAlertDto"][] | null;
+            /** Format: int32 */
+            totalCount?: number;
+            /** Format: int32 */
+            activeCount?: number;
+            /** Format: int32 */
+            acknowledgedCount?: number;
+            /** Format: int32 */
+            resolvedCount?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
+        Area: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            propertyId: string;
+            name: string;
+            areaType: string;
+            color?: string | null;
+            /** Format: int32 */
+            floorLevel?: number;
+            /** Format: int32 */
+            zoneCount?: number;
+            /** Format: double */
+            squareFootage?: number | null;
+            /** Format: int32 */
+            occupancyCapacity?: number | null;
+            /** Format: int32 */
+            currentOccupancy?: number;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            property?: components["schemas"]["Property"];
+            equipment?: components["schemas"]["Equipment"][] | null;
+        };
+        AreaDetailDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            propertyId?: string;
+            name?: string | null;
+            areaType?: string | null;
+            color?: string | null;
+            /** Format: int32 */
+            floorLevel?: number;
+            /** Format: int32 */
+            zoneCount?: number;
+            /** Format: double */
+            squareFootage?: number | null;
+            /** Format: int32 */
+            occupancyCapacity?: number | null;
+            /** Format: int32 */
+            currentOccupancy?: number;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int32 */
+            equipmentCount?: number;
+            /** Format: int32 */
+            activeAlertsCount?: number;
+            propertyName?: string | null;
+            equipment?: components["schemas"]["EquipmentSummaryDto"][] | null;
+        };
+        AreaDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            propertyId?: string;
+            name?: string | null;
+            areaType?: string | null;
+            color?: string | null;
+            /** Format: int32 */
+            floorLevel?: number;
+            /** Format: int32 */
+            zoneCount?: number;
+            /** Format: double */
+            squareFootage?: number | null;
+            /** Format: int32 */
+            occupancyCapacity?: number | null;
+            /** Format: int32 */
+            currentOccupancy?: number;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int32 */
+            equipmentCount?: number;
+            /** Format: int32 */
+            activeAlertsCount?: number;
+            propertyName?: string | null;
         };
         BmsDevice: {
             /** Format: uuid */
@@ -5272,6 +7341,19 @@ export interface components {
             temperatureReading?: number | null;
             notes?: string | null;
         };
+        CreateAreaRequest: {
+            name: string;
+            areaType: string;
+            color?: string | null;
+            /** Format: int32 */
+            floorLevel?: number | null;
+            /** Format: int32 */
+            zoneCount?: number | null;
+            /** Format: double */
+            squareFootage?: number | null;
+            /** Format: int32 */
+            occupancyCapacity?: number | null;
+        };
         CreateBmsDeviceRequest: {
             /** Format: uuid */
             propertyId: string;
@@ -5334,6 +7416,7 @@ export interface components {
             /** Format: int64 */
             fileSizeBytes?: number | null;
             contentHash?: string | null;
+            storagePath: string;
             /** Format: int32 */
             version?: number;
             accessLevel?: string | null;
@@ -5348,6 +7431,24 @@ export interface components {
             departmentId?: string | null;
             /** Format: uuid */
             propertyId?: string | null;
+        };
+        CreateEquipmentRequest: {
+            name?: string | null;
+            equipmentType?: string | null;
+            model?: string | null;
+            manufacturer?: string | null;
+            serialNumber?: string | null;
+            /** Format: double */
+            positionX?: number | null;
+            /** Format: double */
+            positionY?: number | null;
+            /** Format: double */
+            positionZ?: number | null;
+            /** Format: int32 */
+            slotIndex?: number | null;
+            /** Format: date */
+            installDate?: string | null;
+            iotDeviceId?: string | null;
         };
         CreateFacialRecognitionRequest: {
             /** Format: uuid */
@@ -5497,6 +7598,18 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        DepartmentAssignmentResponse: {
+            message?: string | null;
+            /** Format: uuid */
+            projectId?: string;
+            /** Format: uuid */
+            departmentId?: string;
+            departmentName?: string | null;
+            /** Format: int32 */
+            membersAdded?: number;
+            /** Format: int32 */
+            totalDepartmentMembers?: number;
+        };
         DepartmentDto: {
             /** Format: uuid */
             id?: string;
@@ -5621,6 +7734,13 @@ export interface components {
             document?: components["schemas"]["Document"];
             user?: components["schemas"]["User"];
         };
+        DocumentDepartmentDto: {
+            /** Format: uuid */
+            departmentId?: string;
+            departmentName?: string | null;
+            /** Format: date-time */
+            assignedAt?: string;
+        };
         DocumentDownloadResponse: {
             downloadUrl?: string | null;
             fileName?: string | null;
@@ -5668,9 +7788,267 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        DocumentUserAccessDto: {
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+            userEmail?: string | null;
+            accessLevel?: string | null;
+            /** Format: date-time */
+            grantedAt?: string;
+            /** Format: uuid */
+            grantedByUserId?: string | null;
+            grantedByUserName?: string | null;
+        };
         EmailCheckResponse: {
             email?: string | null;
             available?: boolean;
+        };
+        Equipment: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            areaId: string;
+            name: string;
+            equipmentType: string;
+            model?: string | null;
+            manufacturer?: string | null;
+            serialNumber?: string | null;
+            status?: string | null;
+            /** Format: double */
+            positionX?: number | null;
+            /** Format: double */
+            positionY?: number | null;
+            /** Format: double */
+            positionZ?: number | null;
+            /** Format: int32 */
+            slotIndex?: number | null;
+            /** Format: date */
+            installDate?: string | null;
+            /** Format: date */
+            lastServiceDate?: string | null;
+            /** Format: date */
+            nextServiceDate?: string | null;
+            /** Format: double */
+            runtimeHours?: number;
+            iotDeviceId?: string | null;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            area?: components["schemas"]["Area"];
+            metrics?: components["schemas"]["EquipmentMetric"][] | null;
+            alerts?: components["schemas"]["EquipmentAlert"][] | null;
+        };
+        EquipmentAlert: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            equipmentId: string;
+            metricKey?: string | null;
+            alertType: string;
+            title: string;
+            message?: string | null;
+            /** Format: double */
+            value?: number | null;
+            /** Format: double */
+            threshold?: number | null;
+            isAcknowledged?: boolean;
+            /** Format: uuid */
+            acknowledgedBy?: string | null;
+            /** Format: date-time */
+            acknowledgedAt?: string | null;
+            /** Format: date-time */
+            resolvedAt?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            equipment?: components["schemas"]["Equipment"];
+            acknowledgedByUser?: components["schemas"]["User"];
+        };
+        EquipmentAlertDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            equipmentId?: string;
+            metricKey?: string | null;
+            alertType?: string | null;
+            title?: string | null;
+            message?: string | null;
+            /** Format: double */
+            value?: number | null;
+            /** Format: double */
+            threshold?: number | null;
+            isAcknowledged?: boolean;
+            /** Format: uuid */
+            acknowledgedBy?: string | null;
+            acknowledgedByName?: string | null;
+            /** Format: date-time */
+            acknowledgedAt?: string | null;
+            /** Format: date-time */
+            resolvedAt?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            equipmentName?: string | null;
+            areaName?: string | null;
+        };
+        EquipmentDetailDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            areaId?: string;
+            name?: string | null;
+            equipmentType?: string | null;
+            model?: string | null;
+            manufacturer?: string | null;
+            serialNumber?: string | null;
+            status?: string | null;
+            /** Format: double */
+            positionX?: number | null;
+            /** Format: double */
+            positionY?: number | null;
+            /** Format: double */
+            positionZ?: number | null;
+            /** Format: int32 */
+            slotIndex?: number | null;
+            /** Format: date */
+            installDate?: string | null;
+            /** Format: date */
+            lastServiceDate?: string | null;
+            /** Format: date */
+            nextServiceDate?: string | null;
+            /** Format: double */
+            runtimeHours?: number;
+            iotDeviceId?: string | null;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            areaName?: string | null;
+            /** Format: int32 */
+            activeAlertsCount?: number;
+            metrics?: components["schemas"]["EquipmentMetricDto"][] | null;
+            activeAlerts?: components["schemas"]["EquipmentAlertDto"][] | null;
+        };
+        EquipmentDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            areaId?: string;
+            name?: string | null;
+            equipmentType?: string | null;
+            model?: string | null;
+            manufacturer?: string | null;
+            serialNumber?: string | null;
+            status?: string | null;
+            /** Format: double */
+            positionX?: number | null;
+            /** Format: double */
+            positionY?: number | null;
+            /** Format: double */
+            positionZ?: number | null;
+            /** Format: int32 */
+            slotIndex?: number | null;
+            /** Format: date */
+            installDate?: string | null;
+            /** Format: date */
+            lastServiceDate?: string | null;
+            /** Format: date */
+            nextServiceDate?: string | null;
+            /** Format: double */
+            runtimeHours?: number;
+            iotDeviceId?: string | null;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            areaName?: string | null;
+            /** Format: int32 */
+            activeAlertsCount?: number;
+        };
+        EquipmentMetric: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            equipmentId: string;
+            metricKey: string;
+            /** Format: double */
+            currentValue: number;
+            /** Format: double */
+            previousValue?: number | null;
+            trend?: string | null;
+            /** Format: double */
+            changeValue?: number | null;
+            /** Format: double */
+            changePercent?: number | null;
+            /** Format: date-time */
+            recordedAt?: string;
+            equipment?: components["schemas"]["Equipment"];
+        };
+        EquipmentMetricDefinitionDto: {
+            /** Format: uuid */
+            id?: string;
+            equipmentType?: string | null;
+            metricKey?: string | null;
+            label?: string | null;
+            unit?: string | null;
+            /** Format: double */
+            minValue?: number | null;
+            /** Format: double */
+            maxValue?: number | null;
+            /** Format: double */
+            warningThresholdLow?: number | null;
+            /** Format: double */
+            warningThresholdHigh?: number | null;
+            /** Format: double */
+            criticalThresholdLow?: number | null;
+            /** Format: double */
+            criticalThresholdHigh?: number | null;
+            /** Format: int32 */
+            displayOrder?: number;
+        };
+        EquipmentMetricDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            equipmentId?: string;
+            metricKey?: string | null;
+            /** Format: double */
+            currentValue?: number;
+            /** Format: double */
+            previousValue?: number | null;
+            trend?: string | null;
+            /** Format: double */
+            changeValue?: number | null;
+            /** Format: double */
+            changePercent?: number | null;
+            /** Format: date-time */
+            recordedAt?: string;
+            label?: string | null;
+            unit?: string | null;
+            /** Format: double */
+            minValue?: number | null;
+            /** Format: double */
+            maxValue?: number | null;
+            /** Format: double */
+            warningThresholdLow?: number | null;
+            /** Format: double */
+            warningThresholdHigh?: number | null;
+            /** Format: double */
+            criticalThresholdLow?: number | null;
+            /** Format: double */
+            criticalThresholdHigh?: number | null;
+        };
+        EquipmentSummaryDto: {
+            /** Format: uuid */
+            id?: string;
+            name?: string | null;
+            equipmentType?: string | null;
+            status?: string | null;
+            /** Format: int32 */
+            alertsCount?: number;
         };
         FacialRecognition: {
             /** Format: uuid */
@@ -5873,6 +8251,14 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        IotMetricsWebhookRequest: {
+            device_id?: string | null;
+            /** Format: date-time */
+            timestamp?: string | null;
+            readings?: {
+                [key: string]: number;
+            } | null;
+        };
         LoginRequest: {
             /** Format: email */
             email: string;
@@ -5895,6 +8281,18 @@ export interface components {
             /** Format: uuid */
             entityId?: string;
             role?: string | null;
+        };
+        MetricDataPoint: {
+            /** Format: double */
+            value?: number;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        MetricHistoryResponse: {
+            metricKey?: string | null;
+            label?: string | null;
+            unit?: string | null;
+            dataPoints?: components["schemas"]["MetricDataPoint"][] | null;
         };
         PasswordChangeResponse: {
             message?: string | null;
@@ -5947,6 +8345,15 @@ export interface components {
             createdAt?: string;
             project?: components["schemas"]["Project"];
             department?: components["schemas"]["Department"];
+        };
+        ProjectDepartmentDto: {
+            /** Format: uuid */
+            departmentId?: string;
+            departmentName?: string | null;
+            /** Format: date-time */
+            assignedAt?: string;
+            /** Format: int32 */
+            memberCount?: number;
         };
         ProjectDto: {
             /** Format: uuid */
@@ -6031,6 +8438,7 @@ export interface components {
             name: string;
             description?: string | null;
             type?: string | null;
+            propertyType?: string | null;
             status: string;
             locationAddress?: string | null;
             locationCity?: string | null;
@@ -6061,6 +8469,7 @@ export interface components {
             bmsDevices?: components["schemas"]["BmsDevice"][] | null;
             accessLogs?: components["schemas"]["AccessLog"][] | null;
             iotMetrics?: components["schemas"]["IotMetric"][] | null;
+            areas?: components["schemas"]["Area"][] | null;
         };
         PropertyDepartment: {
             /** Format: uuid */
@@ -6215,6 +8624,28 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        TypeDefinition: {
+            value?: string | null;
+            label?: string | null;
+        };
+        UpdateAreaRequest: {
+            /** Format: uuid */
+            id?: string;
+            name: string;
+            areaType: string;
+            color?: string | null;
+            /** Format: int32 */
+            floorLevel?: number | null;
+            /** Format: int32 */
+            zoneCount?: number | null;
+            /** Format: double */
+            squareFootage?: number | null;
+            /** Format: int32 */
+            occupancyCapacity?: number | null;
+            /** Format: int32 */
+            currentOccupancy?: number | null;
+            isActive?: boolean | null;
+        };
         UpdateBmsDeviceRequest: {
             /** Format: uuid */
             id: string;
@@ -6246,6 +8677,10 @@ export interface components {
             lastMaintenanceDate?: string | null;
             notes?: string | null;
         };
+        UpdateCompanyLogoRequest: {
+            /** Format: uri */
+            logoUrl: string;
+        };
         UpdateCompanyRequest: {
             /** Format: uuid */
             id: string;
@@ -6263,6 +8698,8 @@ export interface components {
             /** Format: uri */
             website?: string | null;
             status?: string | null;
+            /** Format: uri */
+            logoUrl?: string | null;
         };
         UpdateDepartmentRequest: {
             /** Format: uuid */
@@ -6294,6 +8731,34 @@ export interface components {
             metadata?: string | null;
             tags?: string | null;
         };
+        UpdateEquipmentRequest: {
+            /** Format: uuid */
+            id?: string;
+            name?: string | null;
+            equipmentType?: string | null;
+            model?: string | null;
+            manufacturer?: string | null;
+            serialNumber?: string | null;
+            status?: string | null;
+            /** Format: double */
+            positionX?: number | null;
+            /** Format: double */
+            positionY?: number | null;
+            /** Format: double */
+            positionZ?: number | null;
+            /** Format: int32 */
+            slotIndex?: number | null;
+            /** Format: date */
+            installDate?: string | null;
+            /** Format: date */
+            lastServiceDate?: string | null;
+            /** Format: date */
+            nextServiceDate?: string | null;
+            /** Format: double */
+            runtimeHours?: number | null;
+            iotDeviceId?: string | null;
+            isActive?: boolean | null;
+        };
         UpdateFacialRecognitionRequest: {
             /** Format: uuid */
             id: string;
@@ -6318,6 +8783,13 @@ export interface components {
         };
         UpdateMemberRoleRequest: {
             role: string;
+        };
+        UpdateMetricsRequest: {
+            readings?: {
+                [key: string]: number;
+            } | null;
+            /** Format: date-time */
+            timestamp?: string | null;
         };
         UpdateProjectRequest: {
             /** Format: uuid */
@@ -6499,6 +8971,21 @@ export interface components {
             /** Format: int32 */
             pageSize?: number;
             readonly hasMore?: boolean;
+        };
+        UserSummaryDto: {
+            /** Format: uuid */
+            id?: string;
+            name?: string | null;
+            email?: string | null;
+            pictureUrl?: string | null;
+            role?: string | null;
+            /** Format: date-time */
+            joinedAt?: string;
+        };
+        WebhookResponse: {
+            success?: boolean;
+            message?: string | null;
+            data?: unknown;
         };
     };
     responses: never;

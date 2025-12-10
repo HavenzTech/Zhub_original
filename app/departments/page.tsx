@@ -17,6 +17,16 @@ import { useDepartments } from "@/lib/hooks/useDepartments";
 import { DepartmentCard } from "@/features/departments/components/DepartmentCard";
 import { DepartmentStats } from "@/features/departments/components/DepartmentStats";
 import { Users, Plus, Search, RefreshCw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const DepartmentFormModal = dynamic(
   () =>
@@ -45,6 +55,7 @@ export default function DepartmentsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
+  const [deleteDepartment, setDeleteDepartment] = useState<Department | null>(null);
 
   useEffect(() => {
     const auth = authService.getAuth();
@@ -87,6 +98,27 @@ export default function DepartmentsPage() {
 
   const handleViewDetails = (department: Department) => {
     router.push(`/departments/${department.id}`);
+  };
+
+  const handleDeleteClick = (department: Department) => {
+    setDeleteDepartment(department);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDepartment) return;
+
+    try {
+      await bmsApi.departments.delete(deleteDepartment.id!);
+      setDepartments((prev: Department[]) => prev.filter((d) => d.id !== deleteDepartment.id));
+      toast.success(`Department "${deleteDepartment.name}" deleted successfully`);
+    } catch (err) {
+      const errorMessage =
+        err instanceof BmsApiError ? err.message : "Failed to delete department";
+      toast.error(errorMessage);
+      console.error("Error deleting department:", err);
+    } finally {
+      setDeleteDepartment(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -214,6 +246,7 @@ export default function DepartmentsPage() {
                     key={department.id}
                     department={department}
                     onViewDetails={handleViewDetails}
+                    onDelete={handleDeleteClick}
                   />
                 ))}
               </div>
@@ -249,6 +282,34 @@ export default function DepartmentsPage() {
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
         />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog
+          open={!!deleteDepartment}
+          onOpenChange={(open) => !open && setDeleteDepartment(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Department</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete{" "}
+                <strong>{deleteDepartment?.name}</strong>? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteDepartment(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="!bg-red-600 hover:!bg-red-700 !text-white focus:ring-red-600"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );

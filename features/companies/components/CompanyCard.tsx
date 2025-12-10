@@ -1,8 +1,8 @@
-import { memo } from "react"
+import { memo, useState } from "react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Building2, MapPin, Calendar, Eye } from "lucide-react"
+import { Building2, MapPin, Calendar, Eye, Trash2 } from "lucide-react"
 import Image from "next/image"
 import type { Company } from "@/types/bms"
 import {
@@ -11,13 +11,18 @@ import {
   formatDate,
   getTimeAgo,
 } from "../utils/companyHelpers"
+import { authService } from "@/lib/services/auth"
 
 interface CompanyCardProps {
   company: Company
   onViewDetails: (company: Company) => void
+  onDelete?: (company: Company) => void
 }
 
-export const CompanyCard = memo(function CompanyCard({ company, onViewDetails }: CompanyCardProps) {
+export const CompanyCard = memo(function CompanyCard({ company, onViewDetails, onDelete }: CompanyCardProps) {
+  const isSuperAdmin = authService.getCurrentRole() === "super_admin"
+  const [imageError, setImageError] = useState(false)
+
   return (
     <Card
       className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -26,13 +31,14 @@ export const CompanyCard = memo(function CompanyCard({ company, onViewDetails }:
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {company.logoUrl ? (
+            {company.logoUrl && !imageError ? (
               <Image
                 src={company.logoUrl}
                 alt={company.name}
                 className="w-12 h-12 rounded-lg object-cover"
                 height={48}
                 width={48}
+                onError={() => setImageError(true)}
               />
             ) : (
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -97,6 +103,19 @@ export const CompanyCard = memo(function CompanyCard({ company, onViewDetails }:
             >
               <Eye className="w-4 h-4" />
             </Button>
+            {isSuperAdmin && onDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(company)
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>

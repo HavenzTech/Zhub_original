@@ -1,7 +1,8 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { FolderOpen } from "lucide-react"
+import { FolderOpen, Trash2 } from "lucide-react"
 import type { Project } from "@/types/bms"
 import {
   getStatusColor,
@@ -9,13 +10,17 @@ import {
   formatCurrency,
   formatDate,
 } from "../utils/projectHelpers"
+import { authService } from "@/lib/services/auth"
 
 interface ProjectCardProps {
   project: Project
   onViewDetails: (project: Project) => void
+  onDelete?: (project: Project) => void
 }
 
-export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
+export function ProjectCard({ project, onViewDetails, onDelete }: ProjectCardProps) {
+  const isSuperAdmin = authService.getCurrentRole() === "super_admin"
+
   return (
     <Card
       className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -86,6 +91,22 @@ export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
             <span className="font-medium">{formatDate(project.endDate)}</span>
           </div>
         </div>
+
+        {isSuperAdmin && onDelete && (
+          <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(project)
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

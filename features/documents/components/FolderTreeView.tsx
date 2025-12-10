@@ -120,11 +120,11 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   };
 
   return (
-    <div className="select-none">
+    <div className="select-none space-y-1">
       {/* Folder Row */}
       <div
-        className={`group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors ${
-          isSelected ? "bg-accent" : ""
+        className={`group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-gray-200 transition-colors ${
+          isSelected ? "bg-accent" : "bg-gray-100"
         }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={handleSelect}
@@ -147,20 +147,20 @@ const FolderNode: React.FC<FolderNodeProps> = ({
 
         {/* Folder Icon */}
         {isExpanded ? (
-          <FolderOpen className="h-4 w-4 text-blue-500 flex-shrink-0" />
+          <FolderOpen className="h-4 w-4 text-gray-900 flex-shrink-0" />
         ) : (
-          <Folder className="h-4 w-4 text-blue-500 flex-shrink-0" />
+          <Folder className="h-4 w-4 text-gray-900 flex-shrink-0" />
         )}
 
         {/* Folder Name */}
-        <span className="text-sm font-medium truncate flex-1">
+        <span className="text-base font-medium truncate flex-1">
           {folder.name}
         </span>
 
         {/* Document Count */}
         {showDocuments && folder.documents && folder.documents.length > 0 && (
-          <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-            {folder.documents.length}
+          <span className="text-xs font-medium text-gray-700 bg-gray-200 px-2 py-0.5 rounded">
+            {folder.documents.length} {folder.documents.length === 1 ? "File" : "Files"}
           </span>
         )}
 
@@ -168,53 +168,33 @@ const FolderNode: React.FC<FolderNodeProps> = ({
         {onFolderCreate && (
           <button
             onClick={handleCreateSubfolder}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-blue-100 rounded transition-opacity"
-            title="Create subfolder"
+            className="opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-900 bg-gray-100 hover:bg-gray-200 rounded transition-opacity"
           >
-            <Plus className="h-3.5 w-3.5 text-black" />
+            <Plus className="h-3.5 w-3.5" />
+            Subfolder
           </button>
         )}
       </div>
 
-      {/* Child Folders */}
-      {isExpanded && hasChildren && (
-        <div className="mt-0.5">
-          {folder.childFolders!.map((childFolder) => (
-            <FolderNode
-              key={childFolder.id}
-              folder={childFolder}
-              selectedFolderId={selectedFolderId}
-              selectedDocumentId={selectedDocumentId}
-              onSelect={onSelect}
-              onDocumentSelect={onDocumentSelect}
-              onFolderCreate={onFolderCreate}
-              onFolderDelete={onFolderDelete}
-              onDocumentEdit={onDocumentEdit}
-              onDocumentDelete={onDocumentDelete}
-              showDocuments={showDocuments}
-              level={level + 1}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Documents in Folder */}
+      {/* Documents in Folder (shown before subfolders for better readability) */}
       {isExpanded && showDocuments && hasDocuments && (
-        <div className="mt-0.5">
-          {folder.documents!.map((doc) => (
+        <div className="mt-1 space-y-1">
+          {folder.documents!.map((doc, index) => (
             <div
               key={doc.id}
-              className={`group flex items-center gap-2 px-2 py-1 rounded-md hover:text-foreground transition-colors cursor-pointer ${
+              className={`group flex items-center gap-2 px-2 py-1.5 rounded-md border transition-colors cursor-pointer ${
                 selectedDocumentId === doc.id
-                  ? "bg-blue-100 text-blue-900 font-medium"
-                  : "text-muted-foreground hover:bg-accent/50"
+                  ? "bg-gray-300 text-gray-900 font-medium border-gray-400"
+                  : index % 2 === 0
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300 border-gray-300"
               }`}
               style={{ paddingLeft: `${(level + 1) * 16 + 28}px` }}
               onClick={() => onDocumentSelect?.(doc)}
               title="Click to view"
             >
-              <FileText className="h-3.5 w-3.5 flex-shrink-0" />
-              <span className="text-xs truncate flex-1">{doc.name}</span>
+              <FileText className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm truncate flex-1">{doc.name}</span>
               <span className="text-xs text-muted-foreground">
                 {doc.fileType?.toUpperCase()}
               </span>
@@ -247,6 +227,28 @@ const FolderNode: React.FC<FolderNodeProps> = ({
         </div>
       )}
 
+      {/* Child Folders (shown after files) */}
+      {isExpanded && hasChildren && (
+        <div className="mt-1 space-y-1">
+          {folder.childFolders!.map((childFolder) => (
+            <FolderNode
+              key={childFolder.id}
+              folder={childFolder}
+              selectedFolderId={selectedFolderId}
+              selectedDocumentId={selectedDocumentId}
+              onSelect={onSelect}
+              onDocumentSelect={onDocumentSelect}
+              onFolderCreate={onFolderCreate}
+              onFolderDelete={onFolderDelete}
+              onDocumentEdit={onDocumentEdit}
+              onDocumentDelete={onDocumentDelete}
+              showDocuments={showDocuments}
+              level={level + 1}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog
         open={!!deleteDocumentId}
@@ -265,7 +267,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
             <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-700"
+              className="!bg-red-600 hover:!bg-red-700 !text-white focus:ring-red-600"
             >
               Delete
             </AlertDialogAction>
@@ -310,17 +312,6 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
 
   return (
     <div className="space-y-1">
-      {/* Root Level (All Documents) */}
-      <div
-        className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-accent transition-colors ${
-          selectedFolderId === null ? "bg-accent" : ""
-        }`}
-        onClick={() => onFolderSelect(null)}
-      >
-        <Folder className="h-4 w-4 text-gray-500 flex-shrink-0" />
-        <span className="text-sm font-medium">All Documents</span>
-      </div>
-
       {/* Folder Tree */}
       {rootFolders.map((folder) => (
         <FolderNode

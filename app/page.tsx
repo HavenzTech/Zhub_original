@@ -50,6 +50,7 @@ export default function HavenzHubDashboard() {
     properties,
     bmsDevices,
     accessLogs,
+    users,
     loading,
     error,
     loadDashboardData,
@@ -142,6 +143,7 @@ export default function HavenzHubDashboard() {
           departments={departments}
           projects={projects}
           properties={properties}
+          users={users}
         />
 
         {/* Quick Actions - Enhanced */}

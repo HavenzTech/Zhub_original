@@ -95,13 +95,14 @@ class BmsApiService {
 
       clearTimeout(timeoutId);
 
-      // Handle 204 No Content
+      // Handle 204 No Content or empty responses
       if (response.status === 204) {
         return undefined as T;
       }
 
       const contentType = response.headers.get('content-type');
       const isJson = contentType?.includes('application/json');
+      const contentLength = response.headers.get('content-length');
 
       if (!response.ok) {
         const errorData = isJson ? await response.json() : { message: response.statusText };
@@ -113,7 +114,12 @@ class BmsApiService {
         );
       }
 
-      return isJson ? await response.json() : (response as any);
+      // Handle successful responses with no body or non-JSON responses
+      if (contentLength === '0' || !isJson) {
+        return undefined as T;
+      }
+
+      return await response.json();
     } catch (error) {
       clearTimeout(timeoutId);
 
@@ -172,6 +178,22 @@ class BmsApiService {
       headers['X-Company-Id'] = this.companyId;
     }
 
+    // Debug logging for file uploads
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📤 FormData Upload:', {
+        url,
+        headers: { ...headers, Authorization: headers['Authorization'] ? 'Bearer ***' : 'none' },
+      });
+      // Log FormData contents
+      for (const [key, value] of data.entries()) {
+        if (value instanceof File) {
+          console.log(`  ${key}: File(${value.name}, ${value.type}, ${value.size} bytes)`);
+        } else {
+          console.log(`  ${key}: ${value}`);
+        }
+      }
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -194,12 +216,24 @@ class BmsApiService {
       const isJson = contentType?.includes('application/json');
 
       if (!response.ok) {
-        const errorData = isJson ? await response.json() : { message: response.statusText };
+        let errorData: any = { message: response.statusText };
+        try {
+          if (isJson) {
+            errorData = await response.json();
+          } else {
+            const errorText = await response.text();
+            console.error('📛 API Error Response (non-JSON):', errorText);
+            errorData = { message: errorText || response.statusText };
+          }
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+        }
+        console.error('📛 API Error:', response.status, errorData);
         throw new BmsApiError(
-          errorData.message || 'API request failed',
+          errorData.message || errorData.title || 'API request failed',
           response.status,
           errorData.code,
-          errorData.details
+          errorData.details || errorData.errors
         );
       }
 
@@ -244,6 +278,18 @@ class BmsApiService {
     create: (data: any) => this.post('/users', data),
     update: (id: string, data: any) => this.put(`/users/${id}`, data),
     delete: (id: string) => this.delete(`/users/${id}`),
+    // Avatar upload - POST /users/me/avatar/upload (own profile)
+    uploadMyAvatar: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return this.postFormData('/users/me/avatar/upload', formData);
+    },
+    // Avatar upload - POST /users/{id}/avatar/upload (admin only)
+    uploadAvatar: (id: string, file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return this.postFormData(`/users/${id}/avatar/upload`, formData);
+    },
   };
 
   // Company endpoints - Swagger: /api/havenzhub/companies
@@ -256,6 +302,12 @@ class BmsApiService {
     create: (data: any) => this.post('/companies', data),
     update: (id: string, data: any) => this.put(`/companies/${id}`, data),
     delete: (id: string) => this.delete(`/companies/${id}`),
+    // Logo upload - POST /companies/{id}/logo/upload
+    uploadLogo: (id: string, file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return this.postFormData(`/companies/${id}/logo/upload`, formData);
+    },
   };
 
   // Department endpoints - Swagger: /api/havenzhub/departments
@@ -286,6 +338,15 @@ class BmsApiService {
     create: (data: any) => this.post('/projects', data),
     update: (id: string, data: any) => this.put(`/projects/${id}`, data),
     delete: (id: string) => this.delete(`/projects/${id}`),
+    // Member management - /api/havenzhub/projects/{projectId}/members
+    addMember: (projectId: string, data: any) => this.post(`/projects/${projectId}/members`, data),
+    getMembers: (projectId: string) => this.get(`/projects/${projectId}/members`),
+    removeMember: (projectId: string, userId: string) => this.delete(`/projects/${projectId}/members/${userId}`),
+    updateMemberRole: (projectId: string, userId: string, data: any) => this.put(`/projects/${projectId}/members/${userId}/role`, data),
+    // Department assignments - /api/havenzhub/projects/{projectId}/departments
+    assignDepartment: (projectId: string, departmentId: string) => this.post(`/projects/${projectId}/departments/${departmentId}`, {}),
+    removeDepartment: (projectId: string, departmentId: string) => this.delete(`/projects/${projectId}/departments/${departmentId}`),
+    getDepartments: (projectId: string) => this.get(`/projects/${projectId}/departments`),
   };
 
   // Property endpoints (Note: Not found in Swagger - may need backend update)
@@ -314,6 +375,7 @@ class BmsApiService {
     getByCategory: (category: string) => this.get(`/documents/category/${category}`),
     getByAccessLevel: (accessLevel: string) => this.get(`/documents/accesslevel/${accessLevel}`),
     search: (name: string) => this.get(`/documents/search/${encodeURIComponent(name)}`),
+    // Two-step upload: 1) upload file, 2) create document record
     upload: (data: FormData) => this.postFormData('/documents/upload', data),
     create: (data: any) => this.post('/documents', data),
     update: (id: string, data: any) => this.put(`/documents/${id}`, data),
@@ -322,6 +384,20 @@ class BmsApiService {
     delete: (id: string) => this.delete(`/documents/${id}`),
     // Get signed download URL for GCS-stored documents
     getDownloadUrl: (id: string) => this.get<DocumentDownloadResponse>(`/documents/${id}/download`),
+    // Department assignment endpoints
+    assignDepartment: (documentId: string, departmentId: string) =>
+      this.post(`/documents/${documentId}/departments/${departmentId}`, {}),
+    removeDepartment: (documentId: string, departmentId: string) =>
+      this.delete(`/documents/${documentId}/departments/${departmentId}`),
+    getDepartments: (documentId: string) =>
+      this.get(`/documents/${documentId}/departments`),
+    // User access endpoints
+    grantUserAccess: (documentId: string, userId: string, accessLevel: string = 'view') =>
+      this.post(`/documents/${documentId}/users/${userId}?accessLevel=${accessLevel}`, {}),
+    revokeUserAccess: (documentId: string, userId: string) =>
+      this.delete(`/documents/${documentId}/users/${userId}`),
+    getUsersWithAccess: (documentId: string) =>
+      this.get(`/documents/${documentId}/users`),
   };
 
   // Folder endpoints - Swagger: /api/havenzhub/folders
