@@ -48,6 +48,7 @@ export default function UsersPage() {
   const [createdUser, setCreatedUser] = useState<CreateUserResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreateUserRequest>(initialFormData);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingUser, setEditingUser] = useState<UserResponse | null>(null);
@@ -101,10 +102,22 @@ export default function UsersPage() {
       const newUser = await createUser(payload);
 
       if (newUser) {
+        // Upload avatar if file was selected
+        if (avatarFile && newUser.id) {
+          try {
+            await bmsApi.users.uploadAvatar(newUser.id, avatarFile);
+            console.log("✅ Avatar uploaded for new user");
+          } catch (avatarErr) {
+            console.error("Error uploading avatar:", avatarErr);
+            toast.info("User created, but avatar upload failed. You can add it later.");
+          }
+        }
+
         setCreatedUser(newUser);
         setShowPasswordModal(true);
         setShowAddForm(false);
         setFormData(initialFormData);
+        setAvatarFile(null);
       }
     } finally {
       setIsSubmitting(false);
@@ -137,8 +150,21 @@ export default function UsersPage() {
       const success = await updateUser(editingUser.id, payload);
 
       if (success) {
+        // Upload avatar if file was selected
+        if (avatarFile) {
+          try {
+            await bmsApi.users.uploadAvatar(editingUser.id, avatarFile);
+            toast.success("User updated with new avatar!");
+            await loadUsers(); // Reload to get updated avatar URL
+          } catch (avatarErr) {
+            console.error("Error uploading avatar:", avatarErr);
+            toast.success("User updated! Avatar upload failed.");
+          }
+        }
+
         setShowEditForm(false);
         setEditingUser(null);
+        setAvatarFile(null);
       }
     } finally {
       setIsSubmitting(false);
@@ -258,17 +284,25 @@ export default function UsersPage() {
         {/* Modals */}
         <UserFormModal
           open={showAddForm}
-          onOpenChange={setShowAddForm}
+          onOpenChange={(open) => {
+            setShowAddForm(open);
+            if (!open) setAvatarFile(null);
+          }}
           mode="add"
           formData={formData}
           setFormData={setFormData}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
+          avatarFile={avatarFile}
+          setAvatarFile={setAvatarFile}
         />
 
         <UserFormModal
           open={showEditForm}
-          onOpenChange={setShowEditForm}
+          onOpenChange={(open) => {
+            setShowEditForm(open);
+            if (!open) setAvatarFile(null);
+          }}
           mode="edit"
           formData={formData}
           setFormData={setFormData}
@@ -277,6 +311,8 @@ export default function UsersPage() {
           setEditFormData={setEditFormData}
           isSubmitting={isSubmitting}
           onSubmit={handleEditSubmit}
+          avatarFile={avatarFile}
+          setAvatarFile={setAvatarFile}
         />
 
         <PasswordDisplayModal

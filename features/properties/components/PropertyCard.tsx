@@ -1,16 +1,21 @@
 import { memo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MapPin } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { MapPin, Trash2 } from "lucide-react"
 import type { Property } from "@/types/bms"
 import { formatCurrency, getStatusColor, getTypeIcon } from "../utils/propertyHelpers"
+import { authService } from "@/lib/services/auth"
 
 interface PropertyCardProps {
   property: Property
   onClick: (property: Property) => void
+  onDelete?: (property: Property) => void
 }
 
-export const PropertyCard = memo(function PropertyCard({ property, onClick }: PropertyCardProps) {
+export const PropertyCard = memo(function PropertyCard({ property, onClick, onDelete }: PropertyCardProps) {
+  const isSuperAdmin = authService.getCurrentRole() === "super_admin"
+
   return (
     <Card
       className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -68,6 +73,22 @@ export const PropertyCard = memo(function PropertyCard({ property, onClick }: Pr
             </span>
           </div>
         </div>
+
+        {isSuperAdmin && onDelete && (
+          <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(property)
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

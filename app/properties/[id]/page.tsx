@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
@@ -12,6 +12,7 @@ import {
 } from "@/features/properties/components/PropertyFormModal";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
+import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { Property, PropertyType, PropertyStatus } from "@/types/bms";
 import { toast } from "sonner";
 
@@ -45,6 +46,12 @@ export default function PropertyDetailPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
+
+  // Memoize breadcrumb items to prevent unnecessary re-renders
+  const breadcrumbItems = useMemo(
+    () => (property?.name ? [{ label: property.name }] : []),
+    [property?.name]
+  );
 
   const loadProperty = useCallback(async () => {
     if (!propertyId) return;
@@ -197,6 +204,9 @@ export default function PropertyDetailPage() {
 
   return (
     <AppLayout>
+      {/* Set breadcrumb inside AppLayout where provider exists */}
+      {breadcrumbItems.length > 0 && <SetBreadcrumb items={breadcrumbItems} />}
+
       <div className="space-y-6">
         {/* Property Details */}
         <PropertyDetails property={property} onBack={handleBack} onEdit={handleEdit} />

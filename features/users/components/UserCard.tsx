@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,18 +21,21 @@ interface UserCardProps {
 }
 
 export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
+  const [imageError, setImageError] = useState(false);
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            {user.pictureUrl ? (
+            {user.pictureUrl && !imageError ? (
               <Image
                 src={user.pictureUrl}
                 alt={user.name ?? "User"}
                 className="rounded-full object-cover"
                 height={48}
                 width={48}
+                onError={() => setImageError(true)}
               />
             ) : (
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">

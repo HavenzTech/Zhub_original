@@ -8,6 +8,7 @@ import type {
   Property,
   BmsDevice,
   AccessLog,
+  User,
 } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -18,6 +19,7 @@ interface DashboardData {
   properties: Property[]
   bmsDevices: BmsDevice[]
   accessLogs: AccessLog[]
+  users: User[]
 }
 
 interface UseDashboardReturn extends DashboardData {
@@ -37,6 +39,7 @@ export function useDashboard(): UseDashboardReturn {
   const [properties, setProperties] = useState<Property[]>([])
   const [bmsDevices, setBmsDevices] = useState<BmsDevice[]>([])
   const [accessLogs, setAccessLogs] = useState<AccessLog[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
@@ -52,6 +55,7 @@ export function useDashboard(): UseDashboardReturn {
         propertiesData,
         devicesData,
         logsData,
+        usersData,
       ] = await Promise.all([
         bmsApi.companies.getAll(),
         bmsApi.departments.getAll(),
@@ -59,6 +63,7 @@ export function useDashboard(): UseDashboardReturn {
         bmsApi.properties.getAll(),
         bmsApi.bmsDevices.getAll(),
         bmsApi.accessLogs.getAll(),
+        bmsApi.users.getAll(),
       ])
 
       setCompanies(extractArray<Company>(companiesData))
@@ -67,6 +72,7 @@ export function useDashboard(): UseDashboardReturn {
       setProperties(extractArray<Property>(propertiesData))
       setBmsDevices(extractArray<BmsDevice>(devicesData))
       setAccessLogs(extractArray<AccessLog>(logsData))
+      setUsers(extractArray<User>(usersData))
     } catch (err) {
       const error =
         err instanceof Error ? err : new Error("Failed to load dashboard data")
@@ -86,6 +92,7 @@ export function useDashboard(): UseDashboardReturn {
     properties,
     bmsDevices,
     accessLogs,
+    users,
     loading,
     error,
     loadDashboardData,

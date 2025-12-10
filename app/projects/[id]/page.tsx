@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
 import { ProjectDetails } from "@/features/projects/components/ProjectDetails";
+import { MembersAssignment } from "@/components/common/MembersAssignment";
+import { DepartmentsAssignment } from "@/components/common/DepartmentsAssignment";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
+import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { Project } from "@/types/bms";
 import { toast } from "sonner";
 
@@ -44,6 +47,12 @@ export default function ProjectDetailPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
+
+  // Memoize breadcrumb items to prevent unnecessary re-renders
+  const breadcrumbItems = useMemo(
+    () => (project?.name ? [{ label: project.name }] : []),
+    [project?.name]
+  );
 
   const loadProject = useCallback(async () => {
     if (!projectId) return;
@@ -180,9 +189,28 @@ export default function ProjectDetailPage() {
 
   return (
     <AppLayout>
+      {/* Set breadcrumb inside AppLayout where provider exists */}
+      {breadcrumbItems.length > 0 && <SetBreadcrumb items={breadcrumbItems} />}
+
       <div className="space-y-6">
         {/* Project Details */}
         <ProjectDetails project={project} onBack={handleBack} onEdit={handleEdit} />
+
+        {/* Assignments Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Members Assignment */}
+          <MembersAssignment
+            entityType="project"
+            entityId={project.id!}
+            entityName={project.name || "this project"}
+          />
+
+          {/* Departments Assignment */}
+          <DepartmentsAssignment
+            projectId={project.id!}
+            projectName={project.name || "this project"}
+          />
+        </div>
 
         {/* Edit Modal */}
         <ProjectFormModal

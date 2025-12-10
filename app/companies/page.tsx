@@ -16,6 +16,16 @@ import { authService } from "@/lib/services/auth";
 import { Company } from "@/types/bms";
 import { toast } from "sonner";
 import { Building2, Plus, Search, RefreshCw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const CompanyFormModal = dynamic(
   () =>
@@ -49,6 +59,8 @@ export default function CompaniesPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [deleteCompany, setDeleteCompany] = useState<Company | null>(null);
 
   useEffect(() => {
     const auth = authService.getAuth();
@@ -67,26 +79,29 @@ export default function CompaniesPage() {
   }, [router, loadCompanies]);
 
   const buildPayload = () => {
+    // Backend CreateCompanyRequest uses different field names than the Company entity
     const payload: Record<string, unknown> = {
       name: formData.name,
       status: formData.status,
     };
 
     if (formData.industry?.trim()) payload.industry = formData.industry;
+    // Backend expects: address, city, province, country, postalCode (not locationAddress, etc.)
     if (formData.locationAddress?.trim())
-      payload.locationAddress = formData.locationAddress;
+      payload.address = formData.locationAddress;
     if (formData.locationCity?.trim())
-      payload.locationCity = formData.locationCity;
+      payload.city = formData.locationCity;
     if (formData.locationProvince?.trim())
-      payload.locationProvince = formData.locationProvince;
+      payload.province = formData.locationProvince;
     if (formData.locationCountry?.trim())
-      payload.locationCountry = formData.locationCountry;
+      payload.country = formData.locationCountry;
     if (formData.locationPostalCode?.trim())
-      payload.locationPostalCode = formData.locationPostalCode;
+      payload.postalCode = formData.locationPostalCode;
+    // Backend expects: email, phone (not contactEmail, contactPhone)
     if (formData.contactEmail?.trim())
-      payload.contactEmail = formData.contactEmail;
+      payload.email = formData.contactEmail;
     if (formData.contactPhone?.trim())
-      payload.contactPhone = formData.contactPhone;
+      payload.phone = formData.contactPhone;
     if (formData.logoUrl?.trim()) payload.logoUrl = formData.logoUrl;
     if (formData.annualRevenue && !isNaN(parseFloat(formData.annualRevenue))) {
       payload.annualRevenue = parseFloat(formData.annualRevenue);
@@ -106,11 +121,25 @@ export default function CompaniesPage() {
     try {
       const payload = buildPayload();
       const newCompany = await bmsApi.companies.create(payload);
+      const companyId = (newCompany as Company).id;
+
+      // Upload logo if a file was selected
+      if (logoFile && companyId) {
+        try {
+          await bmsApi.companies.uploadLogo(companyId, logoFile);
+          toast.success("Company created with logo!");
+        } catch (logoErr) {
+          console.error("Error uploading logo:", logoErr);
+          toast.success("Company created! Logo upload failed - you can add it later.");
+        }
+      } else {
+        toast.success("Company created successfully!");
+      }
 
       setCompanies((prev) => [...prev, newCompany as Company]);
-      toast.success("Company created successfully!");
       setShowAddForm(false);
       setFormData(initialFormData);
+      setLogoFile(null);
     } catch (err) {
       const errorMessage =
         err instanceof BmsApiError ? err.message : "Failed to create company";
@@ -123,6 +152,27 @@ export default function CompaniesPage() {
 
   const handleViewDetails = (company: Company) => {
     router.push(`/companies/${company.id}`);
+  };
+
+  const handleDeleteClick = (company: Company) => {
+    setDeleteCompany(company);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteCompany) return;
+
+    try {
+      await bmsApi.companies.delete(deleteCompany.id!);
+      setCompanies((prev) => prev.filter((c) => c.id !== deleteCompany.id));
+      toast.success(`Company "${deleteCompany.name}" deleted successfully`);
+    } catch (err) {
+      const errorMessage =
+        err instanceof BmsApiError ? err.message : "Failed to delete company";
+      toast.error(errorMessage);
+      console.error("Error deleting company:", err);
+    } finally {
+      setDeleteCompany(null);
+    }
   };
 
   const filteredCompanies = companies.filter(
@@ -211,6 +261,7 @@ export default function CompaniesPage() {
                 key={company.id}
                 company={company}
                 onViewDetails={handleViewDetails}
+                onDelete={handleDeleteClick}
               />
             ))}
           </div>
@@ -239,13 +290,48 @@ export default function CompaniesPage() {
         {/* Add Company Modal */}
         <CompanyFormModal
           open={showAddForm}
-          onOpenChange={setShowAddForm}
+          onOpenChange={(open) => {
+            setShowAddForm(open);
+            if (!open) {
+              setLogoFile(null);
+            }
+          }}
           mode="add"
           formData={formData}
           setFormData={setFormData}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
+          logoFile={logoFile}
+          setLogoFile={setLogoFile}
         />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog
+          open={!!deleteCompany}
+          onOpenChange={(open) => !open && setDeleteCompany(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Company</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete{" "}
+                <strong>{deleteCompany?.name}</strong>? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteCompany(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="!bg-red-600 hover:!bg-red-700 !text-white focus:ring-red-600"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );

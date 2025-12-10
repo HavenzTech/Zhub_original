@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -10,6 +10,7 @@ import { CompanyDetails } from "@/features/companies/components/CompanyDetails";
 import { Button } from "@/components/ui/button";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
+import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { Company } from "@/types/bms";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
@@ -32,6 +33,7 @@ export default function CompanyDetailPage() {
   const [error, setError] = useState<Error | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     industry: "",
@@ -46,6 +48,12 @@ export default function CompanyDetailPage() {
     annualRevenue: "",
     logoUrl: "",
   });
+
+  // Memoize breadcrumb items to prevent unnecessary re-renders
+  const breadcrumbItems = useMemo(
+    () => (company?.name ? [{ label: company.name }] : []),
+    [company?.name]
+  );
 
   const loadCompany = useCallback(async () => {
     if (!companyId) return;
@@ -103,6 +111,7 @@ export default function CompanyDetailPage() {
   };
 
   const buildPayload = (includeId?: string) => {
+    // Backend UpdateCompanyRequest uses different field names than the Company entity
     const payload: Record<string, unknown> = {
       name: formData.name,
       status: formData.status,
@@ -110,20 +119,22 @@ export default function CompanyDetailPage() {
 
     if (includeId) payload.id = includeId;
     if (formData.industry?.trim()) payload.industry = formData.industry;
+    // Backend expects: address, city, province, country, postalCode (not locationAddress, etc.)
     if (formData.locationAddress?.trim())
-      payload.locationAddress = formData.locationAddress;
+      payload.address = formData.locationAddress;
     if (formData.locationCity?.trim())
-      payload.locationCity = formData.locationCity;
+      payload.city = formData.locationCity;
     if (formData.locationProvince?.trim())
-      payload.locationProvince = formData.locationProvince;
+      payload.province = formData.locationProvince;
     if (formData.locationCountry?.trim())
-      payload.locationCountry = formData.locationCountry;
+      payload.country = formData.locationCountry;
     if (formData.locationPostalCode?.trim())
-      payload.locationPostalCode = formData.locationPostalCode;
+      payload.postalCode = formData.locationPostalCode;
+    // Backend expects: email, phone (not contactEmail, contactPhone)
     if (formData.contactEmail?.trim())
-      payload.contactEmail = formData.contactEmail;
+      payload.email = formData.contactEmail;
     if (formData.contactPhone?.trim())
-      payload.contactPhone = formData.contactPhone;
+      payload.phone = formData.contactPhone;
     if (formData.logoUrl?.trim()) payload.logoUrl = formData.logoUrl;
     if (formData.annualRevenue && !isNaN(parseFloat(formData.annualRevenue))) {
       payload.annualRevenue = parseFloat(formData.annualRevenue);
@@ -140,9 +151,24 @@ export default function CompanyDetailPage() {
     try {
       const payload = buildPayload(company.id);
       await bmsApi.companies.update(company.id, payload);
-      toast.success("Company updated successfully!");
-      setCompany({ ...company, ...payload } as Company);
+
+      // Upload logo if a new file was selected
+      if (logoFile) {
+        try {
+          await bmsApi.companies.uploadLogo(company.id, logoFile);
+          toast.success("Company updated with new logo!");
+        } catch (logoErr) {
+          console.error("Error uploading logo:", logoErr);
+          toast.success("Company updated! Logo upload failed.");
+        }
+      } else {
+        toast.success("Company updated successfully!");
+      }
+
+      // Reload company to get updated logo URL
+      await loadCompany();
       setShowEditForm(false);
+      setLogoFile(null);
     } catch (err) {
       const errorMessage =
         err instanceof BmsApiError ? err.message : "Failed to update company";
@@ -174,6 +200,9 @@ export default function CompanyDetailPage() {
 
   return (
     <AppLayout>
+      {/* Set breadcrumb inside AppLayout where provider exists */}
+      {breadcrumbItems.length > 0 && <SetBreadcrumb items={breadcrumbItems} />}
+
       <div className="space-y-6">
         {/* Back Button */}
         <Button variant="ghost" onClick={handleBack} className="mb-4">
@@ -187,12 +216,21 @@ export default function CompanyDetailPage() {
         {/* Edit Modal */}
         <CompanyFormModal
           open={showEditForm}
-          onOpenChange={setShowEditForm}
+          onOpenChange={(open) => {
+            setShowEditForm(open);
+            if (!open) {
+              setLogoFile(null);
+            }
+          }}
           mode="edit"
           formData={formData}
           setFormData={setFormData}
           isSubmitting={isSubmitting}
           onSubmit={handleEditSubmit}
+          companyId={company.id}
+          logoFile={logoFile}
+          setLogoFile={setLogoFile}
+          currentLogoUrl={company.logoUrl || undefined}
         />
       </div>
     </AppLayout>

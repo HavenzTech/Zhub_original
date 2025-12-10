@@ -1,4 +1,4 @@
-import { Building2, Square, Home } from "lucide-react"
+import { Building2, Square, Home, Factory, Store, Zap, Server } from "lucide-react"
 
 /**
  * Helper functions for properties page
@@ -54,14 +54,21 @@ export const getStatusColor = (status?: string | null) => {
 export const getTypeIcon = (type?: string | null) => {
   switch (type) {
     case "office":
+    case "office_building":
       return <Building2 className="w-6 h-6 text-blue-600" />
     case "warehouse":
       return <Square className="w-6 h-6 text-orange-600" />
     case "datacenter":
-      return <Home className="w-6 h-6 text-purple-600" />
+      return <Server className="w-6 h-6 text-purple-600" />
+    case "residential":
+      return <Home className="w-6 h-6 text-green-600" />
     case "industrial":
-      return <Building2 className="w-6 h-6 text-red-600" />
+      return <Factory className="w-6 h-6 text-red-600" />
+    case "retail":
+      return <Store className="w-6 h-6 text-pink-600" />
+    case "power_plant":
+      return <Zap className="w-6 h-6 text-yellow-600" />
     default:
-      return <Home className="w-6 h-6 text-gray-600" />
+      return <Building2 className="w-6 h-6 text-gray-600" />
   }
 }

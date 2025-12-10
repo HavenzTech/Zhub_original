@@ -1,3 +1,4 @@
+import { useState, useRef } from "react"
 import {
   Dialog,
   DialogContent,
@@ -16,8 +17,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Loader2, Edit } from "lucide-react"
-interface CompanyFormData {
+import { Plus, Loader2, Edit, Upload, X, ImageIcon } from "lucide-react"
+
+export interface CompanyFormData {
   name: string
   industry: string
   status: string
@@ -40,6 +42,10 @@ interface CompanyFormModalProps {
   setFormData: (data: CompanyFormData) => void
   isSubmitting: boolean
   onSubmit: (e: React.FormEvent) => void
+  companyId?: string
+  logoFile: File | null
+  setLogoFile: (file: File | null) => void
+  currentLogoUrl?: string
 }
 
 export function CompanyFormModal({
@@ -50,8 +56,44 @@ export function CompanyFormModal({
   setFormData,
   isSubmitting,
   onSubmit,
+  companyId,
+  logoFile,
+  setLogoFile,
+  currentLogoUrl,
 }: CompanyFormModalProps) {
   const isEditMode = mode === "edit"
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        alert("Please select an image file")
+        return
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size must be less than 5MB")
+        return
+      }
+      setLogoFile(file)
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file)
+      setLogoPreview(previewUrl)
+    }
+  }
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null)
+    setLogoPreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const displayLogoUrl = logoPreview || currentLogoUrl
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -303,19 +345,63 @@ export function CompanyFormModal({
               />
             </div>
 
+            {/* Logo Upload */}
             <div className="grid gap-2">
-              <Label htmlFor={isEditMode ? "edit-logoUrl" : "logoUrl"}>
-                Logo URL
-              </Label>
-              <Input
-                id={isEditMode ? "edit-logoUrl" : "logoUrl"}
-                type="url"
-                value={formData.logoUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, logoUrl: e.target.value })
-                }
-                placeholder="https://example.com/logo.png"
-              />
+              <Label>Company Logo</Label>
+              <div className="flex items-start gap-4">
+                {/* Logo Preview */}
+                <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50">
+                  {displayLogoUrl ? (
+                    <img
+                      src={displayLogoUrl}
+                      alt="Company logo"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id={isEditMode ? "edit-logo" : "logo"}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {displayLogoUrl ? "Change Logo" : "Upload Logo"}
+                    </Button>
+                    {(logoFile || logoPreview) && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveLogo}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  {logoFile && (
+                    <p className="text-xs text-gray-500">
+                      Selected: {logoFile.name}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    PNG, JPG up to 5MB. {!isEditMode && "Logo can be uploaded after company is created."}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 

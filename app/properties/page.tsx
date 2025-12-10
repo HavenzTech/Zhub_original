@@ -20,6 +20,16 @@ import {
   PropertyFormData,
 } from "@/features/properties/components/PropertyFormModal";
 import { Home, Plus, Search, RefreshCw } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const initialFormData: PropertyFormData = {
   name: "",
@@ -48,12 +58,14 @@ export default function PropertiesPage() {
     error,
     loadProperties,
     createProperty,
+    setProperties,
   } = useProperties();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
+  const [deleteProperty, setDeleteProperty] = useState<Property | null>(null);
 
   useEffect(() => {
     const auth = authService.getAuth();
@@ -118,6 +130,27 @@ export default function PropertiesPage() {
 
   const handleViewDetails = (property: Property) => {
     router.push(`/properties/${property.id}`);
+  };
+
+  const handleDeleteClick = (property: Property) => {
+    setDeleteProperty(property);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteProperty) return;
+
+    try {
+      await bmsApi.properties.delete(deleteProperty.id!);
+      setProperties((prev: Property[]) => prev.filter((p) => p.id !== deleteProperty.id));
+      toast.success(`Property "${deleteProperty.name}" deleted successfully`);
+    } catch (err) {
+      const errorMessage =
+        err instanceof BmsApiError ? err.message : "Failed to delete property";
+      toast.error(errorMessage);
+      console.error("Error deleting property:", err);
+    } finally {
+      setDeleteProperty(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -236,6 +269,7 @@ export default function PropertiesPage() {
                     key={property.id}
                     property={property}
                     onClick={handleViewDetails}
+                    onDelete={handleDeleteClick}
                   />
                 ))}
               </div>
@@ -271,6 +305,34 @@ export default function PropertiesPage() {
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
         />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog
+          open={!!deleteProperty}
+          onOpenChange={(open) => !open && setDeleteProperty(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Property</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete{" "}
+                <strong>{deleteProperty?.name}</strong>? This action cannot be
+                undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteProperty(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="!bg-red-600 hover:!bg-red-700 !text-white focus:ring-red-600"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );

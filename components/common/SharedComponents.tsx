@@ -1,5 +1,5 @@
 // components/common/SharedComponents.tsx - Reusable Components Library
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
   showActions = true,
 }) => {
   const Icon = getIcon(type);
+  const [imageError, setImageError] = useState(false);
 
   return (
     <Card
@@ -95,13 +96,14 @@ export const EntityCard: React.FC<EntityCardProps> = ({
                   : "bg-orange-100"
               }`}
             >
-              {data.logo ? (
+              {data.logo && !imageError ? (
                 <Image
                   src={data.logo}
                   alt={data.name}
                   className="w-8 h-8 object-contain"
                   width={32}
                   height={32}
+                  onError={() => setImageError(true)}
                 />
               ) : (
                 <Icon
@@ -399,6 +401,8 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
   showFallback = true,
   className = "",
 }) => {
+  const [imageError, setImageError] = useState(false);
+
   const logoMap: Record<string, string> = {
     "Agritech Haven Limited Partnership": "/logos/agritech-haven-lp.png",
     "Agritech Haven International Inc.": "/logos/agritech-haven-intl.png",
@@ -407,8 +411,6 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
     "Havenz Smart Communities": "/logos/havenz-smart-communities.png",
     "AHI Management": "/logos/ahi-management.png",
     "Havenz Tech": "/logos/havenz-tech.png",
-    "AHI Red Deer": "/logos/ahi-red-deer.png",
-    "Denvr Dataworks": "/logos/denvr-dataworks.png",
   };
 
   const sizeMap = {
@@ -419,7 +421,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
 
   const logoUrl = logoMap[company];
 
-  if (logoUrl) {
+  if (logoUrl && !imageError) {
     return (
       <Image
         src={logoUrl}
@@ -427,12 +429,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
         className={`object-contain ${sizeMap[size]} ${className}`}
         width={size === "sm" ? 32 : size === "md" ? 48 : 64}
         height={size === "sm" ? 32 : size === "md" ? 48 : 64}
-        onError={(e) => {
-          if (showFallback) {
-            const target = e.target as HTMLImageElement;
-            target.style.display = "none";
-          }
-        }}
+        onError={() => setImageError(true)}
       />
     );
   }

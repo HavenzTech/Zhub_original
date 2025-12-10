@@ -1,14 +1,37 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Save } from "lucide-react";
-import type { Document, DocumentCategory } from "@/types/bms";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Save, Loader2, FileText } from "lucide-react";
+import type { Document, Folder, DocumentCategory } from "@/types/bms";
 
 interface EditMetadataModalProps {
   isOpen: boolean;
   onClose: () => void;
   document: Document | null;
   onSave: (documentId: string, updates: Partial<Document>) => Promise<void>;
+  folders?: Folder[];
+  projects?: any[];
+  departments?: any[];
+  properties?: any[];
 }
 
 const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
@@ -16,12 +39,20 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
   onClose,
   document,
   onSave,
+  folders = [],
+  projects = [],
+  departments = [],
+  properties = [],
 }) => {
   const [formData, setFormData] = useState({
     name: "",
     category: "" as DocumentCategory | "",
     tags: "",
     accessLevel: "private" as string,
+    folderId: "" as string,
+    projectId: "" as string,
+    departmentId: "" as string,
+    propertyId: "" as string,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -54,6 +85,10 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
         category: (document.category as DocumentCategory) || "",
         tags: tagsString,
         accessLevel: document.accessLevel || "private",
+        folderId: document.folderId || "",
+        projectId: document.projectId || "",
+        departmentId: document.departmentId || "",
+        propertyId: document.propertyId || "",
       });
     }
   }, [document]);
@@ -73,6 +108,10 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
         name: formData.name.trim(),
         category: formData.category || undefined,
         accessLevel: formData.accessLevel,
+        folderId: formData.folderId || null,
+        projectId: formData.projectId || null,
+        departmentId: formData.departmentId || null,
+        propertyId: formData.propertyId || null,
       };
 
       // Convert tags to JSON string array for backend
@@ -102,170 +141,310 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
     }
   };
 
+  // Flatten folder tree for dropdown
+  const flattenFolders = (folderList: Folder[], prefix = ""): { id: string; displayName: string }[] => {
+    if (!Array.isArray(folderList)) return [];
+    const result: { id: string; displayName: string }[] = [];
+    for (const folder of folderList) {
+      if (folder.id) {
+        const displayName = prefix ? `${prefix} / ${folder.name}` : folder.name || "";
+        result.push({ id: folder.id, displayName });
+        if (folder.childFolders && folder.childFolders.length > 0) {
+          result.push(...flattenFolders(folder.childFolders, displayName));
+        }
+      }
+    }
+    return result;
+  };
+  const flatFolders = flattenFolders(folders);
+
   if (!isOpen || !document) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-background rounded-lg shadow-lg w-full max-w-md mx-4">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <div className="flex items-center gap-2">
-            <Save className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Edit Metadata</h2>
-          </div>
-          <button
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className="text-muted-foreground hover:text-foreground disabled:opacity-50"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Save className="h-5 w-5" />
+            Edit Document Metadata
+          </DialogTitle>
+          <DialogDescription>
+            Update the document properties and associations.
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {/* Document Name */}
-          <div>
-            <label htmlFor="docName" className="block text-sm font-medium mb-1">
-              Document Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="docName"
-              type="text"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              placeholder="Enter document name"
-              maxLength={500}
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              disabled={isSubmitting}
-              autoFocus
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label
-              htmlFor="category"
-              className="block text-sm font-medium mb-1"
-            >
-              Category
-            </label>
-            <select
-              id="category"
-              value={formData.category}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  category: e.target.value as DocumentCategory | "",
-                })
-              }
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              disabled={isSubmitting}
-            >
-              <option value="">Select category</option>
-              <option value="contract">Contract</option>
-              <option value="financial">Financial</option>
-              <option value="technical">Technical</option>
-              <option value="legal">Legal</option>
-              <option value="hr">HR</option>
-              <option value="marketing">Marketing</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          {/* Tags */}
-          <div>
-            <label htmlFor="tags" className="block text-sm font-medium mb-1">
-              Tags
-            </label>
-            <input
-              id="tags"
-              type="text"
-              value={formData.tags}
-              onChange={(e) =>
-                setFormData({ ...formData, tags: e.target.value })
-              }
-              placeholder="e.g., important, confidential, review"
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              disabled={isSubmitting}
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Separate multiple tags with commas
-            </p>
-          </div>
-
-          {/* Access Level */}
-          <div>
-            <label
-              htmlFor="accessLevel"
-              className="block text-sm font-medium mb-1"
-            >
-              Access Level
-            </label>
-            <select
-              id="accessLevel"
-              value={formData.accessLevel}
-              onChange={(e) =>
-                setFormData({ ...formData, accessLevel: e.target.value as any })
-              }
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              disabled={isSubmitting}
-            >
-              <option value="public">Public</option>
-              <option value="private">Private</option>
-              <option value="restricted">Restricted</option>
-            </select>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-              {error}
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            {/* Document Name */}
+            <div className="grid gap-2">
+              <Label htmlFor="docName">Document Name *</Label>
+              <Input
+                id="docName"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                placeholder="Enter document name"
+                maxLength={500}
+                disabled={isSubmitting}
+                autoFocus
+              />
             </div>
-          )}
 
-          {/* File Info (Read-only) */}
-          <div className="text-xs text-muted-foreground bg-muted p-2 rounded space-y-1">
-            <div>
-              <strong>File Type:</strong>{" "}
-              {document.fileType?.toUpperCase() || "Unknown"}
+            {/* Category and Access Level */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      category: value as DocumentCategory | "",
+                    })
+                  }
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contract">Contract</SelectItem>
+                    <SelectItem value="financial">Financial</SelectItem>
+                    <SelectItem value="technical">Technical</SelectItem>
+                    <SelectItem value="legal">Legal</SelectItem>
+                    <SelectItem value="hr">HR</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Access Level</Label>
+                <RadioGroup
+                  value={formData.accessLevel}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, accessLevel: value })
+                  }
+                  className="flex items-center gap-4 h-10"
+                  disabled={isSubmitting}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="private" id="edit-private" />
+                    <Label htmlFor="edit-private" className="font-normal cursor-pointer">
+                      Private
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="public" id="edit-public" />
+                    <Label htmlFor="edit-public" className="font-normal cursor-pointer">
+                      Public
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="restricted" id="edit-restricted" />
+                    <Label htmlFor="edit-restricted" className="font-normal cursor-pointer">
+                      Restricted
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
             </div>
-            <div>
-              <strong>Size:</strong>{" "}
-              {document.fileSizeBytes
-                ? `${(document.fileSizeBytes / 1024).toFixed(2)} KB`
-                : "N/A"}
+
+            {/* Folder and Project */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="folder">Folder</Label>
+                <Select
+                  value={formData.folderId || "none"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      folderId: value === "none" ? "" : value,
+                    })
+                  }
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select folder" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {flatFolders.map((folder) => (
+                      <SelectItem key={folder.id} value={folder.id}>
+                        {folder.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="project">Project</Label>
+                <Select
+                  value={formData.projectId || "none"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      projectId: value === "none" ? "" : value,
+                    })
+                  }
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {Array.isArray(projects) &&
+                      projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <strong>Uploaded:</strong>{" "}
-              {document.createdAt ? new Date(document.createdAt).toLocaleDateString() : "N/A"}
+
+            {/* Department and Property */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="department">Department</Label>
+                <Select
+                  value={formData.departmentId || "none"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      departmentId: value === "none" ? "" : value,
+                    })
+                  }
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {Array.isArray(departments) &&
+                      departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="property">Property</Label>
+                <Select
+                  value={formData.propertyId || "none"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      propertyId: value === "none" ? "" : value,
+                    })
+                  }
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select property" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {Array.isArray(properties) &&
+                      properties.map((property) => (
+                        <SelectItem key={property.id} value={property.id}>
+                          {property.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div className="grid gap-2">
+              <Label htmlFor="tags">Tags (comma-separated)</Label>
+              <Input
+                id="tags"
+                value={formData.tags}
+                onChange={(e) =>
+                  setFormData({ ...formData, tags: e.target.value })
+                }
+                placeholder="e.g., important, 2024, budget"
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-muted-foreground">
+                Separate multiple tags with commas
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                {error}
+              </div>
+            )}
+
+            {/* File Info (Read-only) */}
+            <div className="text-xs text-muted-foreground bg-muted p-3 rounded space-y-1">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="h-4 w-4" />
+                <span className="font-medium">File Information</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <strong>Type:</strong>{" "}
+                  {document.fileType?.toUpperCase() || "Unknown"}
+                </div>
+                <div>
+                  <strong>Size:</strong>{" "}
+                  {document.fileSizeBytes
+                    ? `${(document.fileSizeBytes / 1024).toFixed(2)} KB`
+                    : "N/A"}
+                </div>
+                <div>
+                  <strong>Uploaded:</strong>{" "}
+                  {document.createdAt
+                    ? new Date(document.createdAt).toLocaleDateString()
+                    : "N/A"}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-2 justify-end pt-2">
-            <button
+          <DialogFooter>
+            <Button
               type="button"
+              variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting || !formData.name.trim()}
-              className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <Save className="h-4 w-4" />
-              {isSubmitting ? "Saving..." : "Save Changes"}
-            </button>
-          </div>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

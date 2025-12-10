@@ -1,19 +1,23 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Users, Trash2 } from "lucide-react"
 import type { Department } from "@/types/bms"
 import {
   formatCurrency,
   getTimeAgo,
   getBudgetUtilization,
 } from "../utils/departmentHelpers"
+import { authService } from "@/lib/services/auth"
 
 interface DepartmentCardProps {
   department: Department
   onViewDetails: (department: Department) => void
+  onDelete?: (department: Department) => void
 }
 
-export function DepartmentCard({ department, onViewDetails }: DepartmentCardProps) {
+export function DepartmentCard({ department, onViewDetails, onDelete }: DepartmentCardProps) {
   const utilization = getBudgetUtilization(department.budgetAllocated ?? undefined, department.budgetSpent ?? undefined)
+  const isSuperAdmin = authService.getCurrentRole() === "super_admin"
 
   return (
     <Card
@@ -66,10 +70,23 @@ export function DepartmentCard({ department, onViewDetails }: DepartmentCardProp
           </div>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
           <div className="text-xs text-gray-500">
             Updated: {department.updatedAt ? getTimeAgo(department.updatedAt) : "N/A"}
           </div>
+          {isSuperAdmin && onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(department)
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
