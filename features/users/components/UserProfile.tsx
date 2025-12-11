@@ -36,12 +36,16 @@ export function UserProfile() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
+      case "super_admin":
+        return "bg-purple-100 text-purple-800 border-purple-200";
       case "admin":
         return "bg-red-100 text-red-800 border-red-200";
-      case "member":
+      case "dept_manager":
+        return "bg-teal-100 text-teal-800 border-teal-200";
+      case "project_lead":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "employee":
         return "bg-blue-100 text-blue-800 border-blue-200";
-      case "viewer":
-        return "bg-gray-100 text-gray-800 border-gray-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -49,14 +53,35 @@ export function UserProfile() {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
+      case "super_admin":
+        return "🔮";
       case "admin":
         return "👑";
-      case "member":
-        return "✏️";
-      case "viewer":
-        return "👁️";
+      case "dept_manager":
+        return "🏢";
+      case "project_lead":
+        return "📋";
+      case "employee":
+        return "👤";
       default:
         return "👤";
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "super_admin":
+        return "Super Admin";
+      case "admin":
+        return "Admin";
+      case "dept_manager":
+        return "Dept Manager";
+      case "project_lead":
+        return "Project Lead";
+      case "employee":
+        return "Employee";
+      default:
+        return role || "Unknown";
     }
   };
 
@@ -75,16 +100,13 @@ export function UserProfile() {
               {auth.name}
             </span>
             <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-500">
-                {currentCompany?.role}
-              </span>
               <Badge
                 className={`text-xs px-1.5 py-0 h-4 ${getRoleBadgeColor(
                   currentCompany?.role || ""
                 )}`}
               >
                 {getRoleIcon(currentCompany?.role || "")}{" "}
-                {currentCompany?.role?.toUpperCase()}
+                {getRoleLabel(currentCompany?.role || "")}
               </Badge>
             </div>
           </div>
@@ -120,7 +142,7 @@ export function UserProfile() {
                   {getRoleIcon(currentCompany?.role || "")}{" "}
                   {currentCompany?.role?.toUpperCase()}
                 </Badge>
-                <PermissionIndicator role={currentCompany?.role || "viewer"} />
+                <PermissionIndicator role={currentCompany?.role || "employee"} />
               </div>
             </div>
           </div>
@@ -149,7 +171,7 @@ export function UserProfile() {
                         company.role
                       )}`}
                     >
-                      {getRoleIcon(company.role)} {company.role.toUpperCase()}
+                      {getRoleIcon(company.role)} {getRoleLabel(company.role)}
                     </Badge>
                   </div>
                 </DropdownMenuItem>
@@ -169,13 +191,15 @@ export function UserProfile() {
 
 function PermissionIndicator({ role }: { role: string }) {
   const permissions = {
-    admin: { label: "Full Access", icon: Shield, color: "text-red-600" },
-    member: { label: "Can Edit", icon: Shield, color: "text-blue-600" },
-    viewer: { label: "Read Only", icon: Shield, color: "text-gray-600" },
+    super_admin: { label: "Full Platform Access", icon: Shield, color: "text-purple-600" },
+    admin: { label: "Full Company Access", icon: Shield, color: "text-red-600" },
+    dept_manager: { label: "Manage Departments", icon: Shield, color: "text-teal-600" },
+    project_lead: { label: "Manage Projects", icon: Shield, color: "text-green-600" },
+    employee: { label: "View & Tasks", icon: Shield, color: "text-blue-600" },
   };
 
   const perm =
-    permissions[role as keyof typeof permissions] || permissions.viewer;
+    permissions[role as keyof typeof permissions] || permissions.employee;
   const Icon = perm.icon;
 
   return (

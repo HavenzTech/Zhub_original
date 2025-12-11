@@ -58,12 +58,16 @@ export function CompanySelector() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
+      case "super_admin":
+        return "bg-purple-100 text-purple-700 border-purple-200";
       case "admin":
         return "bg-red-100 text-red-700 border-red-200";
-      case "member":
+      case "dept_manager":
+        return "bg-teal-100 text-teal-700 border-teal-200";
+      case "project_lead":
+        return "bg-green-100 text-green-700 border-green-200";
+      case "employee":
         return "bg-blue-100 text-blue-700 border-blue-200";
-      case "viewer":
-        return "bg-gray-100 text-gray-700 border-gray-200";
       default:
         return "bg-gray-100 text-gray-700 border-gray-200";
     }

@@ -216,7 +216,7 @@ export interface Project {
   description?: string | null;
   status: string;
   priority?: string | null;
-  progress?: number;
+  progress?: number; // Now auto-calculated from tasks
   startDate?: string | null;
   endDate?: string | null;
   budgetAllocated?: number | null;
@@ -224,6 +224,14 @@ export interface Project {
   teamLead?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  // New task-based schedule tracking fields
+  totalTasks?: number;
+  completedTasks?: number;
+  projectedDeadline?: string | null;
+  updatedDeadline?: string | null;
+  daysAheadOrBehind?: number | null;
+  scheduleStatus?: 'ahead' | 'on_track' | 'behind' | 'unknown' | string | null;
+  scheduleStatusFormatted?: string | null;
 }
 
 export interface ProjectDto {
@@ -233,7 +241,7 @@ export interface ProjectDto {
   description?: string | null;
   status?: string | null;
   priority?: string | null;
-  progress?: number;
+  progress?: number; // Now auto-calculated from tasks (completedTasks/totalTasks × 100)
   startDate?: string | null;
   endDate?: string | null;
   budgetAllocated?: number | null;
@@ -257,6 +265,14 @@ export interface ProjectDto {
   priorityDisplayName?: string | null;
   createdTimeAgo?: string | null;
   updatedTimeAgo?: string | null;
+  // New task-based schedule tracking fields
+  totalTasks?: number;
+  completedTasks?: number;
+  projectedDeadline?: string | null; // Initial deadline (stays fixed)
+  updatedDeadline?: string | null; // Current deadline based on latest task due date
+  daysAheadOrBehind?: number | null; // +3 = 3 days ahead, -2 = 2 days behind
+  scheduleStatus?: 'ahead' | 'on_track' | 'behind' | 'unknown' | string | null;
+  scheduleStatusFormatted?: string | null; // "3 days ahead", "On Track", "2 days behind"
 }
 
 export interface CreateProjectRequest {
@@ -264,12 +280,13 @@ export interface CreateProjectRequest {
   description?: string | null;
   status: string;
   priority?: string | null;
-  progress?: number;
+  // progress is now auto-calculated from tasks - removed from request
   startDate?: string | null;
   endDate?: string | null;
   budgetAllocated?: number | null;
   budgetSpent?: number | null;
   teamLead?: string | null;
+  projectedDeadline?: string | null; // Optional initial deadline
 }
 
 export interface UpdateProjectRequest {
@@ -278,12 +295,13 @@ export interface UpdateProjectRequest {
   description?: string | null;
   status: string;
   priority?: string | null;
-  progress?: number;
+  // progress is now auto-calculated from tasks - removed from request
   startDate?: string | null;
   endDate?: string | null;
   budgetAllocated?: number | null;
   budgetSpent?: number | null;
   teamLead?: string | null;
+  projectedDeadline?: string | null; // Optional initial deadline
 }
 
 export interface ProjectMemberDto {
@@ -920,6 +938,109 @@ export interface UpdateMemberRoleRequest {
 }
 
 // ============================================
+// Task Types
+// ============================================
+
+export type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'completed' | 'cancelled';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
+
+export interface Task {
+  id?: string;
+  companyId?: string;
+  projectId?: string | null;
+  departmentId?: string | null;
+  propertyId?: string | null;
+  title: string;
+  description?: string | null;
+  status: TaskStatus | string;
+  priority?: TaskPriority | string | null;
+  taskType?: string | null;
+  createdByUserId?: string;
+  assignedToUserId?: string | null;
+  dueDate?: string | null;
+  startDate?: string | null;
+  completedAt?: string | null;
+  estimatedHours?: number | null;
+  actualHours?: number | null;
+  tags?: string | null;
+  notes?: string | null;
+  parentTaskId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TaskDto {
+  id?: string;
+  companyId?: string;
+  projectId?: string | null;
+  departmentId?: string | null;
+  propertyId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  status?: string | null;
+  priority?: string | null;
+  taskType?: string | null;
+  createdByUserId?: string;
+  assignedToUserId?: string | null;
+  dueDate?: string | null;
+  startDate?: string | null;
+  completedAt?: string | null;
+  estimatedHours?: number | null;
+  actualHours?: number | null;
+  tags?: string | null;
+  notes?: string | null;
+  parentTaskId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  // Joined fields from API
+  createdByUserName?: string | null;
+  assignedToUserName?: string | null;
+  projectName?: string | null;
+  departmentName?: string | null;
+  propertyName?: string | null;
+  subTasksCount?: number;
+  completedSubTasksCount?: number;
+}
+
+export interface CreateTaskRequest {
+  title: string;
+  description?: string | null;
+  projectId?: string | null;
+  departmentId?: string | null;
+  propertyId?: string | null;
+  status?: string | null;
+  priority?: string | null;
+  taskType?: string | null;
+  assignedToUserId?: string | null;
+  dueDate?: string | null;
+  startDate?: string | null;
+  estimatedHours?: number | null;
+  tags?: string | null;
+  notes?: string | null;
+  parentTaskId?: string | null;
+}
+
+export interface UpdateTaskRequest {
+  id: string;
+  title: string;
+  description?: string | null;
+  projectId?: string | null;
+  departmentId?: string | null;
+  propertyId?: string | null;
+  status: string;
+  priority?: string | null;
+  taskType?: string | null;
+  assignedToUserId?: string | null;
+  dueDate?: string | null;
+  startDate?: string | null;
+  estimatedHours?: number | null;
+  actualHours?: number | null;
+  tags?: string | null;
+  notes?: string | null;
+  parentTaskId?: string | null;
+}
+
+// ============================================
 // Paginated Response Types
 // ============================================
 
@@ -943,13 +1064,20 @@ export type AccessLogDtoPagedResult = PagedResult<AccessLogDto>;
 export type IotMetricDtoPagedResult = PagedResult<IotMetricDto>;
 export type FacialRecognitionDtoPagedResult = PagedResult<FacialRecognitionDto>;
 export type UserResponsePagedResult = PagedResult<UserResponse>;
+export type TaskDtoPagedResult = PagedResult<TaskDto>;
 
 // ============================================
 // Legacy Type Aliases (for backwards compatibility)
 // ============================================
 
 // These maintain compatibility with existing code
-export type UserRole = 'super_admin' | 'admin' | 'member' | 'viewer';
+// New role hierarchy:
+// super_admin - Global access to all companies and features
+// admin - Full access within company
+// dept_manager - Manage assigned departments + view company
+// project_lead - Manage assigned projects + view company
+// employee - View + work on assigned tasks only
+export type UserRole = 'super_admin' | 'admin' | 'dept_manager' | 'project_lead' | 'employee';
 export type CompanyStatus = 'active' | 'inactive' | 'pending';
 export type ProjectStatus = 'planning' | 'active' | 'on-hold' | 'completed' | 'cancelled';
 export type ProjectPriority = 'low' | 'medium' | 'high' | 'critical';

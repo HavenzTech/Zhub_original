@@ -2800,6 +2800,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -5865,6 +5875,16 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -7330,6 +7350,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
@@ -9719,18 +9749,17 @@
             "type": "string",
             "nullable": true
           },
-          "progress": {
-            "maximum": 100,
-            "minimum": 0,
-            "type": "integer",
-            "format": "int32"
-          },
           "startDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "projectedDeadline": {
             "type": "string",
             "format": "date-time",
             "nullable": true
@@ -9964,7 +9993,7 @@
           },
           "role": {
             "minLength": 1,
-            "pattern": "^(admin|member|viewer|super_admin)$",
+            "pattern": "^(admin|dept_manager|project_lead|employee|super_admin)$",
             "type": "string"
           }
         },
@@ -12191,6 +12220,16 @@
             "format": "date-time",
             "nullable": true
           },
+          "projectedDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updatedDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "budgetAllocated": {
             "type": "number",
             "format": "double",
@@ -12419,6 +12458,37 @@
             "nullable": true
           },
           "updatedTimeAgo": {
+            "type": "string",
+            "nullable": true
+          },
+          "projectedDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updatedDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "totalTasks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "completedTasks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "daysAheadOrBehind": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "scheduleStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduleStatusFormatted": {
             "type": "string",
             "nullable": true
           }
@@ -13405,6 +13475,12 @@
             "type": "string",
             "format": "uri",
             "nullable": true
+          },
+          "annualRevenue": {
+            "minimum": 0,
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -13750,18 +13826,17 @@
             "type": "string",
             "nullable": true
           },
-          "progress": {
-            "maximum": 100,
-            "minimum": 0,
-            "type": "integer",
-            "format": "int32"
-          },
           "startDate": {
             "type": "string",
             "format": "date-time",
             "nullable": true
           },
           "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "projectedDeadline": {
             "type": "string",
             "format": "date-time",
             "nullable": true

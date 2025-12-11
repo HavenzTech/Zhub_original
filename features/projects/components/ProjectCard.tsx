@@ -7,6 +7,7 @@ import type { Project } from "@/types/bms"
 import {
   getStatusColor,
   getPriorityColor,
+  getScheduleStatusColor,
   formatCurrency,
   formatDate,
 } from "../utils/projectHelpers"
@@ -58,13 +59,27 @@ export function ProjectCard({ project, onViewDetails, onDelete }: ProjectCardPro
           </p>
         )}
 
+        {/* Progress - now auto-calculated from tasks */}
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-600">Progress</span>
-            <span className="font-medium">{project.progress}%</span>
+            <span className="text-gray-600">
+              {project.totalTasks !== undefined && project.totalTasks > 0
+                ? `${project.completedTasks ?? 0}/${project.totalTasks} tasks`
+                : "Progress"}
+            </span>
+            <span className="font-medium">{project.progress ?? 0}%</span>
           </div>
-          <Progress value={project.progress} className="h-2" />
+          <Progress value={project.progress ?? 0} className="h-2" />
         </div>
+
+        {/* Schedule Status Badge */}
+        {project.scheduleStatusFormatted && (
+          <div className="mb-4">
+            <Badge className={getScheduleStatusColor(project.scheduleStatus)}>
+              {project.scheduleStatusFormatted}
+            </Badge>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center">

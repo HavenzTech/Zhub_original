@@ -2397,6 +2397,15 @@ export interface paths {
                         "application/json": components["schemas"]["ProblemDetails"];
                     };
                 };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         put?: never;
@@ -5129,6 +5138,15 @@ export interface paths {
                         "application/json": components["schemas"]["ProblemDetails"];
                     };
                 };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
                 /** @description Not Found */
                 404: {
                     headers: {
@@ -6421,6 +6439,15 @@ export interface paths {
                         "application/json": components["schemas"]["ProblemDetails"];
                     };
                 };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
                 /** @description Not Found */
                 404: {
                     headers: {
@@ -7497,12 +7524,12 @@ export interface components {
             description?: string | null;
             status: string;
             priority?: string | null;
-            /** Format: int32 */
-            progress?: number;
             /** Format: date-time */
             startDate?: string | null;
             /** Format: date-time */
             endDate?: string | null;
+            /** Format: date-time */
+            projectedDeadline?: string | null;
             /** Format: double */
             budgetAllocated?: number | null;
             /** Format: double */
@@ -8322,6 +8349,10 @@ export interface components {
             startDate?: string | null;
             /** Format: date-time */
             endDate?: string | null;
+            /** Format: date-time */
+            projectedDeadline?: string | null;
+            /** Format: date-time */
+            updatedDeadline?: string | null;
             /** Format: double */
             budgetAllocated?: number | null;
             /** Format: double */
@@ -8400,6 +8431,18 @@ export interface components {
             priorityDisplayName?: string | null;
             createdTimeAgo?: string | null;
             updatedTimeAgo?: string | null;
+            /** Format: date-time */
+            projectedDeadline?: string | null;
+            /** Format: date-time */
+            updatedDeadline?: string | null;
+            /** Format: int32 */
+            totalTasks?: number;
+            /** Format: int32 */
+            completedTasks?: number;
+            /** Format: int32 */
+            daysAheadOrBehind?: number | null;
+            scheduleStatus?: string | null;
+            scheduleStatusFormatted?: string | null;
         };
         ProjectDtoPagedResult: {
             data?: components["schemas"]["ProjectDto"][] | null;
@@ -8700,6 +8743,8 @@ export interface components {
             status?: string | null;
             /** Format: uri */
             logoUrl?: string | null;
+            /** Format: double */
+            annualRevenue?: number | null;
         };
         UpdateDepartmentRequest: {
             /** Format: uuid */
@@ -8798,12 +8843,12 @@ export interface components {
             description?: string | null;
             status: string;
             priority?: string | null;
-            /** Format: int32 */
-            progress?: number;
             /** Format: date-time */
             startDate?: string | null;
             /** Format: date-time */
             endDate?: string | null;
+            /** Format: date-time */
+            projectedDeadline?: string | null;
             /** Format: double */
             budgetAllocated?: number | null;
             /** Format: double */

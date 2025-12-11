@@ -60,10 +60,10 @@ export function Sidebar() {
   const pathname = usePathname();
 
   // Filter out admin-only items if user is not admin/super_admin
+  // Only super_admin and admin roles can access User Management
   const visibleItems = sidebarItems.filter((item) => {
     if (item.adminOnly) {
-      const role = authService.getCurrentRole();
-      return role === "admin" || role === "super_admin";
+      return authService.isAdmin();
     }
     return true;
   });

@@ -1,7 +1,7 @@
 // app/z-ai/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Message, useChat } from "@/lib/hooks/useChat";
@@ -39,6 +39,21 @@ export default function ZAiPage() {
   } = useChat();
   const [messages, setMessages] = useState<Message[]>(chatMessages || []);
   const [isLoading, setIsLoading] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      // Find the viewport element inside ScrollArea (Radix adds this)
+      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTo({
+          top: viewport.scrollHeight,
+          behavior: "smooth"
+        });
+      }
+    }
+  }, [messages]);
 
   // Keep local messages state in sync with the messages from the hook if it updates externally
   useEffect(() => {
@@ -304,17 +319,19 @@ export default function ZAiPage() {
           <ChatHeader aiMode={aiMode} onModeChange={setAiMode} />
 
           {/* Chat Messages */}
-          <ScrollArea className="flex-1 p-6">
-            <div className="space-y-6 max-w-4xl mx-auto">
-              {messages.map((message, index) => (
-                <ChatMessage
-                  key={index}
-                  message={message}
-                  onDocumentPreview={handleDocumentPreview}
-                />
-              ))}
-            </div>
-          </ScrollArea>
+          <div ref={scrollAreaRef} className="flex-1 min-h-0">
+            <ScrollArea className="h-full p-6">
+              <div className="space-y-6 max-w-4xl mx-auto">
+                {messages.map((message, index) => (
+                  <ChatMessage
+                    key={index}
+                    message={message}
+                    onDocumentPreview={handleDocumentPreview}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
 
           <ChatInput
             input={input}

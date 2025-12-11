@@ -1,9 +1,17 @@
 // Auth API types based on backend response structure
 
+// New role hierarchy:
+// super_admin - Global access to all companies and features
+// admin - Full access within company
+// dept_manager - Manage assigned departments + view company
+// project_lead - Manage assigned projects + view company
+// employee - View + work on assigned tasks only
+export type UserRole = 'super_admin' | 'admin' | 'dept_manager' | 'project_lead' | 'employee'
+
 export interface Company {
   companyId: string
   companyName: string
-  role: 'super_admin' | 'admin' | 'member' | 'viewer'
+  role: UserRole
 }
 
 export interface LoginResponse {
