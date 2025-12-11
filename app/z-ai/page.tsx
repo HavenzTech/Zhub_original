@@ -90,6 +90,7 @@ export default function ZAiPage() {
         // Get auth token from localStorage
         const authData = localStorage.getItem("auth");
         const token = authData ? JSON.parse(authData).token : null;
+        const auth = authData ? JSON.parse(authData) : null;
 
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
@@ -107,6 +108,11 @@ export default function ZAiPage() {
             chat_history: formattedHistory,
             search_type: "general",
             user_email: "", // Will be extracted from token by backend
+            // Multi-level access control
+            company_id: auth?.currentCompanyId || "",
+            department_ids: auth?.departmentIds || [],
+            project_id: auth?.currentProjectId || "",
+            user_id: auth?.userId || "",
           }),
         });
 

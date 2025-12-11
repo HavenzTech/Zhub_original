@@ -399,6 +399,14 @@ export default function DocumentControlPage() {
       if (formData.propertyId) payload.propertyId = formData.propertyId;
       if (formData.category) payload.category = formData.category;
 
+      // Multi-level access control fields
+      if (formData.departmentIds.length > 0) {
+        payload.departmentIds = JSON.stringify(formData.departmentIds);
+      }
+      if (formData.userAccess.length > 0) {
+        payload.userIds = JSON.stringify(formData.userAccess.map(u => u.userId));
+      }
+
       if (formData.tags?.trim()) {
         const tagsArray = formData.tags.split(",").map((t) => t.trim());
         payload.tags = JSON.stringify(tagsArray);

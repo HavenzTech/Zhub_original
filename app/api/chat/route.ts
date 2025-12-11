@@ -16,7 +16,12 @@ export async function POST(request: NextRequest) {
       query: body.query,
       chat_history: body.chat_history || [],
       search_type: body.search_type || "general",
-      user_email: body.user_email || "anonymous@example.com"
+      user_email: body.user_email || "anonymous@example.com",
+      // Multi-level access control parameters
+      company_id: body.company_id || "",
+      department_ids: body.department_ids || [],
+      project_id: body.project_id || "",
+      user_id: body.user_id || ""
     }
 
     // Get Authorization header from incoming request
