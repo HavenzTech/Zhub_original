@@ -380,7 +380,7 @@ class BmsApiService {
     create: (data: any) => this.post('/documents', data),
     update: (id: string, data: any) => this.put(`/documents/${id}`, data),
     approve: (id: string) => this.post(`/documents/${id}/approve`, {}),
-    reject: (id: string) => this.post(`/documents/${id}/reject`, {}),
+    reject: (id: string, data?: { reason?: string }) => this.post(`/documents/${id}/reject`, data || {}),
     delete: (id: string) => this.delete(`/documents/${id}`),
     // Get signed download URL for GCS-stored documents
     getDownloadUrl: (id: string) => this.get<DocumentDownloadResponse>(`/documents/${id}/download`),

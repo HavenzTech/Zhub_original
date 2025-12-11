@@ -9,28 +9,16 @@ import { ChatHeader } from "@/features/z-ai/components/ChatHeader";
 import { ChatMessage } from "@/features/z-ai/components/ChatMessage";
 import { ChatInput } from "@/features/z-ai/components/ChatInput";
 import { QuickActionsSidebar } from "@/features/z-ai/components/QuickActionsSidebar";
-import { DocumentPreviewPanel } from "@/features/z-ai/components/DocumentPreviewPanel";
-
-interface PreviewPanelState {
-  isOpen: boolean;
-  document: any;
-  content: string;
-  loading: boolean;
-  error: string | null;
-  downloadUrl?: string;
-}
+import DocumentViewModal from "@/features/documents/components/DocumentViewModal";
+import { bmsApi } from "@/lib/services/bmsApi";
+import { authService } from "@/lib/services/auth";
+import type { Document } from "@/types/bms";
 
 export default function ZAiPage() {
   const [input, setInput] = useState("");
   const [aiMode, setAiMode] = useState<"internal" | "external">("internal");
-  const [previewPanel, setPreviewPanel] = useState<PreviewPanelState>({
-    isOpen: false,
-    document: null,
-    content: "",
-    loading: false,
-    error: null,
-    downloadUrl: undefined,
-  });
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
   const {
     messages: chatMessages,
@@ -243,78 +231,47 @@ export default function ZAiPage() {
   };
 
   const handleDocumentPreview = async (doc: any) => {
-    setPreviewPanel({
-      isOpen: true,
-      document: doc,
-      content: "",
-      loading: true,
-      error: null,
-      downloadUrl: undefined,
-    });
-
     try {
-      const response = await fetch(
-        `/api/document-preview/${encodeURIComponent(doc.title)}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+      // Set up auth for API call
+      const token = authService.getToken();
+      const companyId = authService.getCurrentCompanyId();
+      if (token) bmsApi.setToken(token);
+      if (companyId) bmsApi.setCompanyId(companyId);
+
+      // Fetch all documents and find by name (search endpoint not available)
+      const allDocs = await bmsApi.documents.getAll();
+      const allDocsList = Array.isArray(allDocs)
+        ? allDocs
+        : (allDocs as any)?.items || (allDocs as any)?.data || [];
+
+      // Try exact match first, then partial match
+      const docTitle = doc.title?.toLowerCase() || "";
+      let matchedDoc = allDocsList.find(
+        (d: Document) => d.name?.toLowerCase() === docTitle
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!matchedDoc) {
+        matchedDoc = allDocsList.find(
+          (d: Document) =>
+            d.name?.toLowerCase().includes(docTitle) ||
+            docTitle.includes(d.name?.toLowerCase() || "")
+        );
       }
 
-      const data = await response.json();
-
-      if (data.success) {
-        if (data.content && data.content.trim()) {
-          setPreviewPanel((prev) => ({
-            ...prev,
-            loading: false,
-            content: data.content,
-            downloadUrl: data.downloadUrl,
-          }));
-        } else if (data.type === "pdf" && data.downloadUrl) {
-          setPreviewPanel((prev) => ({
-            ...prev,
-            loading: false,
-            content: "pdf_embedded",
-            downloadUrl: data.downloadUrl,
-          }));
-        } else {
-          setPreviewPanel((prev) => ({
-            ...prev,
-            loading: false,
-            content: `Unsupported file type: ${data.type}\n\nPlease download the file to view its contents.`,
-            downloadUrl: data.downloadUrl,
-          }));
-        }
+      if (matchedDoc) {
+        setSelectedDocument(matchedDoc as Document);
+        setShowDocumentModal(true);
       } else {
-        throw new Error(data.error || "Failed to load preview");
+        console.error("Document not found:", doc.title);
       }
     } catch (error) {
-      setPreviewPanel((prev) => ({
-        ...prev,
-        loading: false,
-        error: `Failed to load document: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
-      }));
+      console.error("Error loading document for preview:", error);
     }
   };
 
-  const closePreviewPanel = () => {
-    setPreviewPanel({
-      isOpen: false,
-      document: null,
-      content: "",
-      loading: false,
-      error: null,
-      downloadUrl: undefined,
-    });
+  const closeDocumentModal = () => {
+    setShowDocumentModal(false);
+    setSelectedDocument(null);
   };
 
   return (
@@ -352,10 +309,11 @@ export default function ZAiPage() {
         {/* Quick Actions Sidebar */}
         <QuickActionsSidebar onQuickAction={handleQuickAction} />
 
-        {/* Document Preview Panel */}
-        <DocumentPreviewPanel
-          previewPanel={previewPanel}
-          onClose={closePreviewPanel}
+        {/* Document View Modal - Same as Document Control */}
+        <DocumentViewModal
+          document={selectedDocument}
+          open={showDocumentModal}
+          onClose={closeDocumentModal}
         />
       </div>
     </AppLayout>
