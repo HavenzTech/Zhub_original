@@ -41,12 +41,12 @@ const initialFormData = {
   description: "",
   status: "planning",
   priority: "medium",
-  progress: 0,
   startDate: "",
   endDate: "",
   budgetAllocated: "",
   budgetSpent: "",
   teamLead: "",
+  projectedDeadline: "",
 };
 
 export default function ProjectsPage() {
@@ -80,7 +80,7 @@ export default function ProjectsPage() {
       name: formData.name.trim(),
       status: formData.status,
       priority: formData.priority,
-      progress: formData.progress,
+      // progress is now auto-calculated from tasks - removed from payload
     };
 
     if (formData.description?.trim())
@@ -88,6 +88,7 @@ export default function ProjectsPage() {
     if (formData.startDate?.trim()) payload.startDate = formData.startDate;
     if (formData.endDate?.trim()) payload.endDate = formData.endDate;
     if (formData.teamLead?.trim()) payload.teamLead = formData.teamLead;
+    if (formData.projectedDeadline?.trim()) payload.projectedDeadline = formData.projectedDeadline;
     if (
       formData.budgetAllocated &&
       !isNaN(parseFloat(formData.budgetAllocated))

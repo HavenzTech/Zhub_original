@@ -262,12 +262,11 @@ export function UserFormModal({
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="viewer">Viewer - Read-only access</SelectItem>
-                <SelectItem value="member">Member - Standard access</SelectItem>
-                <SelectItem value="admin">Admin - Full control</SelectItem>
-                <SelectItem value="super_admin">
-                  Super Admin - Platform-wide access
-                </SelectItem>
+                <SelectItem value="employee">Employee - View & work on assigned tasks</SelectItem>
+                <SelectItem value="project_lead">Project Lead - Manage assigned projects</SelectItem>
+                <SelectItem value="dept_manager">Dept Manager - Manage assigned departments</SelectItem>
+                <SelectItem value="admin">Admin - Full company control</SelectItem>
+                <SelectItem value="super_admin">Super Admin - Platform-wide access</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -9,11 +9,13 @@ import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
 import { ProjectDetails } from "@/features/projects/components/ProjectDetails";
 import { MembersAssignment } from "@/components/common/MembersAssignment";
 import { DepartmentsAssignment } from "@/components/common/DepartmentsAssignment";
+import { ProjectTasksSection } from "@/features/tasks/components";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { Project } from "@/types/bms";
 import { toast } from "sonner";
+import { formatDateForInput } from "@/features/tasks/utils/taskHelpers";
 
 const ProjectFormModal = dynamic(
   () =>
@@ -28,12 +30,12 @@ const initialFormData = {
   description: "",
   status: "planning",
   priority: "medium",
-  progress: 0,
   startDate: "",
   endDate: "",
   budgetAllocated: "",
   budgetSpent: "",
   teamLead: "",
+  projectedDeadline: "",
 };
 
 export default function ProjectDetailPage() {
@@ -97,12 +99,12 @@ export default function ProjectDetailPage() {
       description: project.description ?? "",
       status: project.status ?? "planning",
       priority: project.priority ?? "medium",
-      progress: project.progress ?? 0,
-      startDate: project.startDate ?? "",
-      endDate: project.endDate ?? "",
+      startDate: formatDateForInput(project.startDate),
+      endDate: formatDateForInput(project.endDate),
       budgetAllocated: project.budgetAllocated?.toString() ?? "",
       budgetSpent: project.budgetSpent?.toString() ?? "",
       teamLead: project.teamLead ?? "",
+      projectedDeadline: formatDateForInput(project.projectedDeadline),
     });
     setShowEditForm(true);
   };
@@ -112,7 +114,7 @@ export default function ProjectDetailPage() {
       name: formData.name.trim(),
       status: formData.status,
       priority: formData.priority,
-      progress: formData.progress,
+      // progress is now auto-calculated from tasks - removed from payload
     };
 
     if (includeId) {
@@ -130,6 +132,8 @@ export default function ProjectDetailPage() {
     if (formData.endDate?.trim()) payload.endDate = formData.endDate.trim();
     if (formData.teamLead?.trim())
       payload.teamLead = formData.teamLead.trim();
+    if (formData.projectedDeadline?.trim())
+      payload.projectedDeadline = formData.projectedDeadline.trim();
 
     const budgetAllocated = formData.budgetAllocated?.trim();
     if (budgetAllocated && !isNaN(parseFloat(budgetAllocated))) {
@@ -195,6 +199,12 @@ export default function ProjectDetailPage() {
       <div className="space-y-6">
         {/* Project Details */}
         <ProjectDetails project={project} onBack={handleBack} onEdit={handleEdit} />
+
+        {/* Tasks Section */}
+        <ProjectTasksSection
+          projectId={project.id!}
+          projectName={project.name || "this project"}
+        />
 
         {/* Assignments Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

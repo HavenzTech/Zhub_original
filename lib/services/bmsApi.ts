@@ -473,6 +473,59 @@ class BmsApiService {
     update: (id: string, data: any) => this.put(`/FacialRecognition/${id}`, data),
     delete: (id: string) => this.delete(`/FacialRecognition/${id}`),
   };
+
+  // Task endpoints - Swagger: /api/havenzhub/tasks
+  tasks = {
+    // GET /tasks - paginated with filters
+    getAll: (params?: {
+      page?: number;
+      pageSize?: number;
+      status?: string;
+      priority?: string;
+      projectId?: string;
+      departmentId?: string;
+      propertyId?: string;
+      assignedToUserId?: string;
+      createdByUserId?: string;
+      search?: string;
+    }) => {
+      const query = new URLSearchParams();
+      if (params?.page) query.append('page', params.page.toString());
+      if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
+      if (params?.status) query.append('status', params.status);
+      if (params?.priority) query.append('priority', params.priority);
+      if (params?.projectId) query.append('projectId', params.projectId);
+      if (params?.departmentId) query.append('departmentId', params.departmentId);
+      if (params?.propertyId) query.append('propertyId', params.propertyId);
+      if (params?.assignedToUserId) query.append('assignedToUserId', params.assignedToUserId);
+      if (params?.createdByUserId) query.append('createdByUserId', params.createdByUserId);
+      if (params?.search) query.append('search', params.search);
+      const queryString = query.toString();
+      return this.get(`/tasks${queryString ? `?${queryString}` : ''}`);
+    },
+    // GET /tasks/{id}
+    getById: (id: string) => this.get(`/tasks/${id}`),
+    // GET /tasks/my-tasks - current user's assigned tasks
+    getMyTasks: (status?: string) => {
+      const query = status ? `?status=${status}` : '';
+      return this.get(`/tasks/my-tasks${query}`);
+    },
+    // GET /tasks/project/{projectId}
+    getByProject: (projectId: string) => this.get(`/tasks/project/${projectId}`),
+    // POST /tasks - create new task
+    create: (data: any) => this.post('/tasks', data),
+    // PUT /tasks/{id} - full update (admin, dept_manager, project_lead only)
+    update: (id: string, data: any) => this.put(`/tasks/${id}`, data),
+    // PATCH /tasks/{id}/status/{status} - update status only (employees can use this)
+    updateStatus: (id: string, status: string) => this.request(`/tasks/${id}/status/${status}`, { method: 'PATCH' }),
+    // PATCH /tasks/{id}/assign/{userId?} - assign/unassign task
+    assign: (id: string, userId?: string) => {
+      const endpoint = userId ? `/tasks/${id}/assign/${userId}` : `/tasks/${id}/assign`;
+      return this.request(endpoint, { method: 'PATCH' });
+    },
+    // DELETE /tasks/{id} - soft delete
+    delete: (id: string) => this.delete(`/tasks/${id}`),
+  };
 }
 
 // Export singleton instance

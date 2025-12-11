@@ -23,12 +23,12 @@ interface ProjectFormData {
   description: string
   status: string
   priority: string
-  progress: number
   startDate: string
   endDate: string
   budgetAllocated: string
   budgetSpent: string
   teamLead: string
+  projectedDeadline: string
 }
 
 interface ProjectFormModalProps {
@@ -153,27 +153,6 @@ export function ProjectFormModal({
               </div>
             </div>
 
-            {/* Progress */}
-            <div className="grid gap-2">
-              <Label htmlFor={isEditMode ? "edit-progress" : "progress"}>
-                Progress (%)
-              </Label>
-              <Input
-                id={isEditMode ? "edit-progress" : "progress"}
-                type="number"
-                value={formData.progress}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    progress: parseInt(e.target.value) || 0,
-                  })
-                }
-                placeholder="0"
-                min="0"
-                max="100"
-              />
-            </div>
-
             {/* Dates */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
@@ -203,6 +182,24 @@ export function ProjectFormModal({
                   }
                 />
               </div>
+            </div>
+
+            {/* Projected Deadline */}
+            <div className="grid gap-2">
+              <Label htmlFor={isEditMode ? "edit-projectedDeadline" : "projectedDeadline"}>
+                Projected Deadline
+              </Label>
+              <Input
+                id={isEditMode ? "edit-projectedDeadline" : "projectedDeadline"}
+                type="date"
+                value={formData.projectedDeadline}
+                onChange={(e) =>
+                  setFormData({ ...formData, projectedDeadline: e.target.value })
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Initial deadline for schedule tracking. Progress is auto-calculated from tasks.
+              </p>
             </div>
 
             {/* Budget */}

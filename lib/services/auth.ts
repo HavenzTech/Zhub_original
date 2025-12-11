@@ -4,6 +4,7 @@ import type {
   LoginResponse,
   AuthState,
   ApiError,
+  UserRole,
 } from "@/lib/types/auth";
 
 // Environment variables - configured in .env.local
@@ -137,7 +138,7 @@ class AuthService {
   /**
    * Get user's role for the current company
    */
-  getCurrentRole(): "super_admin" | "admin" | "member" | "viewer" | null {
+  getCurrentRole(): UserRole | null {
     const auth = this.getAuth();
     if (!auth || !auth.currentCompanyId) return null;
 
@@ -156,7 +157,26 @@ class AuthService {
   }
 
   /**
+   * Check if user is an admin (company-level)
+   */
+  isAdmin(): boolean {
+    const role = this.getCurrentRole();
+    return role === "admin" || role === "super_admin";
+  }
+
+  /**
+   * Check if user has a management role (can manage departments/projects)
+   */
+  hasManagementRole(): boolean {
+    const role = this.getCurrentRole();
+    return role === "super_admin" || role === "admin" || role === "dept_manager" || role === "project_lead";
+  }
+
+  /**
    * Check if user has permission for an action
+   * Note: This is a basic permission check. Context-aware permissions
+   * (e.g., dept_manager can only manage assigned departments) should be
+   * handled at the API level or with additional context checks.
    */
   hasPermission(
     action: "create" | "update" | "delete",
@@ -174,24 +194,58 @@ class AuthService {
       return true;
     }
 
-    // Viewer has no write permissions
-    if (role === "viewer") return false;
+    // Department Manager permissions
+    if (role === "dept_manager") {
+      // Can manage tasks, documents in their departments
+      if (entity === "task" || entity === "document") {
+        return action === "create" || action === "update" || action === "delete";
+      }
+      // Can view but not modify departments/projects at company level
+      return false;
+    }
 
-    // Member permissions based on entity
-    if (role === "member") {
-      if (action === "create") {
-        // Members can create projects and documents
-        return entity === "project" || entity === "document";
+    // Project Lead permissions
+    if (role === "project_lead") {
+      // Can manage tasks in their projects
+      if (entity === "task") {
+        return action === "create" || action === "update" || action === "delete";
       }
-      if (action === "update") {
-        // Members can update projects and documents
-        return entity === "project" || entity === "document";
+      // Can manage documents
+      if (entity === "document") {
+        return action === "create" || action === "update";
       }
-      // Members cannot delete
+      return false;
+    }
+
+    // Employee permissions - very limited
+    if (role === "employee") {
+      // Employees can only update task status (not create/delete tasks)
+      // This is handled at API level - they use PATCH /tasks/{id}/status
+      if (entity === "task" && action === "update") {
+        return true; // Only for status updates on assigned tasks
+      }
+      // Employees cannot create or delete anything
       return false;
     }
 
     return false;
+  }
+
+  /**
+   * Check if user can create tasks
+   * Employees cannot create tasks, only update status on assigned tasks
+   */
+  canCreateTasks(): boolean {
+    const role = this.getCurrentRole();
+    return role === "super_admin" || role === "admin" || role === "dept_manager" || role === "project_lead";
+  }
+
+  /**
+   * Check if user can delete tasks
+   */
+  canDeleteTasks(): boolean {
+    const role = this.getCurrentRole();
+    return role === "super_admin" || role === "admin" || role === "dept_manager" || role === "project_lead";
   }
 
   /**

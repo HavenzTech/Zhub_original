@@ -169,8 +169,8 @@ export default function DocumentChatPanel({
   }
 
   return (
-    <div className="h-full flex flex-col border rounded-lg bg-white">
-      <div className="pb-3 p-4 border-b">
+    <div className="flex flex-col border rounded-lg bg-white" style={{ height: '95vh', maxHeight: '95vh', overflow: 'hidden' }}>
+      <div className="pb-3 p-4 border-b flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-blue-600" />
@@ -200,8 +200,9 @@ export default function DocumentChatPanel({
         }
       `}</style>
       <div
-        className="chat-messages flex-1 overflow-y-scroll px-4 pt-4 pb-2 min-h-0"
+        className="chat-messages overflow-y-auto px-4 pt-4 pb-2"
         ref={scrollRef}
+        style={{ flex: '1 1 0', minHeight: 0, overflow: 'auto' }}
       >
         <div className="space-y-4 pb-2">
           {messages.map((message) => (
@@ -223,8 +224,9 @@ export default function DocumentChatPanel({
                     ? "bg-blue-600 text-white"
                     : "bg-gray-100 text-gray-900"
                 }`}
+                style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
               >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap" style={{ wordBreak: 'break-word' }}>{message.content}</p>
                 <span className="text-xs opacity-70 mt-1 block">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",

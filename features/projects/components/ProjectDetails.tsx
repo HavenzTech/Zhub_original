@@ -12,12 +12,15 @@ import {
   DollarSign,
   TrendingUp,
   Target,
+  CheckCircle,
+  Clock,
 } from "lucide-react";
 import {
   formatCurrency,
   formatDate,
   getStatusColor,
   getPriorityColor,
+  getScheduleStatusColor,
 } from "../utils/projectHelpers";
 
 interface ProjectDetailsProps {
@@ -59,16 +62,21 @@ export function ProjectDetails({
                 <p className="text-gray-600 mb-4">{project.description}</p>
               )}
 
-              <div className="flex gap-3 mb-4">
+              <div className="flex gap-3 mb-4 flex-wrap">
                 <Badge className={getStatusColor(project.status)}>
                   {project.status}
                 </Badge>
                 <Badge className={getPriorityColor(project.priority)}>
                   {project.priority}
                 </Badge>
+                {project.scheduleStatusFormatted && (
+                  <Badge className={getScheduleStatusColor(project.scheduleStatus)}>
+                    {project.scheduleStatusFormatted}
+                  </Badge>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 {project.teamLead && (
                   <div>
                     <span className="text-gray-600">Project Lead:</span>
@@ -77,8 +85,16 @@ export function ProjectDetails({
                 )}
                 <div>
                   <span className="text-gray-600">Progress:</span>
-                  <div className="font-medium">{project.progress}%</div>
+                  <div className="font-medium">{project.progress ?? 0}%</div>
                 </div>
+                {project.totalTasks !== undefined && project.totalTasks > 0 && (
+                  <div>
+                    <span className="text-gray-600">Tasks:</span>
+                    <div className="font-medium">
+                      {project.completedTasks ?? 0}/{project.totalTasks}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <span className="text-gray-600">Project ID:</span>
                   <div className="font-medium font-mono text-xs">
@@ -96,13 +112,17 @@ export function ProjectDetails({
             </div>
           </div>
 
-          {/* Progress Bar */}
+          {/* Progress Bar - auto-calculated from tasks */}
           <div>
             <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-600">Overall Progress</span>
-              <span className="font-medium">{project.progress}%</span>
+              <span className="text-gray-600">
+                {project.totalTasks !== undefined && project.totalTasks > 0
+                  ? `Overall Progress (${project.completedTasks ?? 0}/${project.totalTasks} tasks)`
+                  : "Overall Progress"}
+              </span>
+              <span className="font-medium">{project.progress ?? 0}%</span>
             </div>
-            <Progress value={project.progress} className="h-3" />
+            <Progress value={project.progress ?? 0} className="h-3" />
           </div>
         </CardContent>
       </Card>
@@ -170,19 +190,67 @@ export function ProjectDetails({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Target className="w-5 h-5 text-orange-600" />
+                <CheckCircle className="w-5 h-5 text-orange-600" />
               </div>
               <div>
                 <div className="text-lg font-bold text-gray-900">
-                  {project.progress}%
+                  {project.totalTasks !== undefined && project.totalTasks > 0
+                    ? `${project.completedTasks ?? 0}/${project.totalTasks}`
+                    : `${project.progress ?? 0}%`}
                 </div>
-                <div className="text-sm text-gray-600">Complete</div>
-                <div className="text-xs text-gray-500">{project.status}</div>
+                <div className="text-sm text-gray-600">
+                  {project.totalTasks !== undefined && project.totalTasks > 0
+                    ? "Tasks Complete"
+                    : "Complete"}
+                </div>
+                <div className="text-xs text-gray-500">{project.progress ?? 0}% done</div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Schedule Tracking - only show if schedule data available */}
+      {(project.projectedDeadline || project.updatedDeadline || project.scheduleStatusFormatted) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Schedule Tracking
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {project.projectedDeadline && (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm text-gray-600 mb-1">Projected Deadline</div>
+                  <div className="text-lg font-semibold">
+                    {formatDate(project.projectedDeadline)}
+                  </div>
+                  <div className="text-xs text-gray-500">Initial deadline</div>
+                </div>
+              )}
+              {project.updatedDeadline && (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm text-gray-600 mb-1">Updated Deadline</div>
+                  <div className="text-lg font-semibold">
+                    {formatDate(project.updatedDeadline)}
+                  </div>
+                  <div className="text-xs text-gray-500">Based on latest task</div>
+                </div>
+              )}
+              {project.scheduleStatusFormatted && (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm text-gray-600 mb-1">Schedule Status</div>
+                  <Badge className={`${getScheduleStatusColor(project.scheduleStatus)} text-base px-3 py-1`}>
+                    {project.scheduleStatusFormatted}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Project Details */}
       <Card>

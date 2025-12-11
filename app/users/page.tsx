@@ -29,7 +29,7 @@ const initialFormData: CreateUserRequest = {
   email: "",
   name: "",
   pictureUrl: "",
-  role: "member",
+  role: "employee", // Default role for new users
 };
 
 const initialEditFormData = {
@@ -64,8 +64,8 @@ export default function UsersPage() {
       return;
     }
 
-    const role = authService.getCurrentRole();
-    if (role !== "admin" && role !== "super_admin") {
+    // Only super_admin and admin can access user management
+    if (!authService.isAdmin()) {
       toast.error("Access denied. Only admins can manage users.");
       router.push("/");
       return;
