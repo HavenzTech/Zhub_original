@@ -49,6 +49,9 @@ class AuthService {
       // Default to first company if available
       currentCompanyId: authData.companies[0]?.companyId || null,
       expiresAt: authData.expiresAt,
+      // Multi-level access control fields
+      departmentIds: authData.departmentIds || [],
+      currentProjectId: authData.currentProjectId || null,
     };
 
     // Store in localStorage for client-side access

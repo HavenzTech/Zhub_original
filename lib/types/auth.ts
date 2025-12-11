@@ -21,6 +21,9 @@ export interface LoginResponse {
   name: string
   companies: Company[]
   expiresAt: string
+  // Multi-level access control fields (optional - backend may not return these)
+  departmentIds?: string[]
+  currentProjectId?: string | null
 }
 
 export interface LoginRequest {
@@ -36,6 +39,9 @@ export interface AuthState {
   companies: Company[]
   currentCompanyId: string | null
   expiresAt: string | null
+  // Multi-level access control fields
+  departmentIds?: string[]
+  currentProjectId?: string | null
 }
 
 export interface ApiError {
