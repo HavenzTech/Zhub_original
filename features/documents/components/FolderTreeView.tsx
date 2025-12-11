@@ -10,6 +10,8 @@ import {
   Plus,
   Edit,
   Trash2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import type { Folder as FolderType, Document } from "@/types/bms";
 import {
@@ -33,6 +35,8 @@ interface FolderTreeViewProps {
   onFolderDelete?: (folderId: string) => void;
   onDocumentEdit?: (documentId: string) => void;
   onDocumentDelete?: (documentId: string) => void;
+  onDocumentApprove?: (documentId: string) => void;
+  onDocumentReject?: (documentId: string, reason?: string) => void;
   showDocuments?: boolean;
 }
 
@@ -46,6 +50,8 @@ interface FolderNodeProps {
   onFolderDelete?: (folderId: string) => void;
   onDocumentEdit?: (documentId: string) => void;
   onDocumentDelete?: (documentId: string) => void;
+  onDocumentApprove?: (documentId: string) => void;
+  onDocumentReject?: (documentId: string, reason?: string) => void;
   showDocuments?: boolean;
   level: number;
 }
@@ -60,12 +66,17 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   onFolderDelete,
   onDocumentEdit,
   onDocumentDelete,
+  onDocumentApprove,
+  onDocumentReject,
   showDocuments = false,
   level,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [deleteDocumentId, setDeleteDocumentId] = useState<string | null>(null);
   const [deleteDocumentName, setDeleteDocumentName] = useState<string>("");
+  const [rejectDocumentId, setRejectDocumentId] = useState<string | null>(null);
+  const [rejectDocumentName, setRejectDocumentName] = useState<string>("");
+  const [rejectionReason, setRejectionReason] = useState<string>("");
   const isSelected = selectedFolderId === folder.id;
   const hasChildren = folder.childFolders && folder.childFolders.length > 0;
   const hasDocuments =
@@ -117,6 +128,78 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   const cancelDelete = () => {
     setDeleteDocumentId(null);
     setDeleteDocumentName("");
+  };
+
+  const handleDocumentApprove = (e: React.MouseEvent, docId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onDocumentApprove) {
+      onDocumentApprove(docId);
+    }
+  };
+
+  const handleDocumentRejectClick = (
+    e: React.MouseEvent,
+    docId: string,
+    docName: string
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setRejectDocumentId(docId);
+    setRejectDocumentName(docName);
+    setRejectionReason("");
+  };
+
+  const confirmReject = () => {
+    if (rejectDocumentId && onDocumentReject) {
+      onDocumentReject(rejectDocumentId, rejectionReason || undefined);
+    }
+    setRejectDocumentId(null);
+    setRejectDocumentName("");
+    setRejectionReason("");
+  };
+
+  const cancelReject = () => {
+    setRejectDocumentId(null);
+    setRejectDocumentName("");
+    setRejectionReason("");
+  };
+
+  const getStatusBadge = (status?: string) => {
+    const statusLower = status?.toLowerCase();
+    switch (statusLower) {
+      case "approved":
+        return (
+          <span className="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-800">
+            Approved
+          </span>
+        );
+      case "pending":
+        return (
+          <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800">
+            Pending
+          </span>
+        );
+      case "rejected":
+        return (
+          <span className="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-800">
+            Rejected
+          </span>
+        );
+      case "draft":
+        return (
+          <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-800">
+            Draft
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const canApproveOrReject = (status?: string) => {
+    const statusLower = status?.toLowerCase();
+    return statusLower === "pending" || statusLower === "draft";
   };
 
   return (
@@ -199,8 +282,32 @@ const FolderNode: React.FC<FolderNodeProps> = ({
                 {doc.fileType?.toUpperCase()}
               </span>
 
-              {/* Edit and Delete Icons */}
+              {/* Status Badge */}
+              {getStatusBadge(doc.status)}
+
+              {/* Action Icons */}
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Approve/Reject buttons - only for pending or draft documents */}
+                {onDocumentApprove && doc.id && canApproveOrReject(doc.status) && (
+                  <button
+                    onClick={(e) => handleDocumentApprove(e, doc.id!)}
+                    className="p-1 hover:bg-green-100 rounded transition-colors"
+                    title="Approve document"
+                  >
+                    <CheckCircle className="h-3 w-3 text-green-600" />
+                  </button>
+                )}
+                {onDocumentReject && doc.id && canApproveOrReject(doc.status) && (
+                  <button
+                    onClick={(e) =>
+                      handleDocumentRejectClick(e, doc.id!, doc.name ?? "")
+                    }
+                    className="p-1 hover:bg-red-100 rounded transition-colors"
+                    title="Reject document"
+                  >
+                    <XCircle className="h-3 w-3 text-red-600" />
+                  </button>
+                )}
                 {onDocumentEdit && doc.id && (
                   <button
                     onClick={(e) => handleDocumentEdit(e, doc.id!)}
@@ -242,6 +349,8 @@ const FolderNode: React.FC<FolderNodeProps> = ({
               onFolderDelete={onFolderDelete}
               onDocumentEdit={onDocumentEdit}
               onDocumentDelete={onDocumentDelete}
+              onDocumentApprove={onDocumentApprove}
+              onDocumentReject={onDocumentReject}
               showDocuments={showDocuments}
               level={level + 1}
             />
@@ -274,6 +383,43 @@ const FolderNode: React.FC<FolderNodeProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reject Confirmation Dialog */}
+      <AlertDialog
+        open={!!rejectDocumentId}
+        onOpenChange={(open) => !open && cancelReject()}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reject{" "}
+              <strong>{rejectDocumentName}</strong>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="px-6 pb-4">
+            <label className="text-sm font-medium text-gray-700">
+              Reason (optional)
+            </label>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Enter reason for rejection..."
+              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              rows={3}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelReject}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmReject}
+              className="!bg-red-600 hover:!bg-red-700 !text-white focus:ring-red-600"
+            >
+              Reject
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -288,6 +434,8 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
   onFolderDelete,
   onDocumentEdit,
   onDocumentDelete,
+  onDocumentApprove,
+  onDocumentReject,
   showDocuments = false,
 }) => {
   // Root folders (no parent)
@@ -325,6 +473,8 @@ const FolderTreeView: React.FC<FolderTreeViewProps> = ({
           onFolderDelete={onFolderDelete}
           onDocumentEdit={onDocumentEdit}
           onDocumentDelete={onDocumentDelete}
+          onDocumentApprove={onDocumentApprove}
+          onDocumentReject={onDocumentReject}
           showDocuments={showDocuments}
           level={0}
         />

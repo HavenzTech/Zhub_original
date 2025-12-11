@@ -248,6 +248,38 @@ export default function DocumentControlPage() {
     }
   };
 
+  const handleDocumentApprove = async (documentId: string) => {
+    try {
+      await bmsApi.documents.approve(documentId);
+      toast.success("Document approved successfully");
+      // Update local state to reflect new status
+      setDocuments((prev) =>
+        prev.map((d) => (d.id === documentId ? { ...d, status: "approved" } : d))
+      );
+      await loadFolders();
+    } catch (err) {
+      const errorMessage =
+        err instanceof BmsApiError ? err.message : "Failed to approve document";
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleDocumentReject = async (documentId: string, reason?: string) => {
+    try {
+      await bmsApi.documents.reject(documentId, reason ? { reason } : undefined);
+      toast.success("Document rejected");
+      // Update local state to reflect new status
+      setDocuments((prev) =>
+        prev.map((d) => (d.id === documentId ? { ...d, status: "rejected" } : d))
+      );
+      await loadFolders();
+    } catch (err) {
+      const errorMessage =
+        err instanceof BmsApiError ? err.message : "Failed to reject document";
+      toast.error(errorMessage);
+    }
+  };
+
   const handleSaveMetadata = async (
     documentId: string,
     updates: Partial<Document>
@@ -568,6 +600,8 @@ export default function DocumentControlPage() {
                       onFolderDelete={handleFolderDelete}
                       onDocumentEdit={handleDocumentEdit}
                       onDocumentDelete={handleDocumentDelete}
+                      onDocumentApprove={handleDocumentApprove}
+                      onDocumentReject={handleDocumentReject}
                       showDocuments={true}
                     />
                   )}

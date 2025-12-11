@@ -54,7 +54,7 @@ export function MembersAssignment({
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [selectedRole, setSelectedRole] = useState<string>("contributor");
+  const [selectedRole, setSelectedRole] = useState<string>("employee");
   const [removingMember, setRemovingMember] = useState<Member | null>(null);
 
   const loadMembers = useCallback(async () => {
@@ -111,7 +111,7 @@ export function MembersAssignment({
       }
       toast.success("Member added successfully");
       setSelectedUserId("");
-      setSelectedRole("contributor");
+      setSelectedRole("employee");
       await loadMembers();
     } catch (err) {
       console.error("Error adding member:", err);
@@ -181,9 +181,10 @@ export function MembersAssignment({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="contributor">Contributor</SelectItem>
-              <SelectItem value="lead">Lead</SelectItem>
-              <SelectItem value="viewer">Viewer</SelectItem>
+              <SelectItem value="employee">Employee</SelectItem>
+              <SelectItem value="project_lead">Project Lead</SelectItem>
+              <SelectItem value="dept_manager">Dept Manager</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={handleAddMember} disabled={adding || !selectedUserId}>

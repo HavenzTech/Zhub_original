@@ -8298,6 +8298,8 @@ export interface components {
             email?: string | null;
             name?: string | null;
             companies?: components["schemas"]["UserCompanyInfo"][] | null;
+            departmentIds?: string[] | null;
+            projectIds?: string[] | null;
             /** Format: date-time */
             expiresAt?: string;
         };
@@ -8956,6 +8958,8 @@ export interface components {
             companyId?: string;
             companyName?: string | null;
             role?: string | null;
+            departmentIds?: string[] | null;
+            projectIds?: string[] | null;
         };
         UserDepartment: {
             /** Format: uuid */

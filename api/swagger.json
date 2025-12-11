@@ -12066,6 +12066,22 @@
             },
             "nullable": true
           },
+          "departmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          },
+          "projectIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          },
           "expiresAt": {
             "type": "string",
             "format": "date-time"
@@ -14224,6 +14240,22 @@
           },
           "role": {
             "type": "string",
+            "nullable": true
+          },
+          "departmentIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          },
+          "projectIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
             "nullable": true
           }
         },
