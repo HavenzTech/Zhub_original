@@ -13,7 +13,7 @@ import {
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
-import { Property, PropertyType, PropertyStatus } from "@/types/bms";
+import { Property, PropertyType, PropertyStatus, Company } from "@/types/bms";
 import { toast } from "sonner";
 
 const initialFormData: PropertyFormData = {
@@ -41,6 +41,7 @@ export default function PropertyDetailPage() {
   const propertyId = params.id as string;
 
   const [property, setProperty] = useState<Property | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -74,6 +75,16 @@ export default function PropertyDetailPage() {
 
       const data = await bmsApi.properties.getById(propertyId);
       setProperty(data as Property);
+
+      // Fetch company name if companyId exists
+      if ((data as Property).companyId) {
+        try {
+          const companyData = await bmsApi.companies.getById((data as Property).companyId);
+          setCompany(companyData as Company);
+        } catch {
+          // Silently fail - company name is optional
+        }
+      }
     } catch (err) {
       console.error("Error loading property:", err);
       setError(err instanceof Error ? err : new Error("Failed to load property"));
@@ -209,7 +220,12 @@ export default function PropertyDetailPage() {
 
       <div className="space-y-6">
         {/* Property Details */}
-        <PropertyDetails property={property} onBack={handleBack} onEdit={handleEdit} />
+        <PropertyDetails
+          property={property}
+          companyName={company?.name}
+          onBack={handleBack}
+          onEdit={handleEdit}
+        />
 
         {/* Edit Modal */}
         <PropertyFormModal

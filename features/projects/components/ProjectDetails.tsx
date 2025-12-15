@@ -14,6 +14,7 @@ import {
   Target,
   CheckCircle,
   Clock,
+  Info,
 } from "lucide-react";
 import {
   formatCurrency,
@@ -25,14 +26,20 @@ import {
 
 interface ProjectDetailsProps {
   project: Project;
+  companyName?: string;
   onBack: () => void;
   onEdit: (project: Project) => void;
+  onSetActive?: () => void;
+  isSettingActive?: boolean;
 }
 
 export function ProjectDetails({
   project,
+  companyName,
   onBack,
   onEdit,
+  onSetActive,
+  isSettingActive,
 }: ProjectDetailsProps) {
   const budgetRemaining =
     (project.budgetAllocated || 0) - (project.budgetSpent || 0);
@@ -40,11 +47,44 @@ export function ProjectDetails({
     ? Math.round(((project.budgetSpent || 0) / project.budgetAllocated) * 100)
     : 0;
 
+  // Check if all required fields are filled
+  const isProjectComplete =
+    project.name?.trim() &&
+    project.description?.trim() &&
+    project.priority &&
+    project.startDate &&
+    project.endDate &&
+    project.budgetAllocated &&
+    project.teamLead?.trim();
+
+  // Show notification when project is complete but still in planning
+  const showActivateNotification =
+    isProjectComplete && project.status === "planning";
+
   return (
     <div className="space-y-6">
       <Button variant="ghost" onClick={onBack}>
         ← Back to Projects
       </Button>
+
+      {/* Activate Project Notification */}
+      {showActivateNotification && onSetActive && (
+        <div className="flex items-center justify-between gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-3">
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
+            <p className="text-sm text-blue-800">
+              All project details are complete. Ready to set status to Active?
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={onSetActive}
+            disabled={isSettingActive}
+          >
+            {isSettingActive ? "Setting..." : "Set Active"}
+          </Button>
+        </div>
+      )}
 
       {/* Project Header */}
       <Card>
@@ -96,9 +136,18 @@ export function ProjectDetails({
                   </div>
                 )}
                 <div>
-                  <span className="text-gray-600">Project ID:</span>
-                  <div className="font-medium font-mono text-xs">
-                    {project.id ? `${project.id.slice(0, 8)}...` : "N/A"}
+                  <span className="text-gray-600">Days Remaining:</span>
+                  <div className="font-medium">
+                    {(() => {
+                      if (!project.endDate) return "N/A";
+                      const end = new Date(project.endDate);
+                      const now = new Date();
+                      const diffDays = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                      if (diffDays < 0) return <span className="text-red-600">{Math.abs(diffDays)} days overdue</span>;
+                      if (diffDays === 0) return <span className="text-orange-600">Due today</span>;
+                      if (diffDays <= 7) return <span className="text-orange-600">{diffDays} days</span>;
+                      return `${diffDays} days`;
+                    })()}
                   </div>
                 </div>
               </div>
@@ -260,16 +309,16 @@ export function ProjectDetails({
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Project ID</span>
-              <Badge variant="secondary" className="font-mono text-xs">
-                {project.id ? `${project.id.slice(0, 8)}...` : "N/A"}
-              </Badge>
+              <span className="text-sm text-gray-600">Project</span>
+              <span className="text-sm font-medium">
+                {project.name || "N/A"}
+              </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Company ID</span>
-              <Badge variant="secondary" className="font-mono text-xs">
-                {project.companyId ? `${project.companyId.slice(0, 8)}...` : "N/A"}
-              </Badge>
+              <span className="text-sm text-gray-600">Company</span>
+              <span className="text-sm font-medium">
+                {companyName || "N/A"}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Status</span>
