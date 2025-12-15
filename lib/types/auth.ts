@@ -16,6 +16,7 @@ export interface Company {
 
 export interface LoginResponse {
   token: string
+  refreshToken?: string | null
   userId: string
   email: string
   name: string
@@ -33,6 +34,7 @@ export interface LoginRequest {
 
 export interface AuthState {
   token: string | null
+  refreshToken?: string | null
   userId: string | null
   email: string | null
   name: string | null
@@ -42,6 +44,10 @@ export interface AuthState {
   // Multi-level access control fields
   departmentIds?: string[]
   currentProjectId?: string | null
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string
 }
 
 export interface ApiError {

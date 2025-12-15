@@ -1,4 +1,21 @@
-import { ApiResponse, ApiError, DocumentDownloadResponse } from '@/types/bms';
+import {
+  ApiResponse,
+  ApiError,
+  DocumentDownloadResponse,
+  ExpenseDto,
+  ExpenseDtoPagedResult,
+  CreateExpenseRequest,
+  UpdateExpenseRequest,
+  RejectExpenseRequest,
+  ExpenseActionResponse,
+  ProjectExpenseSummary,
+  InvoiceDownloadResponse,
+  NotificationDto,
+  NotificationDtoPagedResult,
+  UnreadCountResponse,
+  RegisterDeviceTokenRequest,
+} from '@/types/bms';
+import { authService } from './auth';
 
 // Environment variables - configured in .env.local
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -26,6 +43,7 @@ class BmsApiError extends Error {
 interface RequestOptions extends RequestInit {
   timeout?: number;
   skipAuth?: boolean;
+  _retryCount?: number; // Internal use for retry tracking
 }
 
 class BmsApiService {
@@ -54,7 +72,7 @@ class BmsApiService {
     endpoint: string,
     options: RequestOptions = {}
   ): Promise<T> {
-    const { timeout = TIMEOUT, skipAuth = false, ...fetchOptions } = options;
+    const { timeout = TIMEOUT, skipAuth = false, _retryCount = 0, ...fetchOptions } = options;
 
     const url = `${this.baseUrl}${API_PREFIX}${endpoint}`;
 
@@ -105,6 +123,20 @@ class BmsApiService {
       const contentLength = response.headers.get('content-length');
 
       if (!response.ok) {
+        // Handle 401 Unauthorized - try to refresh token and retry
+        if (response.status === 401 && !skipAuth && _retryCount < 1) {
+          const refreshed = await authService.refreshAccessToken();
+          if (refreshed) {
+            // Update token from refreshed auth
+            const newAuth = authService.getAuth();
+            if (newAuth?.token) {
+              this.setToken(newAuth.token);
+            }
+            // Retry the request once
+            return this.request<T>(endpoint, { ...options, _retryCount: _retryCount + 1 });
+          }
+        }
+
         const errorData = isJson ? await response.json() : { message: response.statusText };
         throw new BmsApiError(
           errorData.message || 'API request failed',
@@ -165,7 +197,7 @@ class BmsApiService {
 
   // FormData post for file uploads
   async postFormData<T>(endpoint: string, data: FormData, options?: RequestOptions): Promise<T> {
-    const { timeout = TIMEOUT, skipAuth = false, ...fetchOptions } = options || {};
+    const { timeout = TIMEOUT, skipAuth = false, _retryCount = 0, ...fetchOptions } = options || {};
     const url = `${this.baseUrl}${API_PREFIX}${endpoint}`;
 
     const headers: Record<string, string> = {};
@@ -216,6 +248,20 @@ class BmsApiService {
       const isJson = contentType?.includes('application/json');
 
       if (!response.ok) {
+        // Handle 401 Unauthorized - try to refresh token and retry
+        if (response.status === 401 && !skipAuth && _retryCount < 1) {
+          const refreshed = await authService.refreshAccessToken();
+          if (refreshed) {
+            // Update token from refreshed auth
+            const newAuth = authService.getAuth();
+            if (newAuth?.token) {
+              this.setToken(newAuth.token);
+            }
+            // Retry the request once
+            return this.postFormData<T>(endpoint, data, { ...options, _retryCount: _retryCount + 1 });
+          }
+        }
+
         let errorData: any = { message: response.statusText };
         try {
           if (isJson) {
@@ -525,6 +571,117 @@ class BmsApiService {
     },
     // DELETE /tasks/{id} - soft delete
     delete: (id: string) => this.delete(`/tasks/${id}`),
+  };
+
+  // Expense endpoints - Swagger: /api/havenzhub/expenses
+  expenses = {
+    // GET /expenses/project/{projectId} - List expenses for a project with filters
+    getByProject: (
+      projectId: string,
+      params?: {
+        page?: number;
+        pageSize?: number;
+        status?: string;
+        category?: string;
+        sortBy?: string;
+        descending?: boolean;
+      }
+    ) => {
+      const query = new URLSearchParams();
+      if (params?.page) query.append('page', params.page.toString());
+      if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
+      if (params?.status) query.append('status', params.status);
+      if (params?.category) query.append('category', params.category);
+      if (params?.sortBy) query.append('sortBy', params.sortBy);
+      if (params?.descending !== undefined) query.append('descending', params.descending.toString());
+      const queryString = query.toString();
+      return this.get<ExpenseDtoPagedResult>(`/expenses/project/${projectId}${queryString ? `?${queryString}` : ''}`);
+    },
+
+    // GET /expenses/{id} - Get single expense
+    getById: (id: string) => this.get<ExpenseDto>(`/expenses/${id}`),
+
+    // POST /expenses - Submit new expense
+    create: (data: CreateExpenseRequest) => this.post<ExpenseDto>('/expenses', data),
+
+    // PUT /expenses/{id} - Update pending expense (submitter only)
+    update: (id: string, data: UpdateExpenseRequest) => this.put<ExpenseDto>(`/expenses/${id}`, data),
+
+    // DELETE /expenses/{id} - Delete pending expense (submitter only)
+    delete: (id: string) => this.delete(`/expenses/${id}`),
+
+    // POST /expenses/{id}/invoice - Upload invoice file
+    uploadInvoice: (id: string, file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return this.postFormData<ExpenseDto>(`/expenses/${id}/invoice`, formData);
+    },
+
+    // GET /expenses/{id}/invoice - Get invoice download URL
+    getInvoiceUrl: (id: string) => this.get<InvoiceDownloadResponse>(`/expenses/${id}/invoice`),
+
+    // POST /expenses/{id}/approve - Approve expense (admin only)
+    approve: (id: string) => this.post<ExpenseActionResponse>(`/expenses/${id}/approve`, {}),
+
+    // POST /expenses/{id}/reject - Reject expense with reason (admin only)
+    reject: (id: string, data: RejectExpenseRequest) => this.post<ExpenseActionResponse>(`/expenses/${id}/reject`, data),
+
+    // GET /expenses/pending - List all pending expenses (admin only)
+    getPending: (params?: {
+      page?: number;
+      pageSize?: number;
+      projectId?: string;
+      category?: string;
+      sortBy?: string;
+      descending?: boolean;
+    }) => {
+      const query = new URLSearchParams();
+      if (params?.page) query.append('page', params.page.toString());
+      if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
+      if (params?.projectId) query.append('projectId', params.projectId);
+      if (params?.category) query.append('category', params.category);
+      if (params?.sortBy) query.append('sortBy', params.sortBy);
+      if (params?.descending !== undefined) query.append('descending', params.descending.toString());
+      const queryString = query.toString();
+      return this.get<ExpenseDtoPagedResult>(`/expenses/pending${queryString ? `?${queryString}` : ''}`);
+    },
+
+    // GET /expenses/project/{projectId}/summary - Get expense summary for a project
+    getSummary: (projectId: string) => this.get<ProjectExpenseSummary>(`/expenses/project/${projectId}/summary`),
+  };
+
+  // Notification endpoints - Swagger: /api/havenzhub/notifications
+  notifications = {
+    // GET /notifications - Get notifications for current user
+    getAll: (params?: {
+      page?: number;
+      pageSize?: number;
+      unreadOnly?: boolean;
+    }) => {
+      const query = new URLSearchParams();
+      if (params?.page) query.append('page', params.page.toString());
+      if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
+      if (params?.unreadOnly !== undefined) query.append('unreadOnly', params.unreadOnly.toString());
+      const queryString = query.toString();
+      return this.get<NotificationDtoPagedResult>(`/notifications${queryString ? `?${queryString}` : ''}`);
+    },
+
+    // GET /notifications/unread-count - Get unread notification count
+    getUnreadCount: () => this.get<UnreadCountResponse>('/notifications/unread-count'),
+
+    // PATCH /notifications/{id}/read - Mark notification as read
+    markAsRead: (id: string) => this.request<void>(`/notifications/${id}/read`, { method: 'PATCH' }),
+
+    // PATCH /notifications/read-all - Mark all notifications as read
+    markAllAsRead: () => this.request<void>('/notifications/read-all', { method: 'PATCH' }),
+
+    // POST /notifications/device-token - Register device for push notifications
+    registerDeviceToken: (data: RegisterDeviceTokenRequest) =>
+      this.post<void>('/notifications/device-token', data),
+
+    // DELETE /notifications/device-token/{token} - Remove device token
+    removeDeviceToken: (token: string) =>
+      this.delete<void>(`/notifications/device-token/${encodeURIComponent(token)}`),
   };
 }
 
