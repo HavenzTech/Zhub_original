@@ -23,12 +23,14 @@ import {
 
 interface DepartmentDetailsProps {
   department: Department;
+  companyName?: string;
   onBack: () => void;
   onEdit: (department: Department) => void;
 }
 
 export function DepartmentDetails({
   department,
+  companyName,
   onBack,
   onEdit,
 }: DepartmentDetailsProps) {
@@ -68,15 +70,15 @@ export function DepartmentDetails({
                   </div>
                 )}
                 <div>
-                  <span className="text-gray-600">Department ID:</span>
-                  <div className="font-medium font-mono text-xs">
-                    {department.id ? `${department.id.slice(0, 8)}...` : "N/A"}
+                  <span className="text-gray-600">Department:</span>
+                  <div className="font-medium">
+                    {department.name || "N/A"}
                   </div>
                 </div>
                 <div>
-                  <span className="text-gray-600">Company ID:</span>
-                  <div className="font-medium font-mono text-xs">
-                    {department.companyId ? `${department.companyId.slice(0, 8)}...` : "N/A"}
+                  <span className="text-gray-600">Company:</span>
+                  <div className="font-medium">
+                    {companyName || "N/A"}
                   </div>
                 </div>
               </div>
@@ -203,16 +205,16 @@ export function DepartmentDetails({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Department ID</span>
-              <Badge variant="secondary" className="font-mono text-xs">
-                {department.id ? `${department.id.slice(0, 8)}...` : "N/A"}
-              </Badge>
+              <span className="text-sm text-gray-600">Department</span>
+              <span className="text-sm font-medium">
+                {department.name || "N/A"}
+              </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Company ID</span>
-              <Badge variant="secondary" className="font-mono text-xs">
-                {department.companyId ? `${department.companyId.slice(0, 8)}...` : "N/A"}
-              </Badge>
+              <span className="text-sm text-gray-600">Company</span>
+              <span className="text-sm font-medium">
+                {companyName || "N/A"}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Created At</span>
