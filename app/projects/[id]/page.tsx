@@ -10,6 +10,7 @@ import { ProjectDetails } from "@/features/projects/components/ProjectDetails";
 import { MembersAssignment } from "@/components/common/MembersAssignment";
 import { DepartmentsAssignment } from "@/components/common/DepartmentsAssignment";
 import { ProjectTasksSection } from "@/features/tasks/components";
+import { ExpenseList } from "@/features/expenses/components";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -247,6 +248,15 @@ export default function ProjectDetailPage() {
         <ProjectTasksSection
           projectId={project.id!}
           projectName={project.name || "this project"}
+        />
+
+        {/* Expenses Section */}
+        <ExpenseList
+          projectId={project.id!}
+          projectName={project.name || "this project"}
+          onBudgetUpdate={(newBudgetSpent) => {
+            setProject((prev) => prev ? { ...prev, budgetSpent: newBudgetSpent } : prev);
+          }}
         />
 
         {/* Assignments Section */}

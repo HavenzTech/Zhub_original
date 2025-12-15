@@ -4,11 +4,11 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Bot,
-  Bell,
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserProfile } from "@/features/users/components/UserProfile";
+import { NotificationDropdown } from "@/components/common/NotificationDropdown";
 import { Sidebar } from "./Sidebar";
 import { MyTasksSidebar } from "./MyTasksSidebar";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
@@ -109,9 +109,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
                 Ask Z
               </Button>
 
-              <Button variant="ghost" size="icon">
-                <Bell className="w-4 h-4" />
-              </Button>
+              <NotificationDropdown />
 
               <UserProfile />
             </div>

@@ -1041,6 +1041,121 @@ export interface UpdateTaskRequest {
 }
 
 // ============================================
+// Expense Types
+// ============================================
+
+export type ExpenseStatus = 'pending' | 'approved' | 'rejected';
+export type ExpenseCategory = 'software' | 'contractor' | 'equipment' | 'travel' | 'other';
+
+export interface ExpenseDto {
+  id?: string;
+  companyId?: string;
+  projectId?: string;
+  projectName?: string | null;
+  description?: string | null;
+  amount?: number;
+  amountFormatted?: string | null;
+  expenseDate?: string;
+  category?: string | null;
+  categoryDisplayName?: string | null;
+  invoiceFileName?: string | null;
+  hasInvoice?: boolean;
+  status?: string | null;
+  statusDisplayName?: string | null;
+  submittedByUserId?: string;
+  submittedByName?: string | null;
+  submittedByEmail?: string | null;
+  submittedAt?: string;
+  submittedTimeAgo?: string | null;
+  reviewedByUserId?: string | null;
+  reviewedByName?: string | null;
+  reviewedAt?: string | null;
+  reviewedTimeAgo?: string | null;
+  rejectionReason?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateExpenseRequest {
+  projectId: string;
+  description: string;
+  amount: number;
+  expenseDate: string;
+  category?: string | null;
+}
+
+export interface UpdateExpenseRequest {
+  description?: string | null;
+  amount?: number | null;
+  expenseDate?: string | null;
+  category?: string | null;
+}
+
+export interface RejectExpenseRequest {
+  reason: string;
+}
+
+export interface ExpenseActionResponse {
+  id?: string;
+  status?: string | null;
+  message?: string | null;
+  newProjectBudgetSpent?: number | null;
+}
+
+export interface ProjectExpenseSummary {
+  projectId?: string;
+  totalExpenses?: number;
+  pendingCount?: number;
+  approvedCount?: number;
+  rejectedCount?: number;
+  totalPendingAmount?: number;
+  totalApprovedAmount?: number;
+  totalRejectedAmount?: number;
+  totalApprovedFormatted?: string | null;
+  totalPendingFormatted?: string | null;
+}
+
+export interface InvoiceDownloadResponse {
+  downloadUrl?: string | null;
+  fileName?: string | null;
+  expiresInMinutes?: number;
+}
+
+export type ExpenseDtoPagedResult = PagedResult<ExpenseDto>;
+
+// ============================================
+// Notification Types
+// ============================================
+
+export interface NotificationDto {
+  id?: string;
+  type?: string | null;
+  title?: string | null;
+  body?: string | null;
+  data?: string | null;
+  referenceType?: string | null;
+  referenceId?: string | null;
+  actorUserId?: string | null;
+  actorUserName?: string | null;
+  actorUserPictureUrl?: string | null;
+  isRead?: boolean;
+  readAt?: string | null;
+  createdAt?: string;
+  relativeTime?: string | null;
+}
+
+export interface UnreadCountResponse {
+  count?: number;
+}
+
+export interface RegisterDeviceTokenRequest {
+  token: string;
+  platform: 'web' | 'ios' | 'android';
+}
+
+export type NotificationDtoPagedResult = PagedResult<NotificationDto>;
+
+// ============================================
 // Paginated Response Types
 // ============================================
 

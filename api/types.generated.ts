@@ -1099,6 +1099,151 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RefreshTokenRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LoginResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RefreshTokenRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/logout-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/havenzhub/BmsDevice": {
         parameters: {
             query?: never;
@@ -3696,6 +3841,417 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/havenzhub/expenses/project/{projectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    status?: string;
+                    category?: string;
+                    sortBy?: string;
+                    descending?: boolean;
+                };
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ExpenseDtoPagedResult"];
+                        "application/json": components["schemas"]["ExpenseDtoPagedResult"];
+                        "text/json": components["schemas"]["ExpenseDtoPagedResult"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/expenses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ExpenseDto"];
+                        "application/json": components["schemas"]["ExpenseDto"];
+                        "text/json": components["schemas"]["ExpenseDto"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateExpenseRequest"];
+                    "text/json": components["schemas"]["UpdateExpenseRequest"];
+                    "application/*+json": components["schemas"]["UpdateExpenseRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ExpenseDto"];
+                        "application/json": components["schemas"]["ExpenseDto"];
+                        "text/json": components["schemas"]["ExpenseDto"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateExpenseRequest"];
+                    "text/json": components["schemas"]["CreateExpenseRequest"];
+                    "application/*+json": components["schemas"]["CreateExpenseRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ExpenseDto"];
+                        "application/json": components["schemas"]["ExpenseDto"];
+                        "text/json": components["schemas"]["ExpenseDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/expenses/{id}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["InvoiceDownloadResponse"];
+                        "application/json": components["schemas"]["InvoiceDownloadResponse"];
+                        "text/json": components["schemas"]["InvoiceDownloadResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ExpenseDto"];
+                        "application/json": components["schemas"]["ExpenseDto"];
+                        "text/json": components["schemas"]["ExpenseDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/expenses/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ExpenseActionResponse"];
+                        "application/json": components["schemas"]["ExpenseActionResponse"];
+                        "text/json": components["schemas"]["ExpenseActionResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/expenses/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RejectExpenseRequest"];
+                    "text/json": components["schemas"]["RejectExpenseRequest"];
+                    "application/*+json": components["schemas"]["RejectExpenseRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ExpenseActionResponse"];
+                        "application/json": components["schemas"]["ExpenseActionResponse"];
+                        "text/json": components["schemas"]["ExpenseActionResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/expenses/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    projectId?: string;
+                    sortBy?: string;
+                    descending?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ExpenseDtoPagedResult"];
+                        "application/json": components["schemas"]["ExpenseDtoPagedResult"];
+                        "text/json": components["schemas"]["ExpenseDtoPagedResult"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/expenses/project/{projectId}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProjectExpenseSummary"];
+                        "application/json": components["schemas"]["ProjectExpenseSummary"];
+                        "text/json": components["schemas"]["ProjectExpenseSummary"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/havenzhub/FacialRecognition": {
         parameters: {
             query?: never;
@@ -4997,6 +5553,296 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    unreadOnly?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NotificationDtoPagedResult"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UnreadCountResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MarkReadResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/havenzhub/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MarkReadResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/havenzhub/notifications/device-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RegisterDeviceTokenRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/notifications/device-token/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -7477,6 +8323,16 @@ export interface components {
             installDate?: string | null;
             iotDeviceId?: string | null;
         };
+        CreateExpenseRequest: {
+            /** Format: uuid */
+            projectId: string;
+            description: string;
+            /** Format: double */
+            amount: number;
+            /** Format: date-time */
+            expenseDate: string;
+            category?: string | null;
+        };
         CreateFacialRecognitionRequest: {
             /** Format: uuid */
             userId: string;
@@ -8077,6 +8933,63 @@ export interface components {
             /** Format: int32 */
             alertsCount?: number;
         };
+        ExpenseActionResponse: {
+            /** Format: uuid */
+            id?: string;
+            status?: string | null;
+            message?: string | null;
+            /** Format: double */
+            newProjectBudgetSpent?: number | null;
+        };
+        ExpenseDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            companyId?: string;
+            /** Format: uuid */
+            projectId?: string;
+            projectName?: string | null;
+            description?: string | null;
+            /** Format: double */
+            amount?: number;
+            amountFormatted?: string | null;
+            /** Format: date-time */
+            expenseDate?: string;
+            category?: string | null;
+            categoryDisplayName?: string | null;
+            invoiceFileName?: string | null;
+            hasInvoice?: boolean;
+            status?: string | null;
+            statusDisplayName?: string | null;
+            /** Format: uuid */
+            submittedByUserId?: string;
+            submittedByName?: string | null;
+            submittedByEmail?: string | null;
+            /** Format: date-time */
+            submittedAt?: string;
+            submittedTimeAgo?: string | null;
+            /** Format: uuid */
+            reviewedByUserId?: string | null;
+            reviewedByName?: string | null;
+            /** Format: date-time */
+            reviewedAt?: string | null;
+            reviewedTimeAgo?: string | null;
+            rejectionReason?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        ExpenseDtoPagedResult: {
+            data?: components["schemas"]["ExpenseDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
         FacialRecognition: {
             /** Format: uuid */
             id?: string;
@@ -8217,6 +9130,12 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        InvoiceDownloadResponse: {
+            downloadUrl?: string | null;
+            fileName?: string | null;
+            /** Format: int32 */
+            expiresInMinutes?: number;
+        };
         IotMetric: {
             /** Format: int64 */
             id?: number;
@@ -8293,6 +9212,7 @@ export interface components {
         };
         LoginResponse: {
             token?: string | null;
+            refreshToken?: string | null;
             /** Format: uuid */
             userId?: string;
             email?: string | null;
@@ -8302,6 +9222,11 @@ export interface components {
             projectIds?: string[] | null;
             /** Format: date-time */
             expiresAt?: string;
+        };
+        MarkReadResponse: {
+            success?: boolean;
+            /** Format: int32 */
+            markedCount?: number | null;
         };
         MemberActionResponse: {
             message?: string | null;
@@ -8322,6 +9247,37 @@ export interface components {
             label?: string | null;
             unit?: string | null;
             dataPoints?: components["schemas"]["MetricDataPoint"][] | null;
+        };
+        NotificationDto: {
+            /** Format: uuid */
+            id?: string;
+            type?: string | null;
+            title?: string | null;
+            body?: string | null;
+            data?: string | null;
+            referenceType?: string | null;
+            /** Format: uuid */
+            referenceId?: string | null;
+            /** Format: uuid */
+            actorUserId?: string | null;
+            actorUserName?: string | null;
+            actorUserPictureUrl?: string | null;
+            isRead?: boolean;
+            /** Format: date-time */
+            readAt?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            readonly relativeTime?: string | null;
+        };
+        NotificationDtoPagedResult: {
+            data?: components["schemas"]["NotificationDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
         };
         PasswordChangeResponse: {
             message?: string | null;
@@ -8455,6 +9411,26 @@ export interface components {
             /** Format: int32 */
             pageSize?: number;
             readonly hasMore?: boolean;
+        };
+        ProjectExpenseSummary: {
+            /** Format: uuid */
+            projectId?: string;
+            /** Format: int32 */
+            totalExpenses?: number;
+            /** Format: int32 */
+            pendingCount?: number;
+            /** Format: int32 */
+            approvedCount?: number;
+            /** Format: int32 */
+            rejectedCount?: number;
+            /** Format: double */
+            totalPendingAmount?: number;
+            /** Format: double */
+            totalApprovedAmount?: number;
+            /** Format: double */
+            totalRejectedAmount?: number;
+            totalApprovedFormatted?: string | null;
+            totalPendingFormatted?: string | null;
         };
         ProjectMemberDto: {
             /** Format: uuid */
@@ -8590,6 +9566,33 @@ export interface components {
             property?: components["schemas"]["Property"];
             project?: components["schemas"]["Project"];
         };
+        RefreshToken: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            userId: string;
+            token: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            revokedAt?: string | null;
+            revokedReason?: string | null;
+            replacedByToken?: string | null;
+            user?: components["schemas"]["User"];
+            readonly isExpired?: boolean;
+            readonly isRevoked?: boolean;
+            readonly isActive?: boolean;
+        };
+        RefreshTokenRequest: {
+            refreshToken: string;
+        };
+        RegisterDeviceTokenRequest: {
+            token: string;
+            deviceType: string;
+            deviceName?: string | null;
+        };
         RegisterRequest: {
             /** Format: email */
             email: string;
@@ -8610,6 +9613,9 @@ export interface components {
         };
         RejectDocumentRequest: {
             reason?: string | null;
+        };
+        RejectExpenseRequest: {
+            reason: string;
         };
         TaskDto: {
             /** Format: uuid */
@@ -8672,6 +9678,10 @@ export interface components {
         TypeDefinition: {
             value?: string | null;
             label?: string | null;
+        };
+        UnreadCountResponse: {
+            /** Format: int32 */
+            count?: number;
         };
         UpdateAreaRequest: {
             /** Format: uuid */
@@ -8806,6 +9816,14 @@ export interface components {
             iotDeviceId?: string | null;
             isActive?: boolean | null;
         };
+        UpdateExpenseRequest: {
+            description?: string | null;
+            /** Format: double */
+            amount?: number | null;
+            /** Format: date-time */
+            expenseDate?: string | null;
+            category?: string | null;
+        };
         UpdateFacialRecognitionRequest: {
             /** Format: uuid */
             id: string;
@@ -8937,6 +9955,7 @@ export interface components {
             documents?: components["schemas"]["Document"][] | null;
             facialRecognitions?: components["schemas"]["FacialRecognition"][] | null;
             accessLogs?: components["schemas"]["AccessLog"][] | null;
+            refreshTokens?: components["schemas"]["RefreshToken"][] | null;
         };
         UserCompany: {
             /** Format: uuid */
