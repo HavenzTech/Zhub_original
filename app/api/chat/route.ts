@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       headers['Authorization'] = authHeader
     }
 
-    // Call your RAG backend
+    // Call your RAG backend (using LangGraph agent with smart tool selection)
     const response = await fetch(`${RAG_BACKEND_URL}/chat/agent`, {
       method: 'POST',
       headers,

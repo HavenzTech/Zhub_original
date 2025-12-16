@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Document, DocumentDownloadResponse } from "@/types/bms";
+import { Document as BMSDocument, DocumentDownloadResponse } from "@/types/bms";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,15 +18,18 @@ import {
   File,
   Loader2,
 } from "lucide-react";
+import PdfViewer from "./PdfViewer";
 
 interface DocumentPreviewProps {
-  document: Document | null;
-  onDownload?: (document: Document) => void;
+  document: BMSDocument | null;
+  onDownload?: (document: BMSDocument) => void;
+  initialPage?: number;
 }
 
 export default function DocumentPreview({
   document,
   onDownload,
+  initialPage = 1,
 }: DocumentPreviewProps) {
   const [zoom, setZoom] = useState(100);
   const [loading, setLoading] = useState(false);
@@ -37,7 +40,6 @@ export default function DocumentPreview({
   useEffect(() => {
     if (!document || !document.id) return;
 
-    // Track the current blob URL for cleanup
     let currentBlobUrl: string | null = null;
     let cancelled = false;
 
@@ -47,19 +49,47 @@ export default function DocumentPreview({
         setPreviewError(false);
         console.log("[DocumentPreview] Document object:", document);
         console.log("[DocumentPreview] Document ID:", document.id);
+        console.log("[DocumentPreview] Storage path:", document.storagePath);
 
-        // Get signed URL from backend API
-        const downloadData: DocumentDownloadResponse = await bmsApi.documents.getDownloadUrl(document.id!);
-        console.log("[DocumentPreview] Download response:", downloadData);
+        // Check if this is a local file (storagePath contains a local path)
+        const storagePath = document.storagePath || "";
+        const isLocalFile = storagePath && (
+          storagePath.includes("example_files") ||
+          storagePath.includes("local_uploads") ||
+          storagePath.toLowerCase().startsWith("c:") ||  // Windows paths (case-insensitive)
+          storagePath.startsWith("/") ||  // Unix paths
+          storagePath.match(/^[a-zA-Z]:/)  // Any Windows drive letter
+        );
+        console.log("[DocumentPreview] isLocalFile:", isLocalFile, "storagePath:", storagePath);
 
-        if (!downloadData.downloadUrl) {
-          console.error("[DocumentPreview] No download URL in response");
-          if (!cancelled) setPreviewError(true);
-          return;
+        let downloadUrl: string | null = null;
+
+        if (isLocalFile) {
+          // Use Python backend for local files
+          const pythonApiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8001";
+          downloadUrl = `${pythonApiUrl}/preview-pdf?path=${encodeURIComponent(document.storagePath!)}&page=${initialPage}`;
+          console.log("[DocumentPreview] Using Python backend for local file:", downloadUrl);
+        } else {
+          // Use ASP.NET API for GCS-stored files
+          const authData = localStorage.getItem("auth");
+          if (authData) {
+            const auth = JSON.parse(authData);
+            if (auth.token) bmsApi.setToken(auth.token);
+            if (auth.currentCompanyId) bmsApi.setCompanyId(auth.currentCompanyId);
+          }
+
+          const downloadData: DocumentDownloadResponse = await bmsApi.documents.getDownloadUrl(document.id!);
+          console.log("[DocumentPreview] Download response:", downloadData);
+
+          if (!downloadData.downloadUrl) {
+            console.error("[DocumentPreview] No download URL in response");
+            if (!cancelled) setPreviewError(true);
+            return;
+          }
+          downloadUrl = downloadData.downloadUrl;
         }
 
-        // Fetch the file directly from GCS using the signed URL
-        const response = await fetch(downloadData.downloadUrl);
+        const response = await fetch(downloadUrl);
 
         if (!response.ok) {
           console.error("[DocumentPreview] Failed to fetch from GCS:", response.status);
@@ -72,8 +102,12 @@ export default function DocumentPreview({
           currentBlobUrl = URL.createObjectURL(blob);
           setBlobUrl(currentBlobUrl);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("[DocumentPreview] Error fetching document:", error);
+        // Log more details for BmsApiError
+        if (error?.status) {
+          console.error("[DocumentPreview] API Status:", error.status, "Code:", error.code, "Details:", error.details);
+        }
         if (!cancelled) setPreviewError(true);
       } finally {
         if (!cancelled) setLoading(false);
@@ -82,14 +116,13 @@ export default function DocumentPreview({
 
     fetchDocument();
 
-    // Cleanup blob URL when component unmounts or document changes
     return () => {
       cancelled = true;
       if (currentBlobUrl) {
         URL.revokeObjectURL(currentBlobUrl);
       }
     };
-  }, [document?.id]);
+  }, [document?.id, document?.storagePath, initialPage]);
 
   if (!document) {
     return (
@@ -115,7 +148,6 @@ export default function DocumentPreview({
 
   const handleDownload = () => {
     if (blobUrl && document) {
-      // Create a temporary link to trigger download
       const link = window.document.createElement("a");
       link.href = blobUrl;
       link.download = document.name;
@@ -123,7 +155,6 @@ export default function DocumentPreview({
       link.click();
       window.document.body.removeChild(link);
     } else if (onDownload && document) {
-      // Fallback to provided onDownload handler
       onDownload(document);
     }
   };
@@ -176,17 +207,14 @@ export default function DocumentPreview({
 
     const fileType = document.fileType?.toLowerCase() || "";
 
-    // PDF Preview
+    // PDF Preview with PdfViewer component
     if (fileType.includes("pdf")) {
       return (
-        <div className="h-full bg-gray-50 relative">
-          <iframe
-            key={document.id}
-            src={`${blobUrl}#view=FitH`}
-            className="w-full h-full border-0"
-            title={document.name}
-          />
-        </div>
+        <PdfViewer
+          fileUrl={blobUrl}
+          initialPage={initialPage}
+          zoom={zoom}
+        />
       );
     }
 
@@ -203,9 +231,11 @@ export default function DocumentPreview({
             key={document.id}
             src={blobUrl}
             alt={document.name}
+            width={800}
+            height={600}
             style={{ transform: `scale(${zoom / 100})` }}
             className="max-w-full h-auto shadow-lg"
-            onError={(e) => {
+            onError={() => {
               console.error("Image load error for:", document.name);
               setPreviewError(true);
             }}

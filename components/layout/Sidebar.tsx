@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -57,13 +57,19 @@ const sidebarItems: SidebarItem[] = [
 
 export function Sidebar() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
+
+  // Check admin status after hydration to avoid server/client mismatch
+  useEffect(() => {
+    setIsAdmin(authService.isAdmin());
+  }, []);
 
   // Filter out admin-only items if user is not admin/super_admin
   // Only super_admin and admin roles can access User Management
   const visibleItems = sidebarItems.filter((item) => {
     if (item.adminOnly) {
-      return authService.isAdmin();
+      return isAdmin;
     }
     return true;
   });

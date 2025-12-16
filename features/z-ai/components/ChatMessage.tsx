@@ -134,8 +134,8 @@ export const ChatMessage = memo(function ChatMessage({ message, onDocumentPrevie
                         <p className="text-xs font-medium text-blue-600 truncate hover:text-blue-800 transition-colors">
                           {doc.title}
                         </p>
-                        <p className="text-xs text-gray-600">
-                          {doc.parent_folder}
+                        <p className="text-xs text-gray-500 truncate">
+                          {doc.name} {doc.page_start ? `• p.${doc.page_start}${doc.page_end && doc.page_end !== doc.page_start ? `-${doc.page_end}` : ''}` : ''}
                         </p>
                       </div>
                       <Eye className="w-3 h-3 text-blue-500 opacity-60 hover:opacity-100 transition-opacity" />
