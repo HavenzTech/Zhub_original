@@ -10,12 +10,14 @@ interface DocumentViewModalProps {
   document: Document | null;
   open: boolean;
   onClose: () => void;
+  initialPage?: number; // Page to open PDF at (from source click)
 }
 
 export default function DocumentViewModal({
   document,
   open,
   onClose,
+  initialPage = 1,
 }: DocumentViewModalProps) {
   if (!document || !open) return null;
 
@@ -60,6 +62,7 @@ export default function DocumentViewModal({
             <div className="flex-1 overflow-auto">
               <DocumentPreview
                 document={document}
+                initialPage={initialPage}
                 onDownload={(doc) => {
                   window.open(`/api/document-download/${doc.id}`, "_blank");
                 }}

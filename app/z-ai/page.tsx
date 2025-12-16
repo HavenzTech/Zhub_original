@@ -19,6 +19,7 @@ export default function ZAiPage() {
   const [aiMode, setAiMode] = useState<"internal" | "external">("internal");
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [documentInitialPage, setDocumentInitialPage] = useState(1);
 
   const {
     messages: chatMessages,
@@ -80,6 +81,13 @@ export default function ZAiPage() {
         const token = authData ? JSON.parse(authData).token : null;
         const auth = authData ? JSON.parse(authData) : null;
 
+        // Debug logging
+        console.log("[Z-AI] Auth from localStorage:", auth);
+        console.log("[Z-AI] Sending to backend - company_id:", auth?.currentCompanyId || "(empty)");
+        console.log("[Z-AI] Sending to backend - department_ids:", auth?.departmentIds || []);
+        console.log("[Z-AI] Sending to backend - project_id:", auth?.currentProjectId || "(empty)");
+        console.log("[Z-AI] Sending to backend - user_id:", auth?.userId || "(empty)");
+
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
         };
@@ -137,18 +145,23 @@ export default function ZAiPage() {
           type: "analysis",
           sourceDocuments:
             data.source_documents?.map((doc: any) => {
-              console.log("[Z-AI] Processing doc:", doc);
-              console.log("[Z-AI] Doc metadata:", doc.metadata);
+              console.log("[Z-AI] Processing doc - FULL OBJECT:", JSON.stringify(doc, null, 2));
+              console.log("[Z-AI] pdf_path from doc:", doc.pdf_path);
 
-              // Temporarily just use title as-is for debugging
-              let displayName = doc.metadata?.title || "Unknown Document";
-
-              console.log("[Z-AI] Display name:", displayName);
+              const meta = doc.metadata || {};
 
               return {
-                title: displayName,
-                relevance_score: doc.metadata?.relevance_score || 0,
-                parent_folder: doc.metadata?.parent_folder || "",
+                // Display info
+                title: meta.section_title || meta.title || "Unknown Section",
+                name: meta.name || meta.source || "Unknown Document",  // Filename
+                relevance_score: meta.relevance_score || 0,
+                parent_folder: meta.parent_folder || "",
+                // For document preview
+                document_id: doc.document_id || meta.document_id || "",  // Check top-level first
+                page_start: meta.page_start || 1,
+                page_end: meta.page_end || meta.page_start || 1,
+                // Local PDF path (for local files not in PostgreSQL)
+                pdf_path: doc.pdf_path || "",
               };
             }) || [],
           generatedImages: data.generated_images || [],
@@ -232,46 +245,113 @@ export default function ZAiPage() {
 
   const handleDocumentPreview = async (doc: any) => {
     try {
+      console.log("[handleDocumentPreview] Source doc:", doc);
+
       // Set up auth for API call
       const token = authService.getToken();
       const companyId = authService.getCurrentCompanyId();
       if (token) bmsApi.setToken(token);
       if (companyId) bmsApi.setCompanyId(companyId);
 
-      // Fetch all documents and find by name (search endpoint not available)
+      const docId = doc.document_id || doc.metadata?.document_id || "";
+      const pdfPath = doc.pdf_path || "";
+
+      // Check if document_id is a valid PostgreSQL UUID (36 chars with hyphens like "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+      const isValidUUID = docId && docId.length === 36 && docId.includes("-") && docId.split("-").length === 5;
+
+      console.log("[handleDocumentPreview] docId:", docId, "isValidUUID:", isValidUUID, "pdfPath:", pdfPath);
+
+      // Priority 1: If we have pdf_path (local file), use Python backend directly
+      // This takes priority because local files won't be in PostgreSQL
+      if (pdfPath) {
+        console.log("[handleDocumentPreview] Using local pdf_path:", pdfPath);
+        const docForPreview: Document = {
+          id: `local_${Date.now()}`,
+          name: doc.name || doc.source || doc.title || "Document",
+          fileType: "pdf",
+          version: 1,
+          status: "active",
+          uploadedByUserId: "",
+          companyId: companyId || "",
+          storagePath: pdfPath,
+        };
+        setSelectedDocument(docForPreview);
+        setDocumentInitialPage(doc.page_start || 1);
+        setShowDocumentModal(true);
+        return;
+      }
+
+      // Priority 2: If we have a valid PostgreSQL UUID, use ASP.NET API
+      if (isValidUUID) {
+        console.log("[handleDocumentPreview] Using PostgreSQL document_id:", docId);
+        const docForPreview: Document = {
+          id: docId,
+          name: doc.name || doc.source || doc.title || "Document",
+          fileType: "pdf",
+          version: 1,
+          status: "active",
+          uploadedByUserId: "",
+          companyId: companyId || "",
+        };
+        setSelectedDocument(docForPreview);
+        setDocumentInitialPage(doc.page_start || 1);
+        setShowDocumentModal(true);
+        return;
+      }
+
+      // Priority 3: Fallback - search by name in PostgreSQL
+      console.log("[handleDocumentPreview] Searching by name...");
       const allDocs = await bmsApi.documents.getAll();
       const allDocsList = Array.isArray(allDocs)
         ? allDocs
         : (allDocs as any)?.items || (allDocs as any)?.data || [];
 
-      // Try exact match first, then partial match
       const docTitle = doc.title?.toLowerCase() || "";
+      const docSource = doc.source?.toLowerCase() || doc.metadata?.source?.toLowerCase() || "";
+      const docName = doc.name?.toLowerCase() || "";
+
       let matchedDoc = allDocsList.find(
-        (d: Document) => d.name?.toLowerCase() === docTitle
+        (d: Document) =>
+          d.name?.toLowerCase() === docTitle ||
+          d.name?.toLowerCase() === docSource ||
+          d.name?.toLowerCase() === docName
       );
 
       if (!matchedDoc) {
         matchedDoc = allDocsList.find(
           (d: Document) =>
             d.name?.toLowerCase().includes(docTitle) ||
-            docTitle.includes(d.name?.toLowerCase() || "")
+            docTitle.includes(d.name?.toLowerCase() || "") ||
+            d.name?.toLowerCase().includes(docSource) ||
+            docSource.includes(d.name?.toLowerCase() || "") ||
+            d.name?.toLowerCase().includes(docName) ||
+            docName.includes(d.name?.toLowerCase() || "")
         );
       }
 
       if (matchedDoc) {
+        console.log("[handleDocumentPreview] Found by name match:", matchedDoc.name);
         setSelectedDocument(matchedDoc as Document);
+        setDocumentInitialPage(doc.page_start || 1);
         setShowDocumentModal(true);
       } else {
-        console.error("Document not found:", doc.title);
+        console.error("[handleDocumentPreview] Document not found:", {
+          title: doc.title,
+          source: doc.source,
+          name: doc.name,
+          document_id: docId,
+          pdf_path: pdfPath
+        });
       }
     } catch (error) {
-      console.error("Error loading document for preview:", error);
+      console.error("[handleDocumentPreview] Error:", error);
     }
   };
 
   const closeDocumentModal = () => {
     setShowDocumentModal(false);
     setSelectedDocument(null);
+    setDocumentInitialPage(1); // Reset page when closing
   };
 
   return (
@@ -314,6 +394,7 @@ export default function ZAiPage() {
           document={selectedDocument}
           open={showDocumentModal}
           onClose={closeDocumentModal}
+          initialPage={documentInitialPage}
         />
       </div>
     </AppLayout>
