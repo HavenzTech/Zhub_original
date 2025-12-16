@@ -11,7 +11,7 @@ import { MembersAssignment } from "@/components/common/MembersAssignment";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
-import { Department } from "@/types/bms";
+import { Department, Company } from "@/types/bms";
 import { toast } from "sonner";
 
 const DepartmentFormModal = dynamic(
@@ -38,6 +38,7 @@ export default function DepartmentDetailPage() {
   const departmentId = params.id as string;
 
   const [department, setDepartment] = useState<Department | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -71,6 +72,16 @@ export default function DepartmentDetailPage() {
 
       const data = await bmsApi.departments.getById(departmentId);
       setDepartment(data as Department);
+
+      // Fetch company name if companyId exists
+      if ((data as Department).companyId) {
+        try {
+          const companyData = await bmsApi.companies.getById((data as Department).companyId);
+          setCompany(companyData as Company);
+        } catch {
+          // Silently fail - company name is optional
+        }
+      }
     } catch (err) {
       console.error("Error loading department:", err);
       setError(err instanceof Error ? err : new Error("Failed to load department"));
@@ -176,7 +187,12 @@ export default function DepartmentDetailPage() {
 
       <div className="space-y-6">
         {/* Department Details */}
-        <DepartmentDetails department={department} onBack={handleBack} onEdit={handleEdit} />
+        <DepartmentDetails
+          department={department}
+          companyName={company?.name}
+          onBack={handleBack}
+          onEdit={handleEdit}
+        />
 
         {/* Members Assignment */}
         <MembersAssignment

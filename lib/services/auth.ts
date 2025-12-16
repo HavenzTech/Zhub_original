@@ -5,6 +5,7 @@ import type {
   AuthState,
   ApiError,
   UserRole,
+  RefreshTokenRequest,
 } from "@/lib/types/auth";
 
 // Environment variables - configured in .env.local
@@ -40,14 +41,18 @@ class AuthService {
    * Store auth data in localStorage and cookies
    */
   storeAuth(authData: LoginResponse): void {
+    // Preserve current company selection if updating existing auth
+    const existingAuth = this.getAuthRaw();
+
     const authState: AuthState = {
       token: authData.token,
+      refreshToken: authData.refreshToken || null,
       userId: authData.userId,
       email: authData.email,
       name: authData.name,
       companies: authData.companies,
-      // Default to first company if available
-      currentCompanyId: authData.companies[0]?.companyId || null,
+      // Keep existing company selection if available, otherwise default to first
+      currentCompanyId: existingAuth?.currentCompanyId || authData.companies[0]?.companyId || null,
       expiresAt: authData.expiresAt,
       // Multi-level access control fields
       departmentIds: authData.departmentIds || [],
@@ -68,27 +73,137 @@ class AuthService {
   }
 
   /**
-   * Get stored auth data
+   * Get stored auth data without expiry check (internal use)
    */
-  getAuth(): AuthState | null {
+  private getAuthRaw(): AuthState | null {
     if (typeof window === "undefined") return null;
 
     const stored = localStorage.getItem("auth");
     if (!stored) return null;
 
     try {
-      const auth: AuthState = JSON.parse(stored);
-
-      // Check if token is expired
-      if (auth.expiresAt && new Date(auth.expiresAt) < new Date()) {
-        this.clearAuth();
-        return null;
-      }
-
-      return auth;
+      return JSON.parse(stored);
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Check if token needs refresh (expires within 5 minutes)
+   */
+  private tokenNeedsRefresh(auth: AuthState): boolean {
+    if (!auth.expiresAt) return false;
+    const expiresAt = new Date(auth.expiresAt);
+    const now = new Date();
+    const fiveMinutes = 5 * 60 * 1000;
+    return expiresAt.getTime() - now.getTime() < fiveMinutes;
+  }
+
+  /**
+   * Refresh the access token using the refresh token
+   */
+  async refreshAccessToken(): Promise<boolean> {
+    const auth = this.getAuthRaw();
+    if (!auth?.refreshToken) {
+      return false;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken: auth.refreshToken } as RefreshTokenRequest),
+      });
+
+      if (!response.ok) {
+        // Refresh token is invalid or expired, clear auth
+        this.clearAuth();
+        return false;
+      }
+
+      const data: LoginResponse = await response.json();
+      this.storeAuth(data);
+      return true;
+    } catch (error) {
+      console.error("Failed to refresh token:", error);
+      return false;
+    }
+  }
+
+  // Track if a refresh is in progress to prevent multiple simultaneous refreshes
+  private refreshPromise: Promise<boolean> | null = null;
+
+  /**
+   * Get stored auth data, automatically refreshing if needed
+   */
+  getAuth(): AuthState | null {
+    if (typeof window === "undefined") return null;
+
+    const auth = this.getAuthRaw();
+    if (!auth) return null;
+
+    // Check if token is completely expired
+    if (auth.expiresAt && new Date(auth.expiresAt) < new Date()) {
+      // Token is expired, try to refresh if we have a refresh token
+      if (auth.refreshToken) {
+        // Trigger async refresh but return null for now
+        // The next call will get the new token
+        this.refreshAccessToken();
+      } else {
+        this.clearAuth();
+      }
+      return null;
+    }
+
+    // Check if token needs proactive refresh (within 5 minutes of expiry)
+    if (this.tokenNeedsRefresh(auth) && auth.refreshToken && !this.refreshPromise) {
+      // Trigger background refresh
+      this.refreshPromise = this.refreshAccessToken().finally(() => {
+        this.refreshPromise = null;
+      });
+    }
+
+    return auth;
+  }
+
+  /**
+   * Get auth with guaranteed fresh token (async version)
+   * Use this when you need to ensure token is valid before making API calls
+   */
+  async getAuthAsync(): Promise<AuthState | null> {
+    if (typeof window === "undefined") return null;
+
+    const auth = this.getAuthRaw();
+    if (!auth) return null;
+
+    // If token is expired or needs refresh, wait for refresh
+    if (auth.expiresAt) {
+      const isExpired = new Date(auth.expiresAt) < new Date();
+      const needsRefresh = this.tokenNeedsRefresh(auth);
+
+      if ((isExpired || needsRefresh) && auth.refreshToken) {
+        // Wait for ongoing refresh or start a new one
+        if (this.refreshPromise) {
+          await this.refreshPromise;
+        } else {
+          const success = await this.refreshAccessToken();
+          if (!success && isExpired) {
+            return null;
+          }
+        }
+        // Return the updated auth
+        return this.getAuthRaw();
+      }
+
+      if (isExpired) {
+        this.clearAuth();
+        return null;
+      }
+    }
+
+    return auth;
   }
 
   /**

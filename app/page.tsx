@@ -51,6 +51,7 @@ export default function HavenzHubDashboard() {
     bmsDevices,
     accessLogs,
     users,
+    documents,
     loading,
     error,
     loadDashboardData,
@@ -88,33 +89,31 @@ export default function HavenzHubDashboard() {
     }
   }, [isAuthenticated, loadDashboardData]);
 
-  // Mock data for dashboard
-  const recentUploads = [
-    {
-      id: 1,
-      name: "Contract_AHI_2025.pdf",
-      company: "Agritech Haven LP",
-      time: "2 hours ago",
-    },
-    {
-      id: 2,
-      name: "Budget_Q1_Report.xlsx",
-      company: "Havenz Tech",
-      time: "4 hours ago",
-    },
-    {
-      id: 3,
-      name: "Security_Audit.docx",
-      company: "Denvr Dataworks",
-      time: "1 day ago",
-    },
-    {
-      id: 4,
-      name: "CHP_Maintenance_Schedule.pdf",
-      property: "CHP Facility",
-      time: "2 days ago",
-    },
-  ];
+  // Get recent documents sorted by createdAt, limited to 5
+  const recentDocuments = [...documents]
+    .sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 5);
+
+  // Helper to format relative time
+  const formatRelativeTime = (dateString?: string) => {
+    if (!dateString) return "Unknown";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    return date.toLocaleDateString();
+  };
 
   const renderGlobalDashboard = () => {
     if (loading) {
@@ -266,27 +265,34 @@ export default function HavenzHubDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentUploads.map((upload) => (
-                  <div
-                    key={upload.id}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-sm text-gray-900">
-                        {upload.name}
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        {upload.company || upload.property} • {upload.time}
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <Eye className="w-4 h-4" />
-                    </Button>
+                {recentDocuments.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    No documents uploaded yet
                   </div>
-                ))}
+                ) : (
+                  recentDocuments.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+                      onClick={() => router.push("/document-control")}
+                    >
+                      <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-gray-900 truncate">
+                          {doc.name}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {doc.category || doc.fileType || "Document"} • {formatRelativeTime(doc.createdAt)}
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

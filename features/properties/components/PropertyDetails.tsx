@@ -7,11 +7,12 @@ import { formatCurrency, formatDate, getStatusColor, getTypeIcon } from "../util
 
 interface PropertyDetailsProps {
   property: Property
+  companyName?: string
   onBack: () => void
   onEdit: (property: Property) => void
 }
 
-export function PropertyDetails({ property, onBack, onEdit }: PropertyDetailsProps) {
+export function PropertyDetails({ property, companyName, onBack, onEdit }: PropertyDetailsProps) {
   return (
     <div className="space-y-6">
       <Button variant="ghost" onClick={onBack}>
@@ -49,8 +50,8 @@ export function PropertyDetails({ property, onBack, onEdit }: PropertyDetailsPro
                   <div className="font-medium">{property.sizeFloors || 'N/A'}</div>
                 </div>
                 <div>
-                  <span className="text-gray-600">Property ID:</span>
-                  <div className="font-medium font-mono text-xs">{property.id ? `${property.id.slice(0, 8)}...` : "N/A"}</div>
+                  <span className="text-gray-600">Company:</span>
+                  <div className="font-medium">{companyName || 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -184,12 +185,12 @@ export function PropertyDetails({ property, onBack, onEdit }: PropertyDetailsPro
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Property ID</span>
-              <Badge variant="secondary" className="font-mono text-xs">{property.id ? `${property.id.slice(0, 8)}...` : "N/A"}</Badge>
+              <span className="text-sm text-gray-600">Property</span>
+              <span className="text-sm font-medium">{property.name || "N/A"}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Company ID</span>
-              <Badge variant="secondary" className="font-mono text-xs">{property.companyId ? `${property.companyId.slice(0, 8)}...` : "N/A"}</Badge>
+              <span className="text-sm text-gray-600">Company</span>
+              <span className="text-sm font-medium">{companyName || "N/A"}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Type</span>

@@ -185,10 +185,10 @@ export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Company ID</span>
-              <Badge variant="secondary" className="font-mono text-xs">
-                {company.id ? `${company.id.slice(0, 8)}...` : "N/A"}
-              </Badge>
+              <span className="text-sm text-gray-600">Company Name</span>
+              <span className="text-sm font-medium">
+                {company.name || "N/A"}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Industry</span>

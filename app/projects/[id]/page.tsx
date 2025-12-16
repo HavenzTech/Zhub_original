@@ -10,10 +10,11 @@ import { ProjectDetails } from "@/features/projects/components/ProjectDetails";
 import { MembersAssignment } from "@/components/common/MembersAssignment";
 import { DepartmentsAssignment } from "@/components/common/DepartmentsAssignment";
 import { ProjectTasksSection } from "@/features/tasks/components";
+import { ExpenseList } from "@/features/expenses/components";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
-import { Project } from "@/types/bms";
+import { Project, Company } from "@/types/bms";
 import { toast } from "sonner";
 import { formatDateForInput } from "@/features/tasks/utils/taskHelpers";
 
@@ -44,10 +45,12 @@ export default function ProjectDetailPage() {
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSettingActive, setIsSettingActive] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
 
   // Memoize breadcrumb items to prevent unnecessary re-renders
@@ -77,6 +80,16 @@ export default function ProjectDetailPage() {
 
       const data = await bmsApi.projects.getById(projectId);
       setProject(data as Project);
+
+      // Fetch company name if companyId exists
+      if ((data as Project).companyId) {
+        try {
+          const companyData = await bmsApi.companies.getById((data as Project).companyId);
+          setCompany(companyData as Company);
+        } catch {
+          // Silently fail - company name is optional
+        }
+      }
     } catch (err) {
       console.error("Error loading project:", err);
       setError(err instanceof Error ? err : new Error("Failed to load project"));
@@ -107,6 +120,30 @@ export default function ProjectDetailPage() {
       projectedDeadline: formatDateForInput(project.projectedDeadline),
     });
     setShowEditForm(true);
+  };
+
+  const handleSetActive = async () => {
+    if (!project?.id) return;
+
+    setIsSettingActive(true);
+    try {
+      const payload = {
+        id: project.id,
+        companyId: project.companyId,
+        name: project.name,
+        status: "active",
+        priority: project.priority,
+      };
+      await bmsApi.projects.update(project.id, payload);
+      toast.success("Project status set to Active!");
+      setProject({ ...project, status: "active" });
+    } catch (err) {
+      const errorMessage =
+        err instanceof BmsApiError ? err.message : "Failed to update project status";
+      toast.error(errorMessage);
+    } finally {
+      setIsSettingActive(false);
+    }
   };
 
   const buildPayload = (includeId?: string) => {
@@ -198,12 +235,28 @@ export default function ProjectDetailPage() {
 
       <div className="space-y-6">
         {/* Project Details */}
-        <ProjectDetails project={project} onBack={handleBack} onEdit={handleEdit} />
+        <ProjectDetails
+          project={project}
+          companyName={company?.name}
+          onBack={handleBack}
+          onEdit={handleEdit}
+          onSetActive={handleSetActive}
+          isSettingActive={isSettingActive}
+        />
 
         {/* Tasks Section */}
         <ProjectTasksSection
           projectId={project.id!}
           projectName={project.name || "this project"}
+        />
+
+        {/* Expenses Section */}
+        <ExpenseList
+          projectId={project.id!}
+          projectName={project.name || "this project"}
+          onBudgetUpdate={(newBudgetSpent) => {
+            setProject((prev) => prev ? { ...prev, budgetSpent: newBudgetSpent } : prev);
+          }}
         />
 
         {/* Assignments Section */}
