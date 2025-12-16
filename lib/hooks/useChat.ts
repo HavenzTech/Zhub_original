@@ -11,6 +11,8 @@ export interface Message {
     title: string
     relevance_score: number
     parent_folder: string
+    page_start?: number
+    page_end?: number
   }>
   generatedImages?: Array<{
     image_path: string
