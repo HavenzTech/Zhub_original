@@ -50,6 +50,7 @@ class AuthService {
       userId: authData.userId,
       email: authData.email,
       name: authData.name,
+      pictureUrl: authData.pictureUrl || null,
       companies: authData.companies,
       // Keep existing company selection if available, otherwise default to first
       currentCompanyId: existingAuth?.currentCompanyId || authData.companies[0]?.companyId || null,

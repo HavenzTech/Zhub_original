@@ -19,7 +19,6 @@ import {
   getMessageRoleColor,
   getMessageAvatarBg,
   getMessageContentBg,
-  getRelevanceScoreColor,
 } from "../utils/chatHelpers"
 
 interface ChatMessageProps {
@@ -139,16 +138,6 @@ export const ChatMessage = memo(function ChatMessage({ message, onDocumentPrevie
                         </p>
                       </div>
                       <Eye className="w-3 h-3 text-blue-500 opacity-60 hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="secondary"
-                        className={`text-xs ${getRelevanceScoreColor(
-                          doc.relevance_score
-                        )}`}
-                      >
-                        {doc.relevance_score.toFixed(1)}%
-                      </Badge>
                     </div>
                   </div>
                 ))}
