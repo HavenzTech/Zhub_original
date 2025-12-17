@@ -120,7 +120,7 @@ export const ChatMessage = memo(function ChatMessage({ message, onDocumentPrevie
                 Source Documents (Top 3):
               </p>
               <div className="space-y-2">
-                {message.sourceDocuments.map((doc, i) => (
+                {message.sourceDocuments.slice(0, 3).map((doc, i) => (
                   <div
                     key={i}
                     className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-colors"
