@@ -15,7 +15,15 @@ import {
   Loader2,
   User,
   Bot,
+  Zap,
+  Search,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Message {
   id: string;
@@ -34,6 +42,7 @@ export default function DocumentChatPanel({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deepAnalysis, setDeepAnalysis] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
@@ -81,29 +90,60 @@ export default function DocumentChatPanel({
         document.id
       );
 
-      // Get signed GCS URL from ASP.NET backend (same as DocumentPreview)
-      console.log("[Chat] Getting signed URL for document:", document.id);
-      const downloadData = await bmsApi.documents.getDownloadUrl(document.id!);
-
-      if (!downloadData.downloadUrl) {
-        throw new Error("Could not get document download URL");
-      }
-
-      console.log("[Chat] Got signed GCS URL:", downloadData.downloadUrl.substring(0, 100) + "...");
-
-      // Call the Python AI Backend API with the GCS signed URL
       const pythonApiUrl =
         process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8001";
+
+      // Strategy: Use same approach as DocumentPreview
+      // 1. Check if local file (storagePath contains local path)
+      // 2. If GCS file, get signed URL from ASP.NET
+      // 3. Fall back to document_id (Python will check cache/ChromaDB)
+
+      let documentIdentifier = document.id!;
+      const storagePath = document.storagePath || "";
+      const isLocalFile = storagePath && (
+        storagePath.includes("example_files") ||
+        storagePath.includes("local_uploads") ||
+        storagePath.toLowerCase().startsWith("c:") ||
+        storagePath.startsWith("/") ||
+        storagePath.match(/^[a-zA-Z]:/)
+      );
+
+      if (isLocalFile && storagePath) {
+        // Local file - use storage path directly
+        documentIdentifier = storagePath;
+        console.log("[Chat] Using local file path:", storagePath);
+      } else {
+        // GCS file - try to get signed URL, fall back to document_id
+        try {
+          console.log("[Chat] Getting signed URL for document:", document.id);
+          const downloadData = await bmsApi.documents.getDownloadUrl(document.id!);
+          if (downloadData.downloadUrl) {
+            documentIdentifier = downloadData.downloadUrl;
+            console.log("[Chat] Got signed GCS URL:", downloadData.downloadUrl.substring(0, 100) + "...");
+          }
+        } catch (urlError) {
+          console.log("[Chat] Could not get signed URL, using document_id:", document.id);
+          // Fall back to document_id - Python backend will fetch from GCS using ChromaDB metadata
+        }
+      }
+
       console.log("[Chat] Using Python API URL:", pythonApiUrl);
+
+      // Page analysis modes:
+      // -30 = Quick (first 30 pages) - fast, covers ToC + intro
+      // -50 = Deep (first 50 pages) - slower, more comprehensive
+      const pageNum = deepAnalysis ? -50 : -30;
+      console.log(`[Chat] Analysis mode: ${deepAnalysis ? 'Deep (50 pages)' : 'Quick (30 pages)'}`);
+
       const response = await fetch(`${pythonApiUrl}/analyze-document`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          document_id: downloadData.downloadUrl, // Pass the signed GCS URL
+          document_id: documentIdentifier, // Signed URL, local path, or document_id (UUID)
           query: input,
-          page_num: -1, // -1 means analyze all pages
+          page_num: pageNum,
         }),
       });
 
@@ -288,6 +328,33 @@ export default function DocumentChatPanel({
             disabled={loading}
             className="flex-1"
           />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={deepAnalysis ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setDeepAnalysis(!deepAnalysis)}
+                  disabled={loading}
+                  className={deepAnalysis ? "bg-purple-600 hover:bg-purple-700" : ""}
+                >
+                  {deepAnalysis ? (
+                    <Search className="w-4 h-4" />
+                  ) : (
+                    <Zap className="w-4 h-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p className="text-xs">
+                  {deepAnalysis
+                    ? "Deep Analysis: 50 pages (slower, more thorough)"
+                    : "Quick Analysis: 30 pages (faster)"}
+                </p>
+                <p className="text-xs text-gray-400">Click to toggle</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <Button
             onClick={handleSend}
             disabled={loading || !input.trim()}
@@ -300,10 +367,28 @@ export default function DocumentChatPanel({
             )}
           </Button>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Currently viewing:{" "}
-          <span className="font-medium">{document.name}</span>
-        </p>
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-xs text-gray-500">
+            Currently viewing:{" "}
+            <span className="font-medium">{document.name}</span>
+          </p>
+          <Badge
+            variant={deepAnalysis ? "default" : "secondary"}
+            className={`text-xs ${deepAnalysis ? "bg-purple-100 text-purple-700" : ""}`}
+          >
+            {deepAnalysis ? (
+              <>
+                <Search className="w-3 h-3 mr-1" />
+                Deep (50 pages)
+              </>
+            ) : (
+              <>
+                <Zap className="w-3 h-3 mr-1" />
+                Quick (30 pages)
+              </>
+            )}
+          </Badge>
+        </div>
       </div>
     </div>
   );
