@@ -20,6 +20,7 @@ export interface LoginResponse {
   userId: string
   email: string
   name: string
+  pictureUrl?: string | null
   companies: Company[]
   expiresAt: string
   // Multi-level access control fields (optional - backend may not return these)
@@ -38,6 +39,7 @@ export interface AuthState {
   userId: string | null
   email: string | null
   name: string | null
+  pictureUrl?: string | null
   companies: Company[]
   currentCompanyId: string | null
   expiresAt: string | null

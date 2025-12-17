@@ -1,6 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { authService } from "@/lib/services/auth";
+import { bmsApi } from "@/lib/services/bmsApi";
+import type { UserResponse } from "@/types/bms";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,6 +21,31 @@ import { useRouter } from "next/navigation";
 export function UserProfile() {
   const router = useRouter();
   const auth = authService.getAuth();
+  const [imageError, setImageError] = useState(false);
+  const [pictureUrl, setPictureUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserPicture = async () => {
+      if (!auth?.userId) return;
+
+      // Set up API with current auth
+      const token = authService.getToken();
+      const companyId = authService.getCurrentCompanyId();
+      if (token) bmsApi.setToken(token);
+      if (companyId) bmsApi.setCompanyId(companyId);
+
+      try {
+        const userData = await bmsApi.users.getById(auth.userId) as UserResponse;
+        if (userData?.pictureUrl) {
+          setPictureUrl(userData.pictureUrl);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user picture:", error);
+      }
+    };
+
+    fetchUserPicture();
+  }, [auth?.userId]);
 
   if (!auth) return null;
 
@@ -92,9 +121,20 @@ export function UserProfile() {
           variant="ghost"
           className="flex items-center gap-2 h-auto py-2 px-3"
         >
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-            <User className="w-4 h-4 text-white" />
-          </div>
+          {pictureUrl && !imageError ? (
+            <Image
+              src={pictureUrl}
+              alt={auth.name || "Profile"}
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-white" />
+            </div>
+          )}
           <div className="hidden md:flex flex-col items-start">
             <span className="text-sm font-medium text-gray-900">
               {auth.name}
