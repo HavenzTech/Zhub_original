@@ -45,6 +45,17 @@ const getIcon = (type: string) => {
   }
 };
 
+const formatLargeNumber = (num: number): string => {
+  if (num >= 1_000_000_000) {
+    return `${(num / 1_000_000_000).toFixed(1)}B`
+  } else if (num >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(1)}M`
+  } else if (num >= 1_000) {
+    return `${(num / 1_000).toFixed(1)}K`
+  }
+  return num.toFixed(0)
+}
+
 const getStatusColor = (status: string) => {
   switch (status) {
     case "active":
@@ -167,7 +178,7 @@ export const EntityCard: React.FC<EntityCardProps> = ({
             <>
               <div className="text-center">
                 <div className="font-semibold text-gray-900">
-                  ${(data.financials?.annualRevenue / 1000000).toFixed(1)}M
+                  ${formatLargeNumber(data.financials?.annualRevenue || 0)}
                 </div>
                 <div className="text-gray-600">Revenue</div>
               </div>

@@ -17,6 +17,17 @@ interface MetricCardsProps {
   users: User[]
 }
 
+function formatLargeNumber(num: number): string {
+  if (num >= 1_000_000_000) {
+    return `${(num / 1_000_000_000).toFixed(1)}B`
+  } else if (num >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(1)}M`
+  } else if (num >= 1_000) {
+    return `${(num / 1_000).toFixed(1)}K`
+  }
+  return num.toFixed(0)
+}
+
 export function MetricCards({
   companies,
   departments,
@@ -24,10 +35,8 @@ export function MetricCards({
   properties,
   users,
 }: MetricCardsProps) {
-  const totalBudget = (
-    departments.reduce((sum, dept) => sum + (dept.budgetAllocated || 0), 0) /
-    1000000
-  ).toFixed(1)
+  const totalBudgetRaw = departments.reduce((sum, dept) => sum + (dept.budgetAllocated || 0), 0)
+  const totalBudget = formatLargeNumber(totalBudgetRaw)
 
   const metrics = [
     {
@@ -68,7 +77,7 @@ export function MetricCards({
     },
     {
       label: "Total Budget",
-      value: `$${totalBudget}M`,
+      value: `$${totalBudget}`,
       subtitle: "Department budgets",
       icon: DollarSign,
       iconBg: "bg-emerald-100",
