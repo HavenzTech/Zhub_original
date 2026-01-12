@@ -240,11 +240,25 @@ class AuthService {
   clearAuth(): void {
     if (typeof window === "undefined") return;
     localStorage.removeItem("auth");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("id_token");
 
     // Also clear the auth cookie
     if (typeof document !== "undefined") {
       document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
     }
+  }
+
+  /**
+   * Full logout - clears local storage and redirects to Keycloak logout
+   */
+  async logout(): Promise<void> {
+    const idToken = localStorage.getItem("id_token");
+    this.clearAuth();
+
+    // Redirect to Keycloak logout
+    const { keycloakService } = await import("./keycloak");
+    keycloakService.logout(idToken || undefined);
   }
 
   /**
