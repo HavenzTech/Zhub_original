@@ -53,9 +53,9 @@ export function UserProfile() {
     (c) => c.companyId === auth.currentCompanyId
   );
 
-  const handleLogout = () => {
-    authService.clearAuth();
-    router.push("/login");
+  const handleLogout = async () => {
+    // This clears local storage AND redirects to Keycloak logout
+    await authService.logout();
   };
 
   const handleSwitchCompany = (companyId: string) => {

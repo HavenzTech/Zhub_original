@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Routes that don't require authentication
-const publicRoutes = ['/login', '/signup']
+const publicRoutes = ['/login', '/signup', '/callback']
 
 // Routes that require admin privileges
 const adminRoutes = ['/users']
