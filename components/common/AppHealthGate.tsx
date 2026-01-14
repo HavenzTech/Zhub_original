@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Loader2, WifiOff, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { authService } from "@/lib/services/auth";
 
 interface AppHealthGateProps {
   children: ReactNode;
@@ -59,9 +61,34 @@ export function AppHealthGate({ children }: AppHealthGateProps) {
     }
   };
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   useEffect(() => {
     checkHealth();
   }, []);
+
+  // Check for required actions after health check passes
+  useEffect(() => {
+    if (status !== "healthy") return;
+
+    // Skip auth check on public routes
+    const publicRoutes = ["/login", "/signup", "/forgot-password", "/reset-password"];
+    const requiredActionRoutes = ["/change-password", "/mfa-setup"];
+
+    if (publicRoutes.some(route => pathname.startsWith(route))) return;
+    if (requiredActionRoutes.some(route => pathname.startsWith(route))) return;
+
+    // Check if user has pending required actions
+    const auth = authService.getAuth();
+    if (auth) {
+      if (auth.requiresPasswordChange) {
+        router.replace("/change-password");
+      } else if (auth.requiresMfaSetup) {
+        router.replace("/mfa-setup");
+      }
+    }
+  }, [status, pathname, router]);
 
   // Loading state - splash screen
   if (status === "checking") {

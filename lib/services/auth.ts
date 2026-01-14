@@ -14,8 +14,11 @@ import type {
 // Environment variables - configured in .env.local
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-if (!API_BASE_URL) {
-  throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
+function getApiUrl(): string {
+  if (!API_BASE_URL) {
+    throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
+  }
+  return API_BASE_URL;
 }
 
 class AuthService {
@@ -23,7 +26,7 @@ class AuthService {
    * Login user with email and password
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    const response = await fetch(`${getApiUrl()}/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -117,7 +120,7 @@ class AuthService {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      const response = await fetch(`${getApiUrl()}/api/auth/refresh`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -265,7 +268,7 @@ class AuthService {
     // Call backend logout to invalidate refresh token
     if (auth?.refreshToken) {
       try {
-        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        await fetch(`${getApiUrl()}/api/auth/logout`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -290,7 +293,7 @@ class AuthService {
       throw { message: "Not authenticated", status: 401 } as ApiError;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+    const response = await fetch(`${getApiUrl()}/api/auth/change-password`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -324,7 +327,7 @@ class AuthService {
       throw { message: "Not authenticated", status: 401 } as ApiError;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/mfa/setup`, {
+    const response = await fetch(`${getApiUrl()}/api/auth/mfa/setup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -349,7 +352,7 @@ class AuthService {
       throw { message: "Not authenticated", status: 401 } as ApiError;
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/mfa/verify`, {
+    const response = await fetch(`${getApiUrl()}/api/auth/mfa/verify`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -377,7 +380,7 @@ class AuthService {
      * Request password reset email
      */
     async forgotPassword(email: string): Promise<{ message: string }> {
-      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+      const response = await fetch(`${getApiUrl()}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -390,7 +393,7 @@ class AuthService {
      * Reset password with token
      */
     async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
-      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+      const response = await fetch(`${getApiUrl()}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword }),
