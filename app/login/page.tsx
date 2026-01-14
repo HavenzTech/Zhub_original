@@ -10,30 +10,79 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, Zap, Globe } from "lucide-react";
-import { keycloakService } from "@/lib/services/keycloak";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Shield, Lock, Zap, Globe, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { authService } from "@/lib/services/auth";
+import Link from "next/link";
+import type { ApiError } from "@/lib/types/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Form state
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [requiresMfa, setRequiresMfa] = useState(false);
 
   // Check if already authenticated
   useEffect(() => {
-    if (authService.isAuthenticated()) {
-      router.push("/");
+    const auth = authService.getAuth();
+    if (auth) {
+      // Check for required actions
+      if (auth.requiresPasswordChange) {
+        router.push("/change-password");
+      } else if (auth.requiresMfaSetup) {
+        router.push("/mfa-setup");
+      } else {
+        router.push("/");
+      }
     }
   }, [router]);
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Get the return URL from query params if present
-    const returnTo = searchParams.get("from") || "/";
+    try {
+      const response = await authService.login({
+        email,
+        password,
+        totpCode: requiresMfa ? totpCode : undefined,
+      });
 
-    // Redirect to Keycloak login
-    await keycloakService.login(returnTo);
+      // Check if MFA is required but not provided
+      if (response.requiresMfa && !totpCode) {
+        setRequiresMfa(true);
+        setIsLoading(false);
+        return;
+      }
+
+      // Store auth data
+      authService.storeAuth(response);
+
+      // Get the return URL from query params
+      const returnTo = searchParams.get("from") || "/";
+
+      // Check for required actions and redirect accordingly
+      if (response.requiresPasswordChange) {
+        router.push("/change-password");
+      } else if (response.requiresMfaSetup) {
+        router.push("/mfa-setup");
+      } else {
+        router.push(returnTo);
+      }
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || "Login failed. Please try again.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -96,26 +145,106 @@ export default function LoginPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground text-center">
-                  Click below to sign in securely with your Havenz account.
-                  You&apos;ll be redirected to our secure login portal.
-                </p>
+              <form onSubmit={handleLogin} className="space-y-4">
+                {/* Error message */}
+                {error && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Email field */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="h-11"
+                  />
+                </div>
+
+                {/* Password field */}
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      className="h-11 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                
+                  <div className="flex justify-end">
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+                
+
+                {/* TOTP Code field - shown when MFA is required */}
+                {requiresMfa && (
+                  <div className="space-y-2">
+                    <Label htmlFor="totpCode">Authentication Code</Label>
+                    <Input
+                      id="totpCode"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      placeholder="Enter 6-digit code"
+                      value={totpCode}
+                      onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                      required
+                      disabled={isLoading}
+                      className="h-11 text-center text-lg tracking-widest"
+                      autoFocus
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter the code from your authenticator app
+                    </p>
+                  </div>
+                )}
 
                 <Button
-                  onClick={handleLogin}
+                  type="submit"
                   className="w-full h-12 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg font-medium transition-all duration-200 hover:shadow-xl"
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
-                      Redirecting...
+                      Signing in...
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Zap className="w-4 h-4" />
-                      Sign in to Havenz Hub
+                      {requiresMfa ? "Verify & Sign in" : "Sign in to Havenz Hub"}
                     </div>
                   )}
                 </Button>
@@ -123,7 +252,7 @@ export default function LoginPage() {
                 <div className="text-xs text-center text-muted-foreground pt-4">
                   <p>Protected by multi-factor authentication</p>
                 </div>
-              </div>
+              </form>
             </CardContent>
           </Card>
         </div>

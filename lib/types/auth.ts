@@ -26,11 +26,33 @@ export interface LoginResponse {
   // Multi-level access control fields (optional - backend may not return these)
   departmentIds?: string[]
   currentProjectId?: string | null
+  // Required actions for first-time login flow
+  requiredActions?: string[]
+  requiresPasswordChange?: boolean
+  requiresMfaSetup?: boolean
+  // MFA challenge response (when MFA is enabled but code not provided)
+  requiresMfa?: boolean
 }
 
 export interface LoginRequest {
   email: string
   password: string
+  totpCode?: string
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
+}
+
+export interface MfaSetupResponse {
+  secret: string
+  qrCodeUri: string
+  message: string
+}
+
+export interface VerifyMfaRequest {
+  code: string
 }
 
 export interface AuthState {
@@ -46,6 +68,10 @@ export interface AuthState {
   // Multi-level access control fields
   departmentIds?: string[]
   currentProjectId?: string | null
+  // Required actions for first-time login flow
+  requiredActions?: string[]
+  requiresPasswordChange?: boolean
+  requiresMfaSetup?: boolean
 }
 
 export interface RefreshTokenRequest {
