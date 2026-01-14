@@ -6,6 +6,9 @@ import type {
   ApiError,
   UserRole,
   RefreshTokenRequest,
+  ChangePasswordRequest,
+  MfaSetupResponse,
+  VerifyMfaRequest,
 } from "@/lib/types/auth";
 
 // Environment variables - configured in .env.local
@@ -58,6 +61,10 @@ class AuthService {
       // Multi-level access control fields
       departmentIds: authData.departmentIds || [],
       currentProjectId: authData.currentProjectId || null,
+      // Required actions for first-time login flow
+      requiredActions: authData.requiredActions || [],
+      requiresPasswordChange: authData.requiresPasswordChange || false,
+      requiresMfaSetup: authData.requiresMfaSetup || false,
     };
 
     // Store in localStorage for client-side access
@@ -250,15 +257,163 @@ class AuthService {
   }
 
   /**
-   * Full logout - clears local storage and redirects to Keycloak logout
+   * Full logout - clears local storage and calls backend logout
    */
   async logout(): Promise<void> {
-    const idToken = localStorage.getItem("id_token");
-    this.clearAuth();
+    const auth = this.getAuthRaw();
 
-    // Redirect to Keycloak logout
-    const { keycloakService } = await import("./keycloak");
-    keycloakService.logout(idToken || undefined);
+    // Call backend logout to invalidate refresh token
+    if (auth?.refreshToken) {
+      try {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${auth.token}`,
+          },
+          body: JSON.stringify({ refreshToken: auth.refreshToken }),
+        });
+      } catch (error) {
+        console.error("Failed to call logout endpoint:", error);
+      }
+    }
+
+    this.clearAuth();
+  }
+
+  /**
+   * Change password (required on first login for admin-created users)
+   */
+  async changePassword(request: ChangePasswordRequest): Promise<{ message: string }> {
+    const auth = this.getAuthRaw();
+    if (!auth?.token) {
+      throw { message: "Not authenticated", status: 401 } as ApiError;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${auth.token}`,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await this.handleError(response);
+      throw error;
+    }
+
+    // Update local auth state to clear password change requirement
+    const updatedAuth: AuthState = {
+      ...auth,
+      requiresPasswordChange: false,
+      requiredActions: auth.requiredActions?.filter(a => a !== "CHANGE_PASSWORD") || [],
+    };
+    localStorage.setItem("auth", JSON.stringify(updatedAuth));
+
+    return response.json();
+  }
+
+  /**
+   * Setup MFA - returns QR code URI for authenticator app
+   */
+  async setupMfa(): Promise<MfaSetupResponse> {
+    const auth = this.getAuthRaw();
+    if (!auth?.token) {
+      throw { message: "Not authenticated", status: 401 } as ApiError;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/mfa/setup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${auth.token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await this.handleError(response);
+      throw error;
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Verify MFA setup with TOTP code
+   */
+  async verifyMfa(request: VerifyMfaRequest): Promise<{ message: string }> {
+    const auth = this.getAuthRaw();
+    if (!auth?.token) {
+      throw { message: "Not authenticated", status: 401 } as ApiError;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/mfa/verify`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${auth.token}`,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await this.handleError(response);
+      throw error;
+    }
+
+    // Update local auth state to clear MFA setup requirement
+    const updatedAuth: AuthState = {
+      ...auth,
+      requiresMfaSetup: false,
+      requiredActions: auth.requiredActions?.filter(a => a !== "CONFIGURE_MFA") || [],
+    };
+    localStorage.setItem("auth", JSON.stringify(updatedAuth));
+
+    return response.json();
+  }
+      /**
+     * Request password reset email
+     */
+    async forgotPassword(email: string): Promise<{ message: string }> {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!response.ok) throw await this.handleError(response);
+      return response.json();
+    }
+
+    /**
+     * Reset password with token
+     */
+    async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, newPassword }),
+      });
+      if (!response.ok) throw await this.handleError(response);
+      return response.json();
+    }
+  /**
+   * Check if user has pending required actions
+   */
+  hasRequiredActions(): boolean {
+    const auth = this.getAuthRaw();
+    return (auth?.requiredActions?.length ?? 0) > 0;
+  }
+
+  /**
+   * Get the next required action
+   */
+  getNextRequiredAction(): string | null {
+    const auth = this.getAuthRaw();
+    if (auth?.requiresPasswordChange) return "CHANGE_PASSWORD";
+    if (auth?.requiresMfaSetup) return "CONFIGURE_MFA";
+    return auth?.requiredActions?.[0] || null;
   }
 
   /**

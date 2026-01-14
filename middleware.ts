@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // Routes that don't require authentication
-const publicRoutes = ['/login', '/signup', '/callback']
+const publicRoutes = ['/login', '/signup', '/forgot-password', '/reset-password']
+
+// Routes for required actions (require auth but bypass normal routing)
+const requiredActionRoutes = ['/change-password', '/mfa-setup']
 
 // Routes that require admin privileges
 const adminRoutes = ['/users']
@@ -36,12 +39,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // TODO: Validate JWT token here
-  // For now, we trust that the token exists
-  // In production, you should:
-  // 1. Verify JWT signature
-  // 2. Check token expiration
-  // 3. Validate user permissions for admin routes
+  // Allow required action routes if authenticated
+  // These pages do their own client-side auth state checks
+  if (requiredActionRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next()
+  }
 
   // Check admin routes (basic check - enhance with JWT payload validation)
   if (adminRoutes.some(route => pathname.startsWith(route))) {
