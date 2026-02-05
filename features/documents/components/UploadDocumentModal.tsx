@@ -17,9 +17,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { X, Upload, Loader2, Plus, Info } from "lucide-react";
+import { X, Upload, Loader2, Plus, Info, Shield } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -27,7 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatFileSize } from "../utils/documentHelpers";
-import type { Folder } from "@/types/bms";
+import type { Folder, DocumentTypeDto, DocumentClassification } from "@/types/bms";
 
 export interface UserAccess {
   userId: string;
@@ -47,6 +48,10 @@ export interface UploadFormData {
   departmentIds: string[];
   userAccess: UserAccess[];
   gcpFolderPath: string;
+  // New document control fields
+  documentTypeId: string | null;
+  classification: DocumentClassification;
+  description: string;
 }
 
 interface UploadDocumentModalProps {
@@ -62,6 +67,7 @@ interface UploadDocumentModalProps {
   departments: any[];
   properties: any[];
   users: any[];
+  documentTypes?: DocumentTypeDto[];
   onSubmit: (e: React.FormEvent) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -79,6 +85,7 @@ export function UploadDocumentModal({
   departments,
   properties,
   users,
+  documentTypes = [],
   onSubmit,
   onFileChange,
 }: UploadDocumentModalProps) {
@@ -222,6 +229,97 @@ export function UploadDocumentModal({
                 }
                 placeholder="Enter document name"
                 required
+              />
+            </div>
+
+            {/* Document Type and Classification */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="documentType">Document Type</Label>
+                <Select
+                  value={formData.documentTypeId || "none"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      documentTypeId: value === "none" ? null : value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select document type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {documentTypes.filter(type => type.id).map((type) => (
+                      <SelectItem key={type.id} value={type.id!}>
+                        {type.code} - {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  Determines numbering and allowed file types
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="classification" className="flex items-center gap-1">
+                  <Shield className="w-3 h-3" />
+                  Classification *
+                </Label>
+                <Select
+                  value={formData.classification || "internal"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      classification: value as DocumentClassification,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                        Public - Everyone in company
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="internal">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500" />
+                        Internal - Team members only
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="confidential">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-orange-500" />
+                        Confidential - Permitted users only
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="restricted">
+                      <span className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-red-500" />
+                        Restricted - Named individuals only
+                      </span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                placeholder="Enter a description of this document..."
+                rows={2}
               />
             </div>
 

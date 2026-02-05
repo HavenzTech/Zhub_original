@@ -13,10 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
-import { Document, Folder, UserResponse } from "@/types/bms";
+import { Document, Folder, UserResponse, DocumentTypeDto, DocumentSearchRequest, DocumentSearchResults, DocumentSearchResult } from "@/types/bms";
 import { toast } from "sonner";
 import FolderTreeView from "@/features/documents/components/FolderTreeView";
-import { Upload, Plus, RefreshCw } from "lucide-react";
+import { DocumentSearchBar } from "@/features/documents/components/search/DocumentSearchBar";
+import { DocumentFilterPanel } from "@/features/documents/components/search/DocumentFilterPanel";
+import { Upload, Plus, RefreshCw, Search, FileText, SlidersHorizontal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useDocumentSearch } from "@/lib/hooks/useDocumentSearch";
 import type { UploadFormData, UserAccess } from "@/features/documents/components/UploadDocumentModal";
 
 const UploadDocumentModal = dynamic(
@@ -51,6 +55,10 @@ const initialFormData: UploadFormData = {
   departmentIds: [],
   userAccess: [],
   gcpFolderPath: "",
+  // Document control fields
+  documentTypeId: null,
+  classification: "internal",
+  description: "",
 };
 
 export default function DocumentControlPage() {
@@ -65,6 +73,7 @@ export default function DocumentControlPage() {
   >([]);
   const [users, setUsers] = useState<{ id: string; name: string; email: string }[]>([]);
   const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<DocumentTypeDto[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(
     null
@@ -84,6 +93,11 @@ export default function DocumentControlPage() {
     null
   );
   const [formData, setFormData] = useState<UploadFormData>(initialFormData);
+
+  // Search state
+  const { results: searchResults, loading: searchLoading, search, clearResults } = useDocumentSearch();
+  const [showSearch, setShowSearch] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const loadFolders = useCallback(async () => {
     try {
@@ -152,6 +166,19 @@ export default function DocumentControlPage() {
     }
   }, []);
 
+  const loadDocumentTypes = useCallback(async () => {
+    try {
+      const response = await bmsApi.admin.documentTypes.list();
+      // Handle both array and paginated response formats
+      const data = Array.isArray(response)
+        ? response
+        : (response as any)?.items || (response as any)?.data || [];
+      setDocumentTypes(data as DocumentTypeDto[]);
+    } catch (err) {
+      console.error("Error loading document types:", err);
+    }
+  }, []);
+
   useEffect(() => {
     const auth = authService.getAuth();
     if (!auth) {
@@ -171,7 +198,8 @@ export default function DocumentControlPage() {
     loadDepartments();
     loadUsers();
     loadProperties();
-  }, [router, loadDocuments, loadFolders, loadProjects, loadDepartments, loadUsers, loadProperties]);
+    loadDocumentTypes();
+  }, [router, loadDocuments, loadFolders, loadProjects, loadDepartments, loadUsers, loadProperties, loadDocumentTypes]);
 
   const findFolderById = (
     folderId: string,
@@ -195,16 +223,38 @@ export default function DocumentControlPage() {
   const handleCreateFolder = async (
     name: string,
     description?: string,
-    parentFolderId?: string
+    parentFolderId?: string,
+    templateId?: string
   ) => {
     try {
-      const payload = {
+      // Create the folder first
+      const folder = await bmsApi.folders.create({
         name,
         description,
         parentFolderId: parentFolderId || undefined,
-      };
-      await bmsApi.folders.create(payload);
-      toast.success(`Folder "${name}" created successfully!`);
+      }) as { id?: string };
+
+      // If a template is selected, apply it to the newly created folder
+      if (templateId && folder?.id) {
+        try {
+          await bmsApi.folders.createFromTemplate({
+            templateId,
+            targetFolderId: folder.id,
+            scopeType: "project",
+            scopeId: folder.id,
+          });
+          toast.success(`Folder "${name}" created with template structure!`);
+        } catch (templateErr) {
+          // Folder was created but template failed - still notify user
+          toast.success(`Folder "${name}" created successfully!`);
+          toast.error("Failed to apply template structure", {
+            description: templateErr instanceof Error ? templateErr.message : "Template application failed",
+          });
+        }
+      } else {
+        toast.success(`Folder "${name}" created successfully!`);
+      }
+
       await loadFolders();
       setParentFolderForCreation(null);
     } catch (err) {
@@ -430,6 +480,9 @@ export default function DocumentControlPage() {
       if (formData.projectId) payload.projectId = formData.projectId;
       if (formData.propertyId) payload.propertyId = formData.propertyId;
       if (formData.category) payload.category = formData.category;
+      if (formData.documentTypeId) payload.documentTypeId = formData.documentTypeId;
+      if (formData.classification) payload.classification = formData.classification;
+      if (formData.description) payload.description = formData.description;
 
       // Multi-level access control fields
       if (formData.departmentIds.length > 0) {
@@ -507,6 +560,29 @@ export default function DocumentControlPage() {
     loadFolders();
   };
 
+  const handleSearch = async (request: DocumentSearchRequest) => {
+    await search(request);
+  };
+
+  const handleClearSearch = () => {
+    clearResults();
+  };
+
+  const flatFolders = useCallback((): { id: string; name: string }[] => {
+    const result: { id: string; name: string }[] = [];
+    const traverse = (folderList: Folder[], prefix = "") => {
+      for (const f of folderList) {
+        if (!f.id) continue;
+        result.push({ id: f.id, name: prefix ? `${prefix} / ${f.name}` : f.name });
+        if (f.childFolders?.length) {
+          traverse(f.childFolders, prefix ? `${prefix} / ${f.name}` : f.name);
+        }
+      }
+    };
+    traverse(folders);
+    return result;
+  }, [folders]);
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -523,6 +599,13 @@ export default function DocumentControlPage() {
                 </p>
               </div>
               <div className="flex gap-2">
+                <Button
+                  variant={showSearch ? "default" : "outline"}
+                  onClick={() => { setShowSearch(!showSearch); if (showSearch) { handleClearSearch(); setShowAdvancedFilters(false); } }}
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  Search
+                </Button>
                 <Button variant="outline" onClick={handleRefresh}>
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Refresh
@@ -551,6 +634,91 @@ export default function DocumentControlPage() {
 
             {/* Stats Overview */}
             <DocumentStats documents={documents} className="hidden" />
+
+            {/* Search Bar */}
+            {showSearch && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className={showAdvancedFilters ? "md:col-span-3" : "md:col-span-4"}>
+                  <DocumentSearchBar
+                    onSearch={handleSearch}
+                    onClear={handleClearSearch}
+                    loading={searchLoading}
+                    onToggleFilters={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                    showFiltersToggle={true}
+                    filtersActive={showAdvancedFilters}
+                  />
+
+                  {/* Search Results */}
+                  {searchResults && (
+                    <Card className="mt-4">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center justify-between">
+                          <span>Search Results ({searchResults.total || 0})</span>
+                          <Button variant="ghost" size="sm" onClick={handleClearSearch}>
+                            Clear
+                          </Button>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {searchResults.documents && searchResults.documents.length > 0 ? (
+                          <div className="space-y-2 max-h-96 overflow-y-auto">
+                            {searchResults.documents.map((doc: DocumentSearchResult) => (
+                              <div
+                                key={doc.id}
+                                className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 cursor-pointer"
+                                onClick={() => {
+                                  // Navigate to document detail page
+                                  window.location.href = `/document-control/${doc.id}`;
+                                }}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <FileText className="w-5 h-5 text-blue-500" />
+                                  <div>
+                                    <div className="font-medium text-sm">{doc.name}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {doc.category && `${doc.category} · `}
+                                      {doc.fileType?.toUpperCase()}
+                                      {doc.folderPath && ` · ${doc.folderPath}`}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {doc.status && (
+                                    <Badge variant="secondary" className="text-xs">{doc.status}</Badge>
+                                  )}
+                                  {doc.classification && (
+                                    <Badge variant="outline" className="text-xs">{doc.classification}</Badge>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 text-gray-500 text-sm">
+                            No documents found matching your search criteria.
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+
+                {/* Advanced Filter Panel */}
+                {showAdvancedFilters && (
+                  <div className="md:col-span-1">
+                    <DocumentFilterPanel
+                      onSearch={handleSearch}
+                      onClose={() => setShowAdvancedFilters(false)}
+                      loading={searchLoading}
+                      documentTypes={documentTypes}
+                      folders={flatFolders()}
+                      departments={departments}
+                      projects={projects}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Folder Tree */}
             <div className="grid grid-cols-1 gap-6">
@@ -630,6 +798,7 @@ export default function DocumentControlPage() {
           departments={departments}
           properties={properties}
           users={users}
+          documentTypes={documentTypes}
           onSubmit={handleSubmit}
           onFileChange={handleFileChange}
         />
