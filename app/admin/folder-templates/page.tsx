@@ -200,7 +200,7 @@ function FolderStructureEditor({ structure, onChange }: FolderStructureEditorPro
       </div>
       {folders.length === 0 ? (
         <div className="text-center py-4 text-gray-500 text-sm">
-          No folders defined. Click "Add Folder" to start building the structure.
+          No folders defined. Click &quot;Add Folder&quot; to start building the structure.
         </div>
       ) : (
         <div className="bg-white rounded border p-2 max-h-[250px] overflow-y-auto">
