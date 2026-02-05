@@ -188,23 +188,26 @@ class BmsApiService {
           }
         }
 
-        const errorText = await response.text();
         let errorData: any = { message: response.statusText };
         try {
-          errorData = JSON.parse(errorText);
+          if (isJson) {
+            errorData = await response.json();
+          } else {
+            const errorText = await response.text();
+            errorData = { message: errorText || response.statusText };
+          }
         } catch {
-          errorData = { message: errorText || response.statusText };
+          errorData = { message: response.statusText };
         }
         if (response.status !== 404) {
           console.error('❌ API Error Response:', {
             status: response.status,
             statusText: response.statusText,
-            rawText: errorText,
             errorData: errorData,
           });
         }
         throw new BmsApiError(
-          errorData.message || errorData.title || errorText || 'API request failed',
+          errorData.message || errorData.title || 'API request failed',
           response.status,
           errorData.code,
           errorData.details || errorData.errors
