@@ -3,8 +3,9 @@
 import DocumentPreview from "@/features/documents/components/DocumentPreview";
 import DocumentChatPanel from "@/features/documents/components/DocumentChatPanel";
 import type { Document } from "@/types/bms";
-import { X } from "lucide-react";
+import { X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface DocumentViewModalProps {
   document: Document | null;
@@ -50,14 +51,22 @@ export default function DocumentViewModal({
               <h2 className="text-lg font-semibold text-gray-900">
                 {document.name}
               </h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="h-8 w-8 p-0"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Link href={`/document-control/${document.id}`}>
+                  <Button variant="outline" size="sm">
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Full Details
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClose}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
             <div className="flex-1 overflow-auto">
               <DocumentPreview

@@ -14,6 +14,57 @@ import {
   NotificationDtoPagedResult,
   UnreadCountResponse,
   RegisterDeviceTokenRequest,
+  // Document Control Types
+  DocumentDto,
+  DocumentVersionDto,
+  DocumentPermissionDto,
+  DocumentShareDto,
+  DocumentSearchRequest,
+  DocumentSearchResults,
+  DocumentAccessLogDto,
+  DocumentNeedsReviewDto,
+  DocumentUserAccessDto,
+  DocumentDepartmentDto,
+  CheckedOutDocumentDto,
+  CheckoutStatusDto,
+  CheckoutRequest,
+  CheckinRequest,
+  CheckoutOperationResponse,
+  FavoriteDocumentDto,
+  RecentDocumentDto,
+  RetentionPolicyDto,
+  RetentionScheduleDto,
+  LegalHoldRequest,
+  ExtendRetentionRequest,
+  DocumentTypeDto,
+  CreateDocumentTypeRequest,
+  UpdateDocumentTypeRequest,
+  FileValidationResult,
+  FolderTemplateDto,
+  CreateFolderTemplateRequest,
+  UpdateFolderTemplateRequest,
+  ApplyFolderTemplateRequest,
+  FolderTemplateApplicationDto,
+  CreateRetentionPolicyRequest,
+  UpdateRetentionPolicyRequest,
+  WorkflowDto,
+  WorkflowInstanceDto,
+  WorkflowTaskDto,
+  CreateWorkflowRequest,
+  UpdateWorkflowRequest,
+  StartWorkflowRequest,
+  CancelWorkflowRequest,
+  CompleteTaskRequest,
+  DelegateTaskRequest,
+  CreateDocumentPermissionRequest,
+  UpdateDocumentPermissionRequest,
+  EffectivePermissionsDto,
+  CreateDocumentShareRequest,
+  UpdateDocumentShareRequest,
+  ShareAccessLogDto,
+  RestoreVersionRequest,
+  ForceCheckoutCancelRequest,
+  UpdateFavoriteOrderRequest,
 } from '@/types/bms';
 import { authService } from './auth';
 
@@ -137,12 +188,26 @@ class BmsApiService {
           }
         }
 
-        const errorData = isJson ? await response.json() : { message: response.statusText };
+        const errorText = await response.text();
+        let errorData: any = { message: response.statusText };
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { message: errorText || response.statusText };
+        }
+        if (response.status !== 404) {
+          console.error('❌ API Error Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            rawText: errorText,
+            errorData: errorData,
+          });
+        }
         throw new BmsApiError(
-          errorData.message || 'API request failed',
+          errorData.message || errorData.title || errorText || 'API request failed',
           response.status,
           errorData.code,
-          errorData.details
+          errorData.details || errorData.errors
         );
       }
 
@@ -413,18 +478,18 @@ class BmsApiService {
 
   // Document endpoints - Swagger: /api/havenzhub/documents
   documents = {
-    getAll: () => this.get('/documents'),
-    getById: (id: string) => this.get(`/documents/${id}`),
-    getByCompany: (companyId: string) => this.get(`/documents/company/${companyId}`),
-    getByStatus: (status: string) => this.get(`/documents/status/${status}`),
-    getByUploader: (uploadedByUserId: string) => this.get(`/documents/uploader/${uploadedByUserId}`),
-    getByCategory: (category: string) => this.get(`/documents/category/${category}`),
-    getByAccessLevel: (accessLevel: string) => this.get(`/documents/accesslevel/${accessLevel}`),
-    search: (name: string) => this.get(`/documents/search/${encodeURIComponent(name)}`),
+    getAll: () => this.get<DocumentDto[]>('/documents'),
+    getById: (id: string) => this.get<DocumentDto>(`/documents/${id}`),
+    getByCompany: (companyId: string) => this.get<DocumentDto[]>(`/documents/company/${companyId}`),
+    getByStatus: (status: string) => this.get<DocumentDto[]>(`/documents/status/${status}`),
+    getByUploader: (uploadedByUserId: string) => this.get<DocumentDto[]>(`/documents/uploader/${uploadedByUserId}`),
+    getByCategory: (category: string) => this.get<DocumentDto[]>(`/documents/category/${category}`),
+    getByAccessLevel: (accessLevel: string) => this.get<DocumentDto[]>(`/documents/accesslevel/${accessLevel}`),
+    search: (name: string) => this.get<DocumentDto[]>(`/documents/search/${encodeURIComponent(name)}`),
     // Two-step upload: 1) upload file, 2) create document record
     upload: (data: FormData) => this.postFormData('/documents/upload', data),
-    create: (data: any) => this.post('/documents', data),
-    update: (id: string, data: any) => this.put(`/documents/${id}`, data),
+    create: (data: any) => this.post<DocumentDto>('/documents', data),
+    update: (id: string, data: any) => this.put<DocumentDto>(`/documents/${id}`, data),
     approve: (id: string) => this.post(`/documents/${id}/approve`, {}),
     reject: (id: string, data?: { reason?: string }) => this.post(`/documents/${id}/reject`, data || {}),
     delete: (id: string) => this.delete(`/documents/${id}`),
@@ -432,18 +497,256 @@ class BmsApiService {
     getDownloadUrl: (id: string) => this.get<DocumentDownloadResponse>(`/documents/${id}/download`),
     // Department assignment endpoints
     assignDepartment: (documentId: string, departmentId: string) =>
-      this.post(`/documents/${documentId}/departments/${departmentId}`, {}),
+      this.post<DocumentDepartmentDto>(`/documents/${documentId}/departments/${departmentId}`, {}),
     removeDepartment: (documentId: string, departmentId: string) =>
       this.delete(`/documents/${documentId}/departments/${departmentId}`),
     getDepartments: (documentId: string) =>
-      this.get(`/documents/${documentId}/departments`),
+      this.get<DocumentDepartmentDto[]>(`/documents/${documentId}/departments`),
     // User access endpoints
     grantUserAccess: (documentId: string, userId: string, accessLevel: string = 'view') =>
-      this.post(`/documents/${documentId}/users/${userId}?accessLevel=${accessLevel}`, {}),
+      this.post<DocumentUserAccessDto>(`/documents/${documentId}/users/${userId}?accessLevel=${accessLevel}`, {}),
     revokeUserAccess: (documentId: string, userId: string) =>
       this.delete(`/documents/${documentId}/users/${userId}`),
     getUsersWithAccess: (documentId: string) =>
-      this.get(`/documents/${documentId}/users`),
+      this.get<DocumentUserAccessDto[]>(`/documents/${documentId}/users`),
+    // Access history
+    getAccessHistory: (documentId: string) =>
+      this.get<DocumentAccessLogDto[]>(`/documents/${documentId}/access-history`),
+  };
+
+  // Document Versions - /api/havenzhub/documents/{documentId}/versions
+  documentVersions = {
+    list: (documentId: string) =>
+      this.get<DocumentVersionDto[]>(`/documents/${documentId}/versions`),
+    get: (documentId: string, versionNumber: number) =>
+      this.get<DocumentVersionDto>(`/documents/${documentId}/versions/${versionNumber}`),
+    getCurrent: (documentId: string) =>
+      this.get<DocumentVersionDto>(`/documents/${documentId}/versions/current`),
+    download: (documentId: string, versionNumber: number) =>
+      this.get<DocumentDownloadResponse>(`/documents/${documentId}/versions/${versionNumber}/download`),
+    restore: (documentId: string, versionNumber: number, data?: RestoreVersionRequest) =>
+      this.post<DocumentVersionDto>(`/documents/${documentId}/versions/${versionNumber}/restore`, data || {}),
+  };
+
+  // Document Check-out/Check-in - /api/havenzhub/documents/{documentId}/checkout
+  documentCheckout = {
+    checkout: (documentId: string, data?: CheckoutRequest) =>
+      this.post<CheckoutOperationResponse>(`/documents/${documentId}/checkout`, data || {}),
+    checkin: (documentId: string, data: CheckinRequest) =>
+      this.post<CheckoutOperationResponse>(`/documents/${documentId}/checkin`, data),
+    getStatus: (documentId: string) =>
+      this.get<CheckoutStatusDto>(`/documents/${documentId}/checkout/status`),
+    cancel: (documentId: string) =>
+      this.post<CheckoutOperationResponse>(`/documents/${documentId}/checkout/cancel`, {}),
+    forceCancel: (documentId: string, data: ForceCheckoutCancelRequest) =>
+      this.post<CheckoutOperationResponse>(`/documents/${documentId}/checkout/force`, data),
+  };
+
+  // Document Sharing - /api/havenzhub/documents/{documentId}/shares
+  documentShares = {
+    list: (documentId: string) =>
+      this.get<DocumentShareDto[]>(`/documents/${documentId}/shares`),
+    create: (documentId: string, data: CreateDocumentShareRequest) =>
+      this.post<DocumentShareDto>(`/documents/${documentId}/shares`, data),
+    get: (documentId: string, shareId: string) =>
+      this.get<DocumentShareDto>(`/documents/${documentId}/shares/${shareId}`),
+    update: (documentId: string, shareId: string, data: UpdateDocumentShareRequest) =>
+      this.put<DocumentShareDto>(`/documents/${documentId}/shares/${shareId}`, data),
+    revoke: (documentId: string, shareId: string) =>
+      this.delete(`/documents/${documentId}/shares/${shareId}`),
+    getLogs: (documentId: string, shareId: string) =>
+      this.get<ShareAccessLogDto[]>(`/documents/${documentId}/shares/${shareId}/logs`),
+  };
+
+  // Document Permissions - /api/havenzhub/documents/{documentId}/permissions
+  documentPermissions = {
+    list: (documentId: string) =>
+      this.get<DocumentPermissionDto[]>(`/documents/${documentId}/permissions`),
+    create: (documentId: string, data: CreateDocumentPermissionRequest) =>
+      this.post<DocumentPermissionDto>(`/documents/${documentId}/permissions`, data),
+    get: (documentId: string, permissionId: string) =>
+      this.get<DocumentPermissionDto>(`/documents/${documentId}/permissions/${permissionId}`),
+    update: (documentId: string, permissionId: string, data: UpdateDocumentPermissionRequest) =>
+      this.put<DocumentPermissionDto>(`/documents/${documentId}/permissions/${permissionId}`, data),
+    revoke: (documentId: string, permissionId: string) =>
+      this.delete(`/documents/${documentId}/permissions/${permissionId}`),
+    getEffective: (documentId: string) =>
+      this.get<EffectivePermissionsDto>(`/documents/${documentId}/permissions/effective`),
+    getUserEffective: (documentId: string, userId: string) =>
+      this.get<EffectivePermissionsDto>(`/documents/${documentId}/permissions/effective/${userId}`),
+  };
+
+  // Document Workflows - /api/havenzhub/documents/{documentId}/workflow
+  documentWorkflows = {
+    start: (documentId: string, data?: StartWorkflowRequest) =>
+      this.post<WorkflowInstanceDto>(`/documents/${documentId}/workflow/start`, data || {}),
+    getStatus: (documentId: string) =>
+      this.get<WorkflowInstanceDto>(`/documents/${documentId}/workflow`),
+    getInstance: (documentId: string, instanceId: string) =>
+      this.get<WorkflowInstanceDto>(`/documents/${documentId}/workflow/${instanceId}`),
+    getHistory: (documentId: string) =>
+      this.get<WorkflowInstanceDto[]>(`/documents/${documentId}/workflow/history`),
+    cancel: (documentId: string, data: CancelWorkflowRequest) =>
+      this.post<WorkflowInstanceDto>(`/documents/${documentId}/workflow/cancel`, data),
+  };
+
+  // Recent & Favorites - /api/havenzhub/documents/recent, /favorites
+  documentRecent = {
+    getRecent: () =>
+      this.get<RecentDocumentDto[]>('/documents/recent'),
+    getFavorites: () =>
+      this.get<FavoriteDocumentDto[]>('/documents/favorites'),
+    addFavorite: (documentId: string) =>
+      this.post<FavoriteDocumentDto>(`/documents/${documentId}/favorite`, {}),
+    removeFavorite: (documentId: string) =>
+      this.delete(`/documents/${documentId}/favorite`),
+    reorderFavorites: (data: UpdateFavoriteOrderRequest) =>
+      this.put('/documents/favorites/order', data),
+  };
+
+  // Document Search & Discovery
+  documentSearch = {
+    search: (data: DocumentSearchRequest) =>
+      this.post<DocumentSearchResults>('/documents/search', data),
+    searchGet: (params: DocumentSearchRequest) => {
+      const query = new URLSearchParams();
+      if (params.query) query.append('query', params.query);
+      if (params.documentTypeIds) params.documentTypeIds.forEach(id => query.append('DocumentTypeIds', id));
+      if (params.classifications) params.classifications.forEach(c => query.append('Classifications', c));
+      if (params.categories) params.categories.forEach(c => query.append('Categories', c));
+      if (params.dateFrom) query.append('DateFrom', params.dateFrom);
+      if (params.dateTo) query.append('DateTo', params.dateTo);
+      if (params.folderId) query.append('FolderId', params.folderId);
+      if (params.includeSubfolders !== undefined) query.append('IncludeSubfolders', String(params.includeSubfolders));
+      if (params.projectId) query.append('ProjectId', params.projectId);
+      if (params.departmentId) query.append('DepartmentId', params.departmentId);
+      if (params.propertyId) query.append('PropertyId', params.propertyId);
+      if (params.status) query.append('Status', params.status);
+      if (params.ownedByUserId) query.append('OwnedByUserId', params.ownedByUserId);
+      if (params.uploadedByUserId) query.append('UploadedByUserId', params.uploadedByUserId);
+      if (params.sortBy) query.append('SortBy', params.sortBy);
+      if (params.sortDirection) query.append('SortDirection', params.sortDirection);
+      if (params.page) query.append('Page', String(params.page));
+      if (params.pageSize) query.append('PageSize', String(params.pageSize));
+      return this.get<DocumentSearchResults>(`/documents/search?${query.toString()}`);
+    },
+    getCheckedOut: () =>
+      this.get<CheckedOutDocumentDto[]>('/documents/checked-out'),
+    getMyCheckouts: () =>
+      this.get<CheckedOutDocumentDto[]>('/documents/my-checkouts'),
+    getNeedsReview: () =>
+      this.get<DocumentNeedsReviewDto[]>('/documents/needs-review'),
+  };
+
+  // Document Retention - /api/havenzhub/documents/{documentId}/retention
+  documentRetention = {
+    getSchedules: (documentId: string) =>
+      this.get<RetentionScheduleDto[]>(`/documents/${documentId}/retention/schedules`),
+    extendSchedule: (documentId: string, scheduleId: string, data: ExtendRetentionRequest) =>
+      this.post<RetentionScheduleDto>(`/documents/${documentId}/retention/schedules/${scheduleId}/extend`, data),
+    setLegalHold: (documentId: string, data: LegalHoldRequest) =>
+      this.post(`/documents/${documentId}/retention/legal-hold`, data),
+    applyPolicy: (documentId: string, policyId: string) =>
+      this.post(`/documents/${documentId}/retention/apply-policy/${policyId}`, {}),
+  };
+
+  // Workflow Tasks - /api/havenzhub/workflow-tasks
+  workflowTasks = {
+    getMyTasks: () =>
+      this.get<WorkflowTaskDto[]>('/workflow-tasks?pendingOnly=true'),
+    getPendingTasks: () =>
+      this.get<WorkflowTaskDto[]>('/workflow-tasks?pendingOnly=true'),
+    getAllTasks: (pendingOnly: boolean = true) =>
+      this.get<WorkflowTaskDto[]>(`/workflow-tasks?pendingOnly=${pendingOnly}`),
+    getByRole: (role: string, pendingOnly: boolean = true) =>
+      this.get<WorkflowTaskDto[]>(`/workflow-tasks/by-role/${role}?pendingOnly=${pendingOnly}`),
+    getTask: (taskId: string) =>
+      this.get<WorkflowTaskDto>(`/workflow-tasks/${taskId}`),
+    complete: (taskId: string, data: CompleteTaskRequest) =>
+      this.post<WorkflowTaskDto>(`/workflow-tasks/${taskId}/complete`, data),
+    delegate: (taskId: string, data: DelegateTaskRequest) =>
+      this.post<WorkflowTaskDto>(`/workflow-tasks/${taskId}/delegate`, data),
+  };
+
+  // Admin APIs - /api/havenzhub/admin
+  admin = {
+    // Document Types - /api/havenzhub/admin/document-types
+    documentTypes: {
+      list: (includeInactive: boolean = false) =>
+        this.get<DocumentTypeDto[]>(`/admin/document-types?includeInactive=${includeInactive}`),
+      create: (data: CreateDocumentTypeRequest) =>
+        this.post<DocumentTypeDto>('/admin/document-types', data),
+      get: (id: string) =>
+        this.get<DocumentTypeDto>(`/admin/document-types/${id}`),
+      getByCode: (code: string) =>
+        this.get<DocumentTypeDto>(`/admin/document-types/by-code/${code}`),
+      update: (id: string, data: UpdateDocumentTypeRequest) =>
+        this.put<DocumentTypeDto>(`/admin/document-types/${id}`, data),
+      delete: (id: string) =>
+        this.delete(`/admin/document-types/${id}`),
+      validate: (id: string, file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.postFormData<FileValidationResult>(`/admin/document-types/${id}/validate`, formData);
+      },
+    },
+
+    // Folder Templates - /api/havenzhub/admin/folder-templates
+    folderTemplates: {
+      list: (includeInactive: boolean = false) =>
+        this.get<FolderTemplateDto[]>(`/admin/folder-templates?includeInactive=${includeInactive}`),
+      create: (data: CreateFolderTemplateRequest) =>
+        this.post<FolderTemplateDto>('/admin/folder-templates', data),
+      get: (id: string) =>
+        this.get<FolderTemplateDto>(`/admin/folder-templates/${id}`),
+      getByCode: (code: string) =>
+        this.get<FolderTemplateDto>(`/admin/folder-templates/by-code/${code}`),
+      update: (id: string, data: UpdateFolderTemplateRequest) =>
+        this.put<FolderTemplateDto>(`/admin/folder-templates/${id}`, data),
+      delete: (id: string) =>
+        this.delete(`/admin/folder-templates/${id}`),
+      getForScope: (scopeType: string) =>
+        this.get<FolderTemplateDto[]>(`/admin/folder-templates/for-scope/${scopeType}`),
+      getDefault: (scopeType: string) =>
+        this.get<FolderTemplateDto>(`/admin/folder-templates/default/${scopeType}`),
+      getApplications: (id: string) =>
+        this.get<FolderTemplateApplicationDto[]>(`/admin/folder-templates/${id}/applications`),
+    },
+
+    // Retention Policies - /api/havenzhub/admin/retention-policies
+    retentionPolicies: {
+      list: (includeInactive: boolean = false) =>
+        this.get<RetentionPolicyDto[]>(`/admin/retention-policies?includeInactive=${includeInactive}`),
+      create: (data: CreateRetentionPolicyRequest) =>
+        this.post<RetentionPolicyDto>('/admin/retention-policies', data),
+      get: (id: string) =>
+        this.get<RetentionPolicyDto>(`/admin/retention-policies/${id}`),
+      getByCode: (code: string) =>
+        this.get<RetentionPolicyDto>(`/admin/retention-policies/by-code/${code}`),
+      update: (id: string, data: UpdateRetentionPolicyRequest) =>
+        this.put<RetentionPolicyDto>(`/admin/retention-policies/${id}`, data),
+      delete: (id: string) =>
+        this.delete(`/admin/retention-policies/${id}`),
+    },
+
+    // Workflows - /api/havenzhub/admin/workflows
+    workflows: {
+      list: (includeInactive: boolean = false) =>
+        this.get<WorkflowDto[]>(`/admin/workflows?includeInactive=${includeInactive}`),
+      create: (data: CreateWorkflowRequest) =>
+        this.post<WorkflowDto>('/admin/workflows', data),
+      get: (id: string) =>
+        this.get<WorkflowDto>(`/admin/workflows/${id}`),
+      getByCode: (code: string) =>
+        this.get<WorkflowDto>(`/admin/workflows/by-code/${code}`),
+      update: (id: string, data: UpdateWorkflowRequest) =>
+        this.put<WorkflowDto>(`/admin/workflows/${id}`, data),
+      delete: (id: string) =>
+        this.delete(`/admin/workflows/${id}`),
+      getDefault: () =>
+        this.get<WorkflowDto>('/admin/workflows/default'),
+      // Note: activate/deactivate endpoints not in swagger - workflows are activated via isActive field in update
+    },
   };
 
   // Folder endpoints - Swagger: /api/havenzhub/folders
@@ -451,11 +754,26 @@ class BmsApiService {
     getAll: () => this.get('/folders'),
     getTree: () => this.get('/folders/tree'),
     getById: (id: string) => this.get(`/folders/${id}`),
-    getChildren: (id: string) => this.get(`/folders/${id}/children`),
-    getDocuments: (id: string) => this.get(`/folders/${id}/documents`),
+    getDocuments: (id: string) => this.get<DocumentDto[]>(`/folders/${id}/documents`),
     create: (data: any) => this.post('/folders', data),
     update: (id: string, data: any) => this.put(`/folders/${id}`, data),
     delete: (id: string, cascade?: boolean) => this.delete(`/folders/${id}${cascade ? '?cascade=true' : ''}`),
+    // Folder Templates
+    createFromTemplate: (data: ApplyFolderTemplateRequest) =>
+      this.post<FolderTemplateApplicationDto>('/folders/from-template', data),
+    applyTemplate: (scopeType: string, scopeId: string) =>
+      this.post<FolderTemplateApplicationDto>(`/folders/template-application/${scopeType}/${scopeId}`, {}),
+    // Folder Permissions
+    getPermissions: (folderId: string) =>
+      this.get<DocumentPermissionDto[]>(`/folders/${folderId}/permissions`),
+    createPermission: (folderId: string, data: CreateDocumentPermissionRequest) =>
+      this.post<DocumentPermissionDto>(`/folders/${folderId}/permissions`, data),
+    getPermission: (folderId: string, permissionId: string) =>
+      this.get<DocumentPermissionDto>(`/folders/${folderId}/permissions/${permissionId}`),
+    updatePermission: (folderId: string, permissionId: string, data: UpdateDocumentPermissionRequest) =>
+      this.put<DocumentPermissionDto>(`/folders/${folderId}/permissions/${permissionId}`, data),
+    deletePermission: (folderId: string, permissionId: string) =>
+      this.delete(`/folders/${folderId}/permissions/${permissionId}`),
   };
 
   // BMS Device endpoints - Swagger: /api/havenzhub/BmsDevice

@@ -72,6 +72,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({
   level,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [deleteFolderConfirm, setDeleteFolderConfirm] = useState(false);
   const [deleteDocumentId, setDeleteDocumentId] = useState<string | null>(null);
   const [deleteDocumentName, setDeleteDocumentName] = useState<string>("");
   const [rejectDocumentId, setRejectDocumentId] = useState<string | null>(null);
@@ -257,6 +258,20 @@ const FolderNode: React.FC<FolderNodeProps> = ({
             Subfolder
           </button>
         )}
+
+        {/* Delete Folder Button (visible on hover) */}
+        {onFolderDelete && folder.id && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteFolderConfirm(true);
+            }}
+            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-opacity"
+            title="Delete folder"
+          >
+            <Trash2 className="h-3.5 w-3.5 text-red-600" />
+          </button>
+        )}
       </div>
 
       {/* Documents in Folder (shown before subfolders for better readability) */}
@@ -376,6 +391,35 @@ const FolderNode: React.FC<FolderNodeProps> = ({
             <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
+              className="!bg-red-600 hover:!bg-red-700 !text-white focus:ring-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Folder Confirmation Dialog */}
+      <AlertDialog
+        open={deleteFolderConfirm}
+        onOpenChange={(open) => !open && setDeleteFolderConfirm(false)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Folder</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <strong>{folder.name}</strong> and all its contents? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteFolderConfirm(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (folder.id && onFolderDelete) onFolderDelete(folder.id);
+                setDeleteFolderConfirm(false);
+              }}
               className="!bg-red-600 hover:!bg-red-700 !text-white focus:ring-red-600"
             >
               Delete

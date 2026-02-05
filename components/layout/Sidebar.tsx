@@ -15,6 +15,11 @@ import {
   Search,
   ChevronRight,
   Globe,
+  Settings,
+  GitBranch,
+  Archive,
+  FolderTree,
+  ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +51,12 @@ const sidebarItems: SidebarItem[] = [
     label: "Document Control",
   },
   {
+    id: "workflow-tasks",
+    path: "/workflow-tasks",
+    icon: ClipboardCheck,
+    label: "Workflow Tasks",
+  },
+  {
     id: "users",
     path: "/users",
     icon: Shield,
@@ -53,6 +64,37 @@ const sidebarItems: SidebarItem[] = [
     adminOnly: true,
   },
   { id: "z-ai", path: "/z-ai", icon: Bot, label: "Z AI" },
+];
+
+const adminItems: SidebarItem[] = [
+  {
+    id: "admin-doc-types",
+    path: "/admin/document-types",
+    icon: FileText,
+    label: "Document Types",
+    adminOnly: true,
+  },
+  {
+    id: "admin-folder-templates",
+    path: "/admin/folder-templates",
+    icon: FolderTree,
+    label: "Folder Templates",
+    adminOnly: true,
+  },
+  {
+    id: "admin-retention",
+    path: "/admin/retention-policies",
+    icon: Archive,
+    label: "Retention Policies",
+    adminOnly: true,
+  },
+  {
+    id: "admin-workflows",
+    path: "/admin/workflows",
+    icon: GitBranch,
+    label: "Workflows",
+    adminOnly: true,
+  },
 ];
 
 export function Sidebar() {
@@ -138,7 +180,7 @@ export function Sidebar() {
         )}
 
         {/* Navigation */}
-        <nav className="space-y-2 flex-1">
+        <nav className="space-y-2 flex-1 overflow-y-auto">
           {visibleItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -160,6 +202,42 @@ export function Sidebar() {
               </Link>
             );
           })}
+
+          {/* Admin Section */}
+          {isAdmin && (
+            <>
+              {!sidebarCollapsed && (
+                <div className="pt-4 pb-2">
+                  <div className="flex items-center gap-2 px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <Settings className="w-3 h-3" />
+                    <span>Admin</span>
+                  </div>
+                </div>
+              )}
+              {sidebarCollapsed && <div className="border-t border-gray-200 my-2" />}
+              {adminItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
+
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.path}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                      active
+                        ? "bg-blue-50 text-blue-700 border border-blue-200"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    {!sidebarCollapsed && (
+                      <span className="font-medium">{item.label}</span>
+                    )}
+                  </Link>
+                );
+              })}
+            </>
+          )}
         </nav>
 
         {/* Enhanced Security Status */}
