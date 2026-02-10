@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from "react";
 import { Document as BMSDocument, DocumentDownloadResponse } from "@/types/bms";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { bmsApi } from "@/lib/services/bmsApi";
@@ -126,19 +125,19 @@ export default function DocumentPreview({
 
   if (!document) {
     return (
-      <Card className="h-full">
-        <CardContent className="flex items-center justify-center h-full p-12">
+      <div className="h-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700">
+        <div className="flex items-center justify-center h-full p-12">
           <div className="text-center">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <FileText className="w-16 h-16 text-stone-300 dark:text-stone-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-stone-900 dark:text-stone-50 mb-2">
               No document selected
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-stone-500 dark:text-stone-400">
               Select a document from the tree to preview it here
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -173,27 +172,27 @@ export default function DocumentPreview({
     if (lowerType.includes("xls") || lowerType.includes("sheet")) {
       return <FileText className="w-5 h-5 text-green-600" />;
     }
-    return <File className="w-5 h-5 text-gray-600" />;
+    return <File className="w-5 h-5 text-stone-500 dark:text-stone-400" />;
   };
 
   const renderPreview = () => {
     if (!blobUrl) {
       return (
         <div className="flex items-center justify-center h-full">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-stone-500" />
         </div>
       );
     }
 
     if (previewError) {
       return (
-        <div className="flex items-center justify-center h-full bg-gray-50">
+        <div className="flex items-center justify-center h-full bg-stone-50 dark:bg-stone-900">
           <div className="text-center">
             <FileText className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-stone-900 dark:text-stone-50 mb-2">
               Error loading preview
             </h3>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-stone-500 dark:text-stone-400 mb-4">
               Unable to load the document preview
             </p>
             <Button onClick={handleDownload}>
@@ -226,7 +225,7 @@ export default function DocumentPreview({
       fileType.includes("jpeg")
     ) {
       return (
-        <div className="flex items-center justify-center h-full bg-gray-50 overflow-auto p-4">
+        <div className="flex items-center justify-center h-full bg-stone-50 dark:bg-stone-900 overflow-auto p-4">
           <Image
             key={document.id}
             src={blobUrl}
@@ -247,13 +246,13 @@ export default function DocumentPreview({
     // Excel/Spreadsheet Preview (placeholder)
     if (fileType.includes("xls") || fileType.includes("sheet")) {
       return (
-        <div className="flex items-center justify-center h-full bg-gray-50">
+        <div className="flex items-center justify-center h-full bg-stone-50 dark:bg-stone-900">
           <div className="text-center">
             <FileText className="w-16 h-16 text-green-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-stone-900 dark:text-stone-50 mb-2">
               Spreadsheet Preview
             </h3>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-stone-500 dark:text-stone-400 mb-4">
               Excel preview coming soon
             </p>
             <Button onClick={handleDownload}>
@@ -267,13 +266,13 @@ export default function DocumentPreview({
 
     // Default: No preview available
     return (
-      <div className="flex items-center justify-center h-full bg-gray-50">
+      <div className="flex items-center justify-center h-full bg-stone-50 dark:bg-stone-900">
         <div className="text-center">
-          <File className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <File className="w-16 h-16 text-stone-400 dark:text-stone-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-stone-900 dark:text-stone-50 mb-2">
             Preview not available
           </h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-stone-500 dark:text-stone-400 mb-4">
             This file type cannot be previewed in the browser
           </p>
           <Button onClick={handleDownload}>
@@ -286,20 +285,20 @@ export default function DocumentPreview({
   };
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3 border-b">
+    <div className="h-full flex flex-col bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700">
+      <div className="px-4 py-3 border-b border-stone-200 dark:border-stone-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             {getFileTypeIcon(document.fileType ?? undefined)}
             <div className="min-w-0 flex-1">
-              <CardTitle className="text-base truncate">
+              <h3 className="text-base font-semibold text-stone-900 dark:text-stone-50 truncate">
                 {document.name}
-              </CardTitle>
+              </h3>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="secondary" className="text-xs">
                   v{document.version}
                 </Badge>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-stone-500 dark:text-stone-400">
                   {document.fileType?.toUpperCase()}
                 </span>
               </div>
@@ -312,10 +311,11 @@ export default function DocumentPreview({
               size="sm"
               onClick={handleZoomOut}
               disabled={zoom <= 50}
+              className="text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:text-stone-400 dark:hover:text-stone-200 dark:hover:bg-stone-800"
             >
               <ZoomOut className="w-4 h-4" />
             </Button>
-            <span className="text-sm font-medium w-12 text-center">
+            <span className="text-sm font-medium w-12 text-center text-stone-700 dark:text-stone-300">
               {zoom}%
             </span>
             <Button
@@ -323,33 +323,35 @@ export default function DocumentPreview({
               size="sm"
               onClick={handleZoomIn}
               disabled={zoom >= 200}
+              className="text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:text-stone-400 dark:hover:text-stone-200 dark:hover:bg-stone-800"
             >
               <ZoomIn className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleResetZoom}>
+            <Button variant="ghost" size="sm" onClick={handleResetZoom} className="text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:text-stone-400 dark:hover:text-stone-200 dark:hover:bg-stone-800">
               <Maximize className="w-4 h-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleDownload}
+              className="border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-800"
             >
               <Download className="w-4 h-4 mr-2" />
               Download
             </Button>
           </div>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex-1 p-0 overflow-hidden">
+      <div className="flex-1 p-0 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            <Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-stone-500" />
           </div>
         ) : (
           renderPreview()
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

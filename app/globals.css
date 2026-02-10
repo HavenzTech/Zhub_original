@@ -14,10 +14,10 @@
     --font-mono: var(--font-geist-mono);
     
     /* Updated Color Scheme - New Brand Colors */
-    --background: 210 20% 96%; /* #F0F6FC */
-    --foreground: 216 12% 8.2%; /* #0D1117 */
-    --card: 210 20% 96%; /* #F0F6FC */
-    --card-foreground: 216 12% 8.2%; /* #0D1117 */
+    --background: 210 20% 96%; /* LIGHT MODE PAGE BACKGROUND — the main area behind cards (#F0F6FC light blue-gray) */
+    --foreground: 216 12% 8.2%; /* LIGHT MODE TEXT COLOR — default text on the page (#0D1117 near-black) */
+    --card: 210 20% 96%; /* LIGHT MODE CARD BACKGROUND — card/panel surfaces (#F0F6FC) */
+    --card-foreground: 216 12% 8.2%; /* LIGHT MODE CARD TEXT — text inside cards (#0D1117) */
     --popover: 210 20% 96%; /* #F0F6FC */
     --popover-foreground: 216 12% 8.2%; /* #0D1117 */
     --primary: 174 100% 39%; /* #00C49A */
@@ -40,15 +40,16 @@
     --chart-5: 142 76% 36%; /* #238636 */
     --radius: 0.5rem;
     
-    /* Sidebar Variables */
-    --sidebar-background: 210 20% 96%; /* #F0F6FC */
-    --sidebar-foreground: 216 12% 8.2%; /* #0D1117 */
-    --sidebar-primary: 174 100% 39%; /* #00C49A */
-    --sidebar-primary-foreground: 210 20% 96%; /* #F0F6FC */
-    --sidebar-accent: 213 12% 20%; /* #30363D */
-    --sidebar-accent-foreground: 210 20% 96%; /* #F0F6FC */
-    --sidebar-border: 213 12% 20%; /* #30363D */
-    --sidebar-ring: 174 100% 39%; /* #00C49A */
+    /* Sidebar Variables — Dark sidebar matching mockup */
+    --sidebar-background: 0 0% 100%; /* LIGHT MODE SIDEBAR BACKGROUND — white */
+    --sidebar-foreground: 20 14% 10%; /* LIGHT MODE SIDEBAR TEXT — stone-900 */
+    --sidebar-primary: 189 93% 37%; /* #0891b2 (accent cyan) */
+    --sidebar-primary-foreground: 0 0% 100%; /* white */
+    --sidebar-accent: 60 5% 96%; /* stone-100 */
+    --sidebar-accent-foreground: 20 14% 10%; /* stone-900 */
+    --sidebar-border: 24 6% 83%; /* stone-300 */
+    --sidebar-ring: 189 93% 37%; /* #0891b2 */
+    --sidebar-muted: 24 6% 64%; /* stone-400 */
     
     /* Custom Brand Colors */
     --brand-primary: 174 100% 39%; /* #00C49A */
@@ -87,11 +88,46 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Remove any dark theme enforcement */
   .dark {
-    /* Reset dark theme variables to match light theme */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 20 14% 10%; /* DARK MODE PAGE BACKGROUND — the main area behind cards (stone-900, ~#1c1917) */
+    --foreground: 60 9% 98%; /* DARK MODE TEXT COLOR — default text on the page (#fafaf9 stone-50) */
+    --card: 20 14% 7%; /* DARK MODE CARD BACKGROUND — card/panel surfaces (darker than background) */
+    --card-foreground: 60 9% 98%; /* DARK MODE CARD TEXT — text inside cards (#fafaf9) */
+    --popover: 20 14% 7%;
+    --popover-foreground: 60 9% 98%;
+    --primary: 189 93% 37%; /* #0891b2 accent cyan */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 12 6% 15%; /* stone-800 */
+    --secondary-foreground: 60 9% 98%;
+    --muted: 20 14% 10%; /* stone-900 */
+    --muted-foreground: 24 6% 64%; /* stone-400 */
+    --accent: 12 6% 15%;
+    --accent-foreground: 60 9% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 24 7% 25%; /* stone-700 */
+    --input: 24 7% 25%;
+    --ring: 189 93% 37%;
+
+    --sidebar-background: 20 14% 10%; /* DARK MODE SIDEBAR BACKGROUND — stone-900 */
+    --sidebar-foreground: 60 9% 98%; /* DARK MODE SIDEBAR TEXT — stone-50 */
+    --sidebar-primary: 189 93% 37%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 12 6% 15%;
+    --sidebar-accent-foreground: 60 9% 98%;
+    --sidebar-border: 24 7% 25%;
+    --sidebar-ring: 189 93% 37%;
+    --sidebar-muted: 25 6% 32%;
+
+    /* Semantic colors in dark mode */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 20 14% 4%;
+    --error: 0 84% 60%;
+    --error-foreground: 0 0% 100%;
+    --info: 189 93% 37%;
+    --info-foreground: 0 0% 100%;
   }
 }
 
@@ -204,29 +240,50 @@
   }
 }
 
-/* Scrollbar Styling for Light Theme */
+/* Scrollbar Styling */
 @layer utilities {
   .scrollbar-modern {
     scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f8fafc;
+    scrollbar-color: #d6d3d1 transparent;
   }
-  
+
   .scrollbar-modern::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
-  
+
   .scrollbar-modern::-webkit-scrollbar-track {
-    background: #f8fafc;
-    border-radius: 3px;
+    background: transparent;
   }
-  
+
   .scrollbar-modern::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
+    background: #d6d3d1;
+    border-radius: 4px;
   }
-  
+
   .scrollbar-modern::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #a8a29e;
+  }
+
+  .scrollbar-dark {
+    scrollbar-width: thin;
+    scrollbar-color: #57534e transparent;
+  }
+
+  .scrollbar-dark::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .scrollbar-dark::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-dark::-webkit-scrollbar-thumb {
+    background: #57534e;
+    border-radius: 4px;
+  }
+
+  .scrollbar-dark::-webkit-scrollbar-thumb:hover {
+    background: #78716c;
   }
 }
 

@@ -46,9 +46,9 @@ export const getQuickActions = (): QuickAction[] => [
  * Get relevance score color class
  */
 export const getRelevanceScoreColor = (score: number): string => {
-  if (score >= 80) return "bg-green-100 text-green-800"
-  if (score >= 60) return "bg-yellow-100 text-yellow-800"
-  return "bg-red-100 text-red-800"
+  if (score >= 80) return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+  if (score >= 60) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-400"
+  return "bg-red-100 text-red-800 dark:bg-red-950/30 dark:text-red-400"
 }
 
 /**
@@ -82,24 +82,24 @@ export const getMessageRoleName = (role: "internal-z" | "external-z" | "user"): 
  * Get message role color class
  */
 export const getMessageRoleColor = (role: "internal-z" | "external-z" | "user"): string => {
-  if (role === "user") return "text-gray-600"
-  if (role === "internal-z") return "text-blue-600"
-  return "text-purple-600"
+  if (role === "user") return "text-stone-600 dark:text-stone-400"
+  if (role === "internal-z") return "text-accent-cyan"
+  return "text-violet-600 dark:text-violet-400"
 }
 
 /**
  * Get message avatar background class
  */
 export const getMessageAvatarBg = (role: "internal-z" | "external-z" | "user"): string => {
-  if (role === "user") return "bg-gray-200"
-  if (role === "internal-z") return "bg-blue-600"
-  return "bg-purple-600"
+  if (role === "user") return "bg-stone-200 dark:bg-stone-700"
+  if (role === "internal-z") return "bg-accent-cyan"
+  return "bg-violet-600 dark:bg-violet-500"
 }
 
 /**
  * Get message content background class
  */
 export const getMessageContentBg = (role: "internal-z" | "external-z" | "user"): string => {
-  if (role === "user") return "bg-gray-50 border-gray-200"
-  return "bg-blue-50 border-blue-200"
+  if (role === "user") return "bg-stone-50 border-stone-200 dark:bg-stone-800/50 dark:border-stone-700"
+  return "bg-white border-stone-200 dark:bg-stone-800/50 dark:border-stone-700"
 }

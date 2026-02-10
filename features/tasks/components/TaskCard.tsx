@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card"
+// Card replaced with plain divs for consistent styling
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -70,25 +70,25 @@ export function TaskCard({
       case "cancelled":
         return <XCircle className="w-4 h-4 text-red-600" />
       default:
-        return <Circle className="w-4 h-4 text-gray-400" />
+        return <Circle className="w-4 h-4 text-stone-400 dark:text-stone-500" />
     }
   }
 
   return (
-    <Card
-      className={`hover:shadow-md transition-shadow ${onClick ? "cursor-pointer" : ""} ${
-        overdue ? "border-red-200 bg-red-50/30" : ""
+    <div
+      className={`bg-white dark:bg-stone-900 rounded-xl border hover:shadow-md transition-shadow ${onClick ? "cursor-pointer" : ""} ${
+        overdue ? "border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-950/20" : "border-stone-200 dark:border-stone-700"
       }`}
       onClick={() => onClick?.(task)}
     >
-      <CardContent className="p-4">
+      <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className="mt-0.5">{getStatusIcon(task.status)}</div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 truncate">{task.title}</h3>
+              <h3 className="font-medium text-stone-900 dark:text-stone-50 truncate">{task.title}</h3>
               {task.description && (
-                <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+                <p className="text-sm text-stone-600 dark:text-stone-400 line-clamp-2 mt-1">
                   {task.description}
                 </p>
               )}
@@ -106,7 +106,7 @@ export function TaskCard({
               </div>
 
               {/* Additional details */}
-              <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-gray-500">
+              <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-stone-500 dark:text-stone-400">
                 {task.assignedToUserName && (
                   <div className="flex items-center gap-1">
                     <User className="w-3 h-3" />
@@ -140,14 +140,14 @@ export function TaskCard({
 
               {/* Project/Department info */}
               {(showProject && task.projectName) || task.departmentName ? (
-                <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-400">
+                <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-stone-400 dark:text-stone-500">
                   {showProject && task.projectName && (
-                    <span className="bg-gray-100 px-2 py-0.5 rounded">
+                    <span className="bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded text-stone-600 dark:text-stone-400">
                       {task.projectName}
                     </span>
                   )}
                   {task.departmentName && (
-                    <span className="bg-gray-100 px-2 py-0.5 rounded">
+                    <span className="bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded text-stone-600 dark:text-stone-400">
                       {task.departmentName}
                     </span>
                   )}
@@ -217,7 +217,7 @@ export function TaskCard({
             </DropdownMenu>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

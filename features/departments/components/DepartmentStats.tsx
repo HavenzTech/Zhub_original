@@ -1,8 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { Department } from "@/types/bms";
-import { Users, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import { formatCurrency } from "../utils/departmentHelpers";
 
 interface DepartmentStatsProps {
@@ -32,59 +30,21 @@ export function DepartmentStats({ departments }: DepartmentStatsProps) {
       : 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <StatCard
-        icon={<Users className="w-5 h-5 text-purple-600" />}
-        iconBg="bg-purple-100"
-        value={departments.length.toString()}
-        label="Total Departments"
-      />
-      <StatCard
-        icon={<DollarSign className="w-5 h-5 text-green-600" />}
-        iconBg="bg-green-100"
-        value={formatCurrency(totalBudget)}
-        label="Total Budget"
-      />
-      <StatCard
-        icon={<TrendingUp className="w-5 h-5 text-blue-600" />}
-        iconBg="bg-blue-100"
-        value={formatCurrency(totalSpent)}
-        label="Total Spent"
-      />
-      <StatCard
-        icon={<Calendar className="w-5 h-5 text-orange-600" />}
-        iconBg="bg-orange-100"
-        value={`${avgUtilization}%`}
-        label="Avg Utilization"
-      />
-    </div>
-  );
-}
-
-function StatCard({
-  icon,
-  iconBg,
-  value,
-  label,
-}: {
-  icon: React.ReactNode;
-  iconBg: string;
-  value: string;
-  label: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 ${iconBg} rounded-lg flex items-center justify-center`}>
-            {icon}
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-900">{value}</div>
-            <div className="text-sm text-gray-600">{label}</div>
-          </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {[
+        { label: "Total Departments", value: departments.length.toString() },
+        { label: "Total Budget", value: formatCurrency(totalBudget) },
+        { label: "Total Spent", value: formatCurrency(totalSpent) },
+        { label: "Avg Utilization", value: `${avgUtilization}%` },
+      ].map((stat) => (
+        <div
+          key={stat.label}
+          className="p-5 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700"
+        >
+          <div className="text-sm text-stone-500 dark:text-stone-400 mb-2">{stat.label}</div>
+          <div className="text-3xl font-semibold text-stone-900 dark:text-stone-50">{stat.value}</div>
         </div>
-      </CardContent>
-    </Card>
+      ))}
+    </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -59,15 +58,15 @@ const PERMISSION_LEVELS: { value: PermissionLevel; label: string; description: s
 const getPermissionColor = (level?: string | null): string => {
   switch (level) {
     case "manager":
-      return "bg-purple-100 text-purple-800";
+      return "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-400";
     case "editor":
-      return "bg-blue-100 text-blue-800";
+      return "bg-accent-cyan/10 text-accent-cyan";
     case "contributor":
-      return "bg-green-100 text-green-800";
+      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400";
     case "viewer":
-      return "bg-gray-100 text-gray-800";
+      return "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300";
     default:
-      return "bg-gray-100 text-gray-800";
+      return "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300";
   }
 };
 
@@ -199,24 +198,24 @@ export function DocumentPermissionsPanel({
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+        <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-stone-900 dark:text-stone-50">
             <Users className="w-5 h-5" />
             Document Permissions
-          </CardTitle>
-          <Button size="sm" onClick={() => setAddDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
+          </h3>
+          <Button size="sm" onClick={() => setAddDialogOpen(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white text-xs">
+            <Plus className="w-4 h-4 mr-1" />
             Grant Permission
           </Button>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-5">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-stone-400 dark:text-stone-500" />
             </div>
           ) : permissions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-stone-500 dark:text-stone-400">
               No explicit permissions set. Document uses default access rules.
             </div>
           ) : (
@@ -226,26 +225,26 @@ export function DocumentPermissionsPanel({
                   key={perm.id}
                   className={`p-4 rounded-lg border ${
                     perm.revokedAt
-                      ? "bg-gray-50 border-gray-200 opacity-60"
-                      : "bg-white border-gray-200"
+                      ? "bg-stone-50 border-stone-200 dark:bg-stone-800 dark:border-stone-700 opacity-60"
+                      : "bg-white border-stone-200 dark:bg-stone-800/50 dark:border-stone-700"
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
                         {perm.userId ? (
-                          <User className="w-5 h-5 text-gray-500" />
+                          <User className="w-5 h-5 text-stone-500 dark:text-stone-400" />
                         ) : perm.departmentId ? (
-                          <Building2 className="w-5 h-5 text-gray-500" />
+                          <Building2 className="w-5 h-5 text-stone-500 dark:text-stone-400" />
                         ) : (
-                          <Shield className="w-5 h-5 text-gray-500" />
+                          <Shield className="w-5 h-5 text-stone-500 dark:text-stone-400" />
                         )}
                       </div>
                       <div>
                         <div className="font-medium">
                           {perm.userName || perm.departmentName || perm.roleName || "Unknown"}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-stone-500 dark:text-stone-400">
                           {perm.userId
                             ? perm.userEmail || "User"
                             : perm.departmentId
@@ -253,7 +252,7 @@ export function DocumentPermissionsPanel({
                             : "Role"}
                         </div>
                         {perm.notes && (
-                          <div className="text-xs text-gray-400 mt-1">{perm.notes}</div>
+                          <div className="text-xs text-stone-400 dark:text-stone-500 mt-1">{perm.notes}</div>
                         )}
                       </div>
                     </div>
@@ -298,7 +297,7 @@ export function DocumentPermissionsPanel({
                     {perm.appliesToChildren && <Badge variant="outline" className="text-xs">Inheritable</Badge>}
                   </div>
 
-                  <div className="mt-2 text-xs text-gray-400">
+                  <div className="mt-2 text-xs text-stone-400 dark:text-stone-500">
                     Granted {perm.grantedAt
                       ? formatDistanceToNow(new Date(perm.grantedAt), { addSuffix: true })
                       : "recently"}
@@ -316,27 +315,30 @@ export function DocumentPermissionsPanel({
 
           {/* Effective Permissions Summary */}
           {effectivePermissions && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <div className="font-medium text-blue-800 mb-2">Your Effective Permissions</div>
+            <div className="mt-6 p-4 bg-stone-50 dark:bg-stone-800/50 rounded-lg border border-stone-200 dark:border-stone-700">
+              <div className="font-medium text-accent-cyan mb-2 flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Your Effective Permissions
+              </div>
               <div className="flex flex-wrap gap-2">
-                <Badge>{effectivePermissions.highestPermissionLevel || "viewer"}</Badge>
-                {effectivePermissions.canView && <Badge variant="secondary">View</Badge>}
-                {effectivePermissions.canDownload && <Badge variant="secondary">Download</Badge>}
-                {effectivePermissions.canEdit && <Badge variant="secondary">Edit</Badge>}
-                {effectivePermissions.canDelete && <Badge variant="secondary">Delete</Badge>}
-                {effectivePermissions.canShare && <Badge variant="secondary">Share</Badge>}
-                {effectivePermissions.canComment && <Badge variant="secondary">Comment</Badge>}
-                {effectivePermissions.canManagePermissions && <Badge variant="secondary">Manage Permissions</Badge>}
+                <Badge className="bg-accent-cyan text-white">{effectivePermissions.highestPermissionLevel || "viewer"}</Badge>
+                {effectivePermissions.canView && <Badge variant="outline" className="border-accent-cyan/30 text-stone-700 dark:text-stone-300">View</Badge>}
+                {effectivePermissions.canDownload && <Badge variant="outline" className="border-accent-cyan/30 text-stone-700 dark:text-stone-300">Download</Badge>}
+                {effectivePermissions.canEdit && <Badge variant="outline" className="border-accent-cyan/30 text-stone-700 dark:text-stone-300">Edit</Badge>}
+                {effectivePermissions.canDelete && <Badge variant="outline" className="border-accent-cyan/30 text-stone-700 dark:text-stone-300">Delete</Badge>}
+                {effectivePermissions.canShare && <Badge variant="outline" className="border-accent-cyan/30 text-stone-700 dark:text-stone-300">Share</Badge>}
+                {effectivePermissions.canComment && <Badge variant="outline" className="border-accent-cyan/30 text-stone-700 dark:text-stone-300">Comment</Badge>}
+                {effectivePermissions.canManagePermissions && <Badge variant="outline" className="border-accent-cyan/30 text-stone-700 dark:text-stone-300">Manage Permissions</Badge>}
               </div>
               {effectivePermissions.sources && effectivePermissions.sources.length > 0 && (
-                <div className="mt-2 text-xs text-blue-600">
+                <div className="mt-2 text-xs text-accent-cyan">
                   Sources: {effectivePermissions.sources.map(s => s.sourceName || s.sourceType).join(", ")}
                 </div>
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Add Permission Dialog */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
@@ -409,7 +411,7 @@ export function DocumentPermissionsPanel({
                     <SelectItem key={level.value} value={level.value}>
                       <div>
                         <span className="font-medium">{level.label}</span>
-                        <span className="text-gray-500 ml-2 text-xs">{level.description}</span>
+                        <span className="text-stone-500 dark:text-stone-400 ml-2 text-xs">{level.description}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -420,7 +422,7 @@ export function DocumentPermissionsPanel({
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Apply to Children</Label>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-stone-500 dark:text-stone-400">
                   Permission inherits to sub-folders and documents
                 </div>
               </div>
@@ -506,7 +508,7 @@ export function DocumentPermissionsPanel({
                     <SelectItem key={level.value} value={level.value}>
                       <div>
                         <span className="font-medium">{level.label}</span>
-                        <span className="text-gray-500 ml-2 text-xs">{level.description}</span>
+                        <span className="text-stone-500 dark:text-stone-400 ml-2 text-xs">{level.description}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -517,7 +519,7 @@ export function DocumentPermissionsPanel({
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Apply to Children</Label>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-stone-500 dark:text-stone-400">
                   Permission inherits to sub-folders and documents
                 </div>
               </div>

@@ -20,7 +20,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Save, Loader2, FileText } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Save, Loader2, FileText, Trash2 } from "lucide-react";
 import type { Document, Folder, DocumentCategory } from "@/types/bms";
 
 interface EditMetadataModalProps {
@@ -28,6 +38,7 @@ interface EditMetadataModalProps {
   onClose: () => void;
   document: Document | null;
   onSave: (documentId: string, updates: Partial<Document>) => Promise<void>;
+  onDelete?: (documentId: string) => Promise<void>;
   folders?: Folder[];
   projects?: any[];
   departments?: any[];
@@ -39,6 +50,7 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
   onClose,
   document,
   onSave,
+  onDelete,
   folders = [],
   projects = [],
   departments = [],
@@ -55,6 +67,8 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
     propertyId: "" as string,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -414,6 +428,22 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Delete Document */}
+            {onDelete && document.id && (
+              <div className="border-t border-stone-200 dark:border-stone-700 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700 dark:hover:text-red-300"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isSubmitting || isDeleting}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Document
+                </Button>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
@@ -443,6 +473,47 @@ const EditMetadataModal: React.FC<EditMetadataModalProps> = ({
             </Button>
           </DialogFooter>
         </form>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Document</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <strong>{document.name}</strong>? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="!bg-red-600 hover:!bg-red-700 !text-white focus:ring-red-600"
+                disabled={isDeleting}
+                onClick={async () => {
+                  if (!document.id || !onDelete) return;
+                  setIsDeleting(true);
+                  try {
+                    await onDelete(document.id);
+                    setShowDeleteConfirm(false);
+                    onClose();
+                  } catch {
+                    setError("Failed to delete document");
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

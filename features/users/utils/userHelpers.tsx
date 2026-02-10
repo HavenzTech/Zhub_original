@@ -5,17 +5,17 @@
 export const getRoleBadgeColor = (role?: string | null) => {
   switch (role) {
     case "super_admin":
-      return "bg-purple-100 text-purple-800"
+      return "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-400"
     case "admin":
-      return "bg-blue-100 text-blue-800"
+      return "bg-accent-cyan/10 text-accent-cyan"
     case "dept_manager":
-      return "bg-teal-100 text-teal-800"
+      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
     case "project_lead":
-      return "bg-green-100 text-green-800"
+      return "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
     case "employee":
-      return "bg-gray-100 text-gray-800"
+      return "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300"
     default:
-      return "bg-gray-100 text-gray-800"
+      return "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300"
   }
 }
 

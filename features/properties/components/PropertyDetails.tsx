@@ -1,7 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MapPin, Building2, DollarSign, TrendingUp, Square, Calendar, Edit } from "lucide-react"
+import { MapPin, Building2, DollarSign, TrendingUp, Square, Calendar, Edit, ArrowLeft } from "lucide-react"
 import type { Property } from "@/types/bms"
 import { formatCurrency, formatDate, getStatusColor, getTypeIcon } from "../utils/propertyHelpers"
 
@@ -15,22 +14,23 @@ interface PropertyDetailsProps {
 export function PropertyDetails({ property, companyName, onBack, onEdit }: PropertyDetailsProps) {
   return (
     <div className="space-y-6">
-      <Button variant="ghost" onClick={onBack}>
-        ← Back to Properties
+      <Button variant="ghost" onClick={onBack} className="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-50">
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Properties
       </Button>
 
       {/* Property Header */}
-      <Card>
-        <CardContent className="p-6">
+      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+        <div className="p-6">
           <div className="flex items-start gap-6 mb-6">
-            <div className="w-20 h-20 bg-blue-100 rounded-xl flex items-center justify-center">
+            <div className="w-20 h-20 bg-accent-cyan/10 rounded-xl flex items-center justify-center">
               {getTypeIcon(property.type)}
             </div>
 
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{property.name}</h1>
+              <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50 mb-2">{property.name}</h1>
               {property.description && (
-                <p className="text-gray-600 mb-4">{property.description}</p>
+                <p className="text-stone-600 dark:text-stone-400 mb-4">{property.description}</p>
               )}
 
               <div className="flex gap-3 mb-4">
@@ -40,176 +40,168 @@ export function PropertyDetails({ property, companyName, onBack, onEdit }: Prope
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">Total Area:</span>
-                  <div className="font-medium">
+                  <span className="text-stone-500 dark:text-stone-400">Total Area:</span>
+                  <div className="font-medium text-stone-900 dark:text-stone-50">
                     {property.sizeTotalArea ? `${property.sizeTotalArea.toLocaleString()} sq ft` : 'N/A'}
                   </div>
                 </div>
                 <div>
-                  <span className="text-gray-600">Floors:</span>
-                  <div className="font-medium">{property.sizeFloors || 'N/A'}</div>
+                  <span className="text-stone-500 dark:text-stone-400">Floors:</span>
+                  <div className="font-medium text-stone-900 dark:text-stone-50">{property.sizeFloors || 'N/A'}</div>
                 </div>
                 <div>
-                  <span className="text-gray-600">Company:</span>
-                  <div className="font-medium">{companyName || 'N/A'}</div>
+                  <span className="text-stone-500 dark:text-stone-400">Company:</span>
+                  <div className="font-medium text-stone-900 dark:text-stone-50">{companyName || 'N/A'}</div>
                 </div>
               </div>
             </div>
 
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onEdit(property)}>
+              <Button variant="outline" onClick={() => onEdit(property)} className="border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-800">
                 <Edit className="w-4 h-4 mr-2" />
                 Edit
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <div className="text-lg font-bold text-gray-900">
-                  {formatCurrency(property.currentValue)}
-                </div>
-                <div className="text-sm text-gray-600">Current Value</div>
-              </div>
+        <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/30 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <div className="text-lg font-bold text-stone-900 dark:text-stone-50">
+                {formatCurrency(property.currentValue)}
+              </div>
+              <div className="text-sm text-stone-500 dark:text-stone-400">Current Value</div>
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <div className="text-lg font-bold text-gray-900">
-                  {formatCurrency(property.monthlyOperatingCosts)}
-                </div>
-                <div className="text-sm text-gray-600">Monthly Costs</div>
-              </div>
+        <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-accent-cyan/10 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-accent-cyan" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <div className="text-lg font-bold text-stone-900 dark:text-stone-50">
+                {formatCurrency(property.monthlyOperatingCosts)}
+              </div>
+              <div className="text-sm text-stone-500 dark:text-stone-400">Monthly Costs</div>
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Square className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <div className="text-lg font-bold text-gray-900">
-                  {property.sizeTotalArea ? property.sizeTotalArea.toLocaleString() : 'N/A'}
-                </div>
-                <div className="text-sm text-gray-600">Total Sq Ft</div>
-              </div>
+        <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-violet-100 dark:bg-violet-950/30 rounded-lg flex items-center justify-center">
+              <Square className="w-5 h-5 text-violet-600 dark:text-violet-400" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <div className="text-lg font-bold text-stone-900 dark:text-stone-50">
+                {property.sizeTotalArea ? property.sizeTotalArea.toLocaleString() : 'N/A'}
+              </div>
+              <div className="text-sm text-stone-500 dark:text-stone-400">Total Sq Ft</div>
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <div className="text-sm font-bold text-gray-900">{formatDate(property.createdAt)}</div>
-                <div className="text-sm text-gray-600">Created</div>
-              </div>
+        <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-100 dark:bg-amber-950/30 rounded-lg flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <div className="text-sm font-bold text-stone-900 dark:text-stone-50">{formatDate(property.createdAt)}</div>
+              <div className="text-sm text-stone-500 dark:text-stone-400">Created</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Location & Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+          <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700">
+            <h3 className="flex items-center gap-2 text-base font-semibold text-stone-900 dark:text-stone-50">
               <MapPin className="w-5 h-5" />
               Location
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+            </h3>
+          </div>
+          <div className="p-5 space-y-3">
             {property.locationAddress && (
               <div>
-                <span className="text-sm text-gray-600">Address:</span>
-                <div className="font-medium">{property.locationAddress}</div>
+                <span className="text-sm text-stone-500 dark:text-stone-400">Address:</span>
+                <div className="font-medium text-stone-900 dark:text-stone-50">{property.locationAddress}</div>
               </div>
             )}
             <div>
-              <span className="text-sm text-gray-600">City:</span>
-              <div className="font-medium">{property.locationCity || 'N/A'}</div>
+              <span className="text-sm text-stone-500 dark:text-stone-400">City:</span>
+              <div className="font-medium text-stone-900 dark:text-stone-50">{property.locationCity || 'N/A'}</div>
             </div>
             <div>
-              <span className="text-sm text-gray-600">Province:</span>
-              <div className="font-medium">{property.locationProvince || 'N/A'}</div>
+              <span className="text-sm text-stone-500 dark:text-stone-400">Province:</span>
+              <div className="font-medium text-stone-900 dark:text-stone-50">{property.locationProvince || 'N/A'}</div>
             </div>
             <div>
-              <span className="text-sm text-gray-600">Country:</span>
-              <div className="font-medium">{property.locationCountry || 'N/A'}</div>
+              <span className="text-sm text-stone-500 dark:text-stone-400">Country:</span>
+              <div className="font-medium text-stone-900 dark:text-stone-50">{property.locationCountry || 'N/A'}</div>
             </div>
             {property.locationPostalCode && (
               <div>
-                <span className="text-sm text-gray-600">Postal Code:</span>
-                <div className="font-medium">{property.locationPostalCode}</div>
+                <span className="text-sm text-stone-500 dark:text-stone-400">Postal Code:</span>
+                <div className="font-medium text-stone-900 dark:text-stone-50">{property.locationPostalCode}</div>
               </div>
             )}
             {(property.locationLatitude && property.locationLongitude) && (
               <div>
-                <span className="text-sm text-gray-600">Coordinates:</span>
-                <div className="font-medium font-mono text-xs">
+                <span className="text-sm text-stone-500 dark:text-stone-400">Coordinates:</span>
+                <div className="font-medium font-mono text-xs text-stone-900 dark:text-stone-50">
                   {property.locationLatitude.toFixed(6)}, {property.locationLongitude.toFixed(6)}
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+          <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700">
+            <h3 className="flex items-center gap-2 text-base font-semibold text-stone-900 dark:text-stone-50">
               <Building2 className="w-5 h-5" />
               Property Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </h3>
+          </div>
+          <div className="p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Property</span>
-              <span className="text-sm font-medium">{property.name || "N/A"}</span>
+              <span className="text-sm text-stone-500 dark:text-stone-400">Property</span>
+              <span className="text-sm font-medium text-stone-900 dark:text-stone-50">{property.name || "N/A"}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Company</span>
-              <span className="text-sm font-medium">{companyName || "N/A"}</span>
+              <span className="text-sm text-stone-500 dark:text-stone-400">Company</span>
+              <span className="text-sm font-medium text-stone-900 dark:text-stone-50">{companyName || "N/A"}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Type</span>
+              <span className="text-sm text-stone-500 dark:text-stone-400">Type</span>
               <Badge variant="secondary" className="capitalize">{property.type || 'N/A'}</Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Status</span>
+              <span className="text-sm text-stone-500 dark:text-stone-400">Status</span>
               <Badge className={getStatusColor(property.status)}>{property.status}</Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Created</span>
-              <span className="text-sm font-medium">{formatDate(property.createdAt)}</span>
+              <span className="text-sm text-stone-500 dark:text-stone-400">Created</span>
+              <span className="text-sm font-medium text-stone-900 dark:text-stone-50">{formatDate(property.createdAt)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Last Updated</span>
-              <span className="text-sm font-medium">{formatDate(property.updatedAt)}</span>
+              <span className="text-sm text-stone-500 dark:text-stone-400">Last Updated</span>
+              <span className="text-sm font-medium text-stone-900 dark:text-stone-50">{formatDate(property.updatedAt)}</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

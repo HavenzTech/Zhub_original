@@ -93,6 +93,41 @@ const config: Config = {
           DEFAULT: 'hsl(var(--info))',
           foreground: 'hsl(var(--info-foreground))',
         },
+        // Document status colors (from mockup design system)
+        'doc-status': {
+          draft: { DEFAULT: '#78716c', bg: '#f5f5f4' },
+          'pending-review': { DEFAULT: '#f59e0b', bg: '#fef3c7' },
+          approved: { DEFAULT: '#10b981', bg: '#dcfce7' },
+          published: { DEFAULT: '#3b82f6', bg: '#dbeafe' },
+          archived: { DEFAULT: '#6b7280', bg: '#e5e7eb' },
+          obsolete: { DEFAULT: '#991b1b', bg: '#fee2e2' },
+        },
+        // Document type colors
+        'doc-type': {
+          dwg: '#8b5cf6',
+          spec: '#3b82f6',
+          lease: '#10b981',
+          pol: '#f59e0b',
+          con: '#ef4444',
+          man: '#06b6d4',
+          cert: '#84cc16',
+          rfi: '#ec4899',
+          sub: '#14b8a6',
+          inv: '#f97316',
+        },
+        // Classification colors
+        classification: {
+          public: '#10b981',
+          internal: '#3b82f6',
+          confidential: '#f59e0b',
+          restricted: '#ef4444',
+        },
+        // Mockup accent (cyan)
+        'accent-cyan': {
+          DEFAULT: '#0891b2',
+          light: '#ecfeff',
+          dark: '#0e7490',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

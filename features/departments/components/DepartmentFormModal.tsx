@@ -6,6 +6,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,6 +29,12 @@ interface DepartmentFormData {
   budgetSpent: string
 }
 
+interface UserOption {
+  id: string
+  name: string
+  email: string
+}
+
 interface DepartmentFormModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -30,6 +43,7 @@ interface DepartmentFormModalProps {
   setFormData: (data: DepartmentFormData) => void
   isSubmitting: boolean
   onSubmit: (e: React.FormEvent) => void
+  users?: UserOption[]
 }
 
 export function DepartmentFormModal({
@@ -40,8 +54,24 @@ export function DepartmentFormModal({
   setFormData,
   isSubmitting,
   onSubmit,
+  users = [],
 }: DepartmentFormModalProps) {
   const isEditMode = mode === "edit"
+
+  const handleUserSelect = (userId: string) => {
+    if (userId === "manual") {
+      setFormData({ ...formData, headName: "", headEmail: "" })
+      return
+    }
+    const user = users.find((u) => u.id === userId)
+    if (user) {
+      setFormData({
+        ...formData,
+        headName: user.name,
+        headEmail: user.email,
+      })
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -90,19 +120,35 @@ export function DepartmentFormModal({
               />
             </div>
 
-            {/* Department Head Name */}
+            {/* Department Head */}
             <div className="grid gap-2">
-              <Label htmlFor={isEditMode ? "edit-headName" : "headName"}>
-                Department Head Name
-              </Label>
-              <Input
-                id={isEditMode ? "edit-headName" : "headName"}
-                value={formData.headName}
-                onChange={(e) =>
-                  setFormData({ ...formData, headName: e.target.value })
-                }
-                placeholder="Full name"
-              />
+              <Label>Department Head</Label>
+              {users.length > 0 ? (
+                <Select
+                  value={users.find((u) => u.name === formData.headName)?.id || "manual"}
+                  onValueChange={handleUserSelect}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a user..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manual">Select Department Head</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={formData.headName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, headName: e.target.value })
+                  }
+                  placeholder="Full name"
+                />
+              )}
             </div>
 
             {/* Head Email and Phone */}

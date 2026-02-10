@@ -36,15 +36,15 @@ export const formatDate = (dateString?: string | null) => {
 export const getStatusColor = (status?: string | null) => {
   switch (status) {
     case "active":
-      return "bg-green-100 text-green-800"
+      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
     case "inactive":
-      return "bg-gray-100 text-gray-800"
+      return "bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300"
     case "under-construction":
-      return "bg-blue-100 text-blue-800"
+      return "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400"
     case "maintenance":
-      return "bg-yellow-100 text-yellow-800"
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-400"
     default:
-      return "bg-gray-100 text-gray-800"
+      return "bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300"
   }
 }
 
@@ -55,20 +55,20 @@ export const getTypeIcon = (type?: string | null) => {
   switch (type) {
     case "office":
     case "office_building":
-      return <Building2 className="w-6 h-6 text-blue-600" />
+      return <Building2 className="w-6 h-6 text-accent-cyan" />
     case "warehouse":
-      return <Square className="w-6 h-6 text-orange-600" />
+      return <Square className="w-6 h-6 text-amber-600 dark:text-amber-400" />
     case "datacenter":
-      return <Server className="w-6 h-6 text-purple-600" />
+      return <Server className="w-6 h-6 text-violet-600 dark:text-violet-400" />
     case "residential":
-      return <Home className="w-6 h-6 text-green-600" />
+      return <Home className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
     case "industrial":
-      return <Factory className="w-6 h-6 text-red-600" />
+      return <Factory className="w-6 h-6 text-red-600 dark:text-red-400" />
     case "retail":
-      return <Store className="w-6 h-6 text-pink-600" />
+      return <Store className="w-6 h-6 text-pink-600 dark:text-pink-400" />
     case "power_plant":
-      return <Zap className="w-6 h-6 text-yellow-600" />
+      return <Zap className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
     default:
-      return <Building2 className="w-6 h-6 text-gray-600" />
+      return <Building2 className="w-6 h-6 text-accent-cyan" />
   }
 }
