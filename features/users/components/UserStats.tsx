@@ -1,15 +1,12 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import type { UserResponse } from "@/types/bms";
-import { Users, Shield, Building2, FolderOpen, UserCheck } from "lucide-react";
 
 interface UserStatsProps {
   users: UserResponse[];
 }
 
 export function UserStats({ users }: UserStatsProps) {
-  // Count by new role hierarchy
   const adminCount = users.filter(
     (u) => u.role === "admin" || u.role === "super_admin"
   ).length;
@@ -21,65 +18,22 @@ export function UserStats({ users }: UserStatsProps) {
   const employeeCount = users.filter((u) => u.role === "employee").length;
 
   return (
-    <div className="flex flex-row gap-4">
-      <StatCard
-        icon={<Users className="w-5 h-5 text-blue-600" />}
-        iconBg="bg-blue-100"
-        value={users.length.toString()}
-        label="Total Users"
-      />
-      <StatCard
-        icon={<Shield className="w-5 h-5 text-purple-600" />}
-        iconBg="bg-purple-100"
-        value={adminCount.toString()}
-        label="Admins"
-      />
-      <StatCard
-        icon={<Building2 className="w-5 h-5 text-teal-600" />}
-        iconBg="bg-teal-100"
-        value={deptManagerCount.toString()}
-        label="Dept Managers"
-      />
-      <StatCard
-        icon={<FolderOpen className="w-5 h-5 text-green-600" />}
-        iconBg="bg-green-100"
-        value={projectLeadCount.toString()}
-        label="Project Leads"
-      />
-      <StatCard
-        icon={<UserCheck className="w-5 h-5 text-gray-600" />}
-        iconBg="bg-gray-100"
-        value={employeeCount.toString()}
-        label="Employees"
-      />
-    </div>
-  );
-}
-
-function StatCard({
-  icon,
-  iconBg,
-  value,
-  label,
-}: {
-  icon: React.ReactNode;
-  iconBg: string;
-  value: string;
-  label: string;
-}) {
-  return (
-    <Card className="flex-1">
-      <CardContent className="p-3">
-        <div className="flex flex-col items-center text-center gap-2">
-          <div className={`w-10 h-10 ${iconBg} rounded-lg flex items-center justify-center`}>
-            {icon}
-          </div>
-          <div>
-            <div className="text-xl font-bold text-gray-900">{value}</div>
-            <div className="text-xs text-gray-600">{label}</div>
-          </div>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      {[
+        { label: "Total Users", value: users.length.toString(), color: "text-blue-500" },
+        { label: "Admins", value: adminCount.toString(), color: "text-violet-500" },
+        { label: "Dept Managers", value: deptManagerCount.toString(), color: "text-cyan-500" },
+        { label: "Project Leads", value: projectLeadCount.toString(), color: "text-emerald-500" },
+        { label: "Employees", value: employeeCount.toString(), color: "text-amber-500" },
+      ].map((stat) => (
+        <div
+          key={stat.label}
+          className="p-5 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700"
+        >
+          <div className="text-sm text-stone-500 dark:text-stone-400 mb-2">{stat.label}</div>
+          <div className={`text-3xl font-semibold ${stat.color}`}>{stat.value}</div>
         </div>
-      </CardContent>
-    </Card>
+      ))}
+    </div>
   );
 }

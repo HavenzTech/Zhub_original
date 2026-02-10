@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import dynamic from "next/dynamic"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+// Card replaced with plain divs for consistent styling
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TaskList } from "./TaskList"
@@ -210,11 +210,11 @@ export function ProjectTasksSection({
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+      <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <CheckSquare className="w-5 h-5 text-gray-500" />
-          <CardTitle className="text-lg font-medium">Tasks</CardTitle>
+          <CheckSquare className="w-5 h-5 text-stone-500 dark:text-stone-400" />
+          <h3 className="text-base font-semibold text-stone-900 dark:text-stone-50">Tasks</h3>
           {totalCount > 0 && (
             <Badge variant="secondary">
               {completedCount}/{totalCount} ({progressPercent}%)
@@ -226,17 +226,17 @@ export function ProjectTasksSection({
             <RefreshCw className={`w-4 h-4 ${loadingData ? "animate-spin" : ""}`} />
           </Button>
           {canCreate && (
-            <Button size="sm" onClick={() => setShowAddForm(true)}>
+            <Button size="sm" onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
               <Plus className="w-4 h-4 mr-1" />
               Add Task
             </Button>
           )}
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div className="p-5">
         {loadingData && tasks.length === 0 ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-stone-400 dark:text-stone-500" />
           </div>
         ) : (
           <TaskList
@@ -314,7 +314,7 @@ export function ProjectTasksSection({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

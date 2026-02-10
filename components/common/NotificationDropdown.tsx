@@ -135,8 +135,8 @@ export function NotificationDropdown() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="w-4 h-4" />
+        <Button variant="ghost" size="icon" className="relative h-auto w-auto p-1 text-stone-500 hover:text-stone-300 hover:bg-transparent">
+          <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
               {unreadCount > 99 ? "99+" : unreadCount}
@@ -144,15 +144,15 @@ export function NotificationDropdown() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-80 bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700">
         {/* Header */}
-        <div className="flex items-center justify-between px-3 py-2 border-b">
-          <span className="font-semibold text-sm">Notifications</span>
+        <div className="flex items-center justify-between px-3 py-2 border-b border-stone-200 dark:border-stone-700">
+          <span className="font-semibold text-sm text-stone-900 dark:text-stone-50">Notifications</span>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs text-blue-600 hover:text-blue-800"
+              className="h-7 text-xs text-accent-cyan hover:text-accent-cyan/80 hover:bg-accent-cyan/10"
               onClick={handleMarkAllAsRead}
             >
               <CheckCheck className="w-3 h-3 mr-1" />
@@ -165,47 +165,49 @@ export function NotificationDropdown() {
         <div className="max-h-96 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+              <Loader2 className="w-5 h-5 animate-spin text-accent-cyan" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="py-8 text-center text-gray-500 text-sm">
-              <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-              <p>No notifications yet</p>
+            <div className="py-8 text-center text-sm">
+              <Bell className="w-8 h-8 mx-auto mb-2 text-stone-300 dark:text-stone-600" />
+              <p className="text-stone-500 dark:text-stone-400">No notifications yet</p>
             </div>
           ) : (
             notifications.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
                 className={`flex items-start gap-3 p-3 cursor-pointer ${
-                  !notification.isRead ? "bg-blue-50" : ""
+                  !notification.isRead
+                    ? "bg-accent-cyan/5 dark:bg-accent-cyan/10"
+                    : ""
                 }`}
                 onClick={() => handleNotificationClick(notification)}
               >
                 <Avatar className="w-8 h-8 flex-shrink-0">
                   <AvatarImage src={notification.actorUserPictureUrl || undefined} />
-                  <AvatarFallback className="text-xs">
+                  <AvatarFallback className="text-xs bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300">
                     {getInitials(notification.actorUserName)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p
-                    className={`text-sm leading-tight ${
+                    className={`text-sm leading-tight text-stone-900 dark:text-stone-50 ${
                       !notification.isRead ? "font-medium" : ""
                     }`}
                   >
                     {notification.title}
                   </p>
                   {notification.body && (
-                    <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
+                    <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-2">
                       {notification.body}
                     </p>
                   )}
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
                     {notification.relativeTime || "Just now"}
                   </p>
                 </div>
                 {!notification.isRead && (
-                  <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5" />
+                  <div className="w-2 h-2 bg-accent-cyan rounded-full flex-shrink-0 mt-1.5" />
                 )}
               </DropdownMenuItem>
             ))

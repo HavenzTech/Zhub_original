@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -87,20 +86,20 @@ export function DocumentVersionHistory({
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+        <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-stone-900 dark:text-stone-50">
             <History className="w-5 h-5" />
             Version History
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="p-5">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-stone-400 dark:text-stone-500" />
             </div>
           ) : versions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-stone-500 dark:text-stone-400">
               No version history available
             </div>
           ) : (
@@ -110,20 +109,20 @@ export function DocumentVersionHistory({
                   key={version.versionNumber}
                   className={`flex items-center justify-between p-3 rounded-lg border ${
                     version.versionNumber === currentVersion
-                      ? "bg-blue-50 border-blue-200"
-                      : "bg-gray-50 border-gray-200"
+                      ? "bg-accent-cyan/5 border-accent-cyan/30 dark:bg-accent-cyan/10 dark:border-accent-cyan/20"
+                      : "bg-stone-50 border-stone-200 dark:bg-stone-800 dark:border-stone-700"
                   }`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">v{version.versionNumber}</span>
                       {version.versionNumber === currentVersion && (
-                        <Badge className="bg-blue-100 text-blue-800 text-xs">
+                        <Badge className="bg-accent-cyan/10 text-accent-cyan text-xs">
                           Current
                         </Badge>
                       )}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="text-sm text-stone-500 dark:text-stone-400 mt-1">
                       {version.uploadedByUserName || "Unknown"} •{" "}
                       {version.uploadedAt
                         ? formatDistanceToNow(new Date(version.uploadedAt), {
@@ -132,11 +131,11 @@ export function DocumentVersionHistory({
                         : "Unknown date"}
                     </div>
                     {version.changeSummary && (
-                      <div className="text-sm text-gray-500 mt-1">
+                      <div className="text-sm text-stone-500 dark:text-stone-400 mt-1">
                         {version.changeSummary}
                       </div>
                     )}
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-stone-400 dark:text-stone-500 mt-1">
                       {formatFileSize(version.fileSizeBytes)}
                     </div>
                   </div>
@@ -162,8 +161,8 @@ export function DocumentVersionHistory({
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Restore Confirmation Dialog */}
       <Dialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>

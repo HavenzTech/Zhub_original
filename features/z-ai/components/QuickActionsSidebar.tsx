@@ -1,11 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Shield,
   Search,
   TrendingUp,
   Globe,
-  AlertTriangle,
-  FileText,
 } from "lucide-react"
 import { getQuickActions, type QuickAction } from "../utils/chatHelpers"
 
@@ -17,101 +14,59 @@ export function QuickActionsSidebar({ onQuickAction }: QuickActionsSidebarProps)
   const quickActions = getQuickActions()
 
   return (
-    <div className="w-80 bg-gray-50 border-l border-gray-200 p-4">
-      <h3 className="font-semibold text-gray-900 mb-4">Quick Actions</h3>
+    <div className="w-80 bg-white dark:bg-stone-900 border-l border-stone-200 dark:border-stone-700 p-4 overflow-y-auto">
+      <h3 className="font-semibold text-stone-900 dark:text-stone-50 mb-4">Quick Actions</h3>
 
       <div className="space-y-3 mb-6">
         {quickActions.map((action, index) => (
-          <Card
+          <div
             key={index}
-            className="cursor-pointer hover:shadow-md transition-shadow"
+            className="cursor-pointer bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-accent-cyan/40 hover:shadow-md transition-all"
             onClick={() => onQuickAction(action.prompt)}
           >
-            <CardContent className="p-4">
+            <div className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <action.icon className="w-4 h-4 text-blue-600" />
+                <div className="w-8 h-8 bg-accent-cyan/10 rounded-lg flex items-center justify-center">
+                  <action.icon className="w-4 h-4 text-accent-cyan" />
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 text-sm">
+                  <h4 className="font-medium text-stone-900 dark:text-stone-50 text-sm">
                     {action.title}
                   </h4>
-                  <p className="text-xs text-gray-600">{action.description}</p>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">{action.description}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Recent Insights */}
-      <div className="mb-6">
-        <h4 className="font-medium text-gray-900 mb-3">Recent Insights</h4>
-        <div className="space-y-2">
-          <div className="p-3 bg-white rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-3 h-3 text-green-600" />
-              <span className="text-xs font-medium text-gray-900">
-                Revenue Growth
-              </span>
-            </div>
-            <p className="text-xs text-gray-600">
-              AHI Red Deer showing 15% increase this quarter
-            </p>
-          </div>
-
-          <div className="p-3 bg-white rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2 mb-1">
-              <AlertTriangle className="w-3 h-3 text-orange-600" />
-              <span className="text-xs font-medium text-gray-900">
-                Contract Alert
-              </span>
-            </div>
-            <p className="text-xs text-gray-600">
-              3 contracts expiring within 30 days
-            </p>
-          </div>
-
-          <div className="p-3 bg-white rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2 mb-1">
-              <FileText className="w-3 h-3 text-blue-600" />
-              <span className="text-xs font-medium text-gray-900">
-                Document Activity
-              </span>
-            </div>
-            <p className="text-xs text-gray-600">
-              47 new uploads this week across all companies
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Z AI Capabilities */}
-      <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm text-blue-900">
+      <div className="bg-stone-50 dark:bg-stone-800/50 rounded-xl border border-stone-200 dark:border-stone-700">
+        <div className="px-4 py-3 border-b border-stone-200 dark:border-stone-700">
+          <h4 className="text-sm font-semibold text-stone-900 dark:text-stone-50">
             Z AI Capabilities
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-xs text-blue-800 space-y-2">
+          </h4>
+        </div>
+        <div className="p-4 text-xs text-stone-600 dark:text-stone-400 space-y-2.5">
           <div className="flex items-center gap-2">
-            <Shield className="w-3 h-3" />
+            <Shield className="w-3 h-3 text-accent-cyan" />
             <span>Encryption-secured processing</span>
           </div>
           <div className="flex items-center gap-2">
-            <Search className="w-3 h-3" />
+            <Search className="w-3 h-3 text-accent-cyan" />
             <span>Smart document search</span>
           </div>
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-3 h-3" />
+            <TrendingUp className="w-3 h-3 text-accent-cyan" />
             <span>Predictive analytics</span>
           </div>
           <div className="flex items-center gap-2">
-            <Globe className="w-3 h-3" />
+            <Globe className="w-3 h-3 text-accent-cyan" />
             <span>External research (secure)</span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

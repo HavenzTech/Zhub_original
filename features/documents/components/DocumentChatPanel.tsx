@@ -3,13 +3,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Document } from "@/types/bms";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { bmsApi } from "@/lib/services/bmsApi";
 import {
-  MessageCircle,
   Send,
   Sparkles,
   Loader2,
@@ -44,6 +42,7 @@ export default function DocumentChatPanel({
   const [loading, setLoading] = useState(false);
   const [deepAnalysis, setDeepAnalysis] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -192,82 +191,65 @@ export default function DocumentChatPanel({
 
   if (!document) {
     return (
-      <Card className="h-full">
-        <CardContent className="flex items-center justify-center h-full p-12">
-          <div className="text-center">
-            <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No document selected
-            </h3>
-            <p className="text-sm text-gray-500">
-              Select a document to start chatting about it
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex h-full flex-col items-center justify-center p-8">
+        <Sparkles className="h-10 w-10 text-stone-300 dark:text-stone-600 mb-3" />
+        <h3 className="text-sm font-medium text-stone-500 dark:text-stone-400 mb-1">
+          AI Assistant
+        </h3>
+        <p className="text-xs text-stone-400 dark:text-stone-500 text-center">
+          Select a document to start chatting about it
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="flex flex-col border rounded-lg bg-white" style={{ height: '95vh', maxHeight: '95vh', overflow: 'hidden' }}>
-      <div className="pb-3 p-4 border-b flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="w-5 h-5 text-blue-600" />
-            <h3 className="text-base font-semibold">Ask about this document</h3>
-          </div>
-          <Badge variant="secondary" className="text-xs">
-            <Sparkles className="w-3 h-3 mr-1" />
-            AI Powered
-          </Badge>
+    <div className="flex h-full flex-col overflow-hidden bg-white dark:bg-stone-900">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3 dark:border-stone-700">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-accent-cyan" />
+          <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">
+            AI Assistant
+          </span>
         </div>
+        <Badge variant="secondary" className="text-[10px]">
+          AI Powered
+        </Badge>
       </div>
 
-      {/* Messages Area - with explicit height and scrolling */}
-      <style jsx>{`
-        .chat-messages::-webkit-scrollbar {
-          width: 8px;
-        }
-        .chat-messages::-webkit-scrollbar-track {
-          background: #f1f1f1;
-        }
-        .chat-messages::-webkit-scrollbar-thumb {
-          background: #888;
-          border-radius: 4px;
-        }
-        .chat-messages::-webkit-scrollbar-thumb:hover {
-          background: #555;
-        }
-      `}</style>
+      {/* Messages Area */}
       <div
-        className="chat-messages overflow-y-auto px-4 pt-4 pb-2"
+        className="scrollbar-modern flex-1 overflow-y-auto px-4 pt-4 pb-2"
         ref={scrollRef}
-        style={{ flex: '1 1 0', minHeight: 0, overflow: 'auto' }}
+        style={{ minHeight: 0 }}
       >
         <div className="space-y-4 pb-2">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 ${
+              className={`flex gap-2.5 ${
                 message.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
               {message.role === "assistant" && (
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-5 h-5 text-blue-600" />
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-cyan/10">
+                  <Bot className="h-4 w-4 text-accent-cyan" />
                 </div>
               )}
 
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
+                className={`max-w-[85%] rounded-xl px-4 py-2.5 ${
                   message.role === "user"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-900"
+                    ? "bg-accent-cyan text-white"
+                    : "bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-50"
                 }`}
                 style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
               >
-                <p className="text-sm whitespace-pre-wrap" style={{ wordBreak: 'break-word' }}>{message.content}</p>
-                <span className="text-xs opacity-70 mt-1 block">
+                <p className="whitespace-pre-wrap text-[13px] leading-relaxed" style={{ wordBreak: 'break-word' }}>
+                  {message.content}
+                </p>
+                <span className="mt-1 block text-[10px] opacity-60">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -276,20 +258,20 @@ export default function DocumentChatPanel({
               </div>
 
               {message.role === "user" && (
-                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                  <User className="w-5 h-5 text-gray-600" />
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-stone-200 dark:bg-stone-700">
+                  <User className="h-4 w-4 text-stone-600 dark:text-stone-300" />
                 </div>
               )}
             </div>
           ))}
 
           {loading && (
-            <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-5 h-5 text-blue-600" />
+            <div className="flex gap-2.5 justify-start">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-cyan/10">
+                <Bot className="h-4 w-4 text-accent-cyan" />
               </div>
-              <div className="bg-gray-100 rounded-lg p-3">
-                <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
+              <div className="rounded-xl bg-stone-100 px-3.5 py-2.5 dark:bg-stone-800">
+                <Loader2 className="h-4 w-4 animate-spin text-stone-500" />
               </div>
             </div>
           )}
@@ -298,18 +280,18 @@ export default function DocumentChatPanel({
 
       {/* Quick Actions */}
       {messages.length <= 1 && (
-        <div className="px-4 py-2 border-t bg-gray-50 flex-shrink-0">
-          <p className="text-xs text-gray-600 mb-2">Quick actions:</p>
-          <div className="flex gap-2 flex-wrap">
+        <div className="border-t border-stone-200 bg-stone-50 px-4 py-2.5 dark:border-stone-700 dark:bg-stone-800/50">
+          <p className="mb-2 text-[11px] text-stone-500 dark:text-stone-400">Quick actions:</p>
+          <div className="flex flex-wrap gap-1.5">
             {quickActions.map((action) => (
               <Button
                 key={action.label}
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickAction(action.query)}
-                className="text-xs"
+                className="h-7 text-[11px] border-stone-300 text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:border-stone-600 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-200"
               >
-                <Sparkles className="w-3 h-3 mr-1" />
+                <Sparkles className="mr-1 h-3 w-3 text-accent-cyan" />
                 {action.label}
               </Button>
             ))}
@@ -318,15 +300,32 @@ export default function DocumentChatPanel({
       )}
 
       {/* Input Area */}
-      <div className="p-4 border-t flex-shrink-0">
-        <div className="flex gap-2">
-          <Input
+      <div className="border-t border-stone-200 p-3 dark:border-stone-700">
+        <div className="flex items-end gap-2">
+          <Textarea
+            ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && !loading && handleSend()}
-            placeholder="Ask about this document..."
+            onChange={(e) => {
+              setInput(e.target.value);
+              // Auto-grow
+              const el = e.target;
+              el.style.height = "auto";
+              el.style.height = Math.min(el.scrollHeight + 2, window.innerHeight / 3) + "px";
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !loading) {
+                e.preventDefault();
+                handleSend();
+                // Reset height after sending
+                if (textareaRef.current) {
+                  textareaRef.current.style.height = "auto";
+                }
+              }
+            }}
+            placeholder="Ask about documents..."
             disabled={loading}
-            className="flex-1"
+            rows={1}
+            className="flex-1 text-[13px] min-h-[36px] max-h-[33vh] resize-none border-stone-300 bg-white text-stone-900 placeholder:text-stone-400 focus-visible:ring-accent-cyan dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50 dark:placeholder:text-stone-500"
           />
           <TooltipProvider>
             <Tooltip>
@@ -336,12 +335,12 @@ export default function DocumentChatPanel({
                   size="icon"
                   onClick={() => setDeepAnalysis(!deepAnalysis)}
                   disabled={loading}
-                  className={deepAnalysis ? "bg-purple-600 hover:bg-purple-700" : ""}
+                  className={`h-9 w-9 ${deepAnalysis ? "bg-accent-cyan hover:bg-accent-cyan/90 text-white" : "border-stone-300 text-stone-500 hover:bg-stone-100 hover:text-stone-700 dark:border-stone-600 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-200"}`}
                 >
                   {deepAnalysis ? (
-                    <Search className="w-4 h-4" />
+                    <Search className="h-3.5 w-3.5" />
                   ) : (
-                    <Zap className="w-4 h-4" />
+                    <Zap className="h-3.5 w-3.5" />
                   )}
                 </Button>
               </TooltipTrigger>
@@ -351,7 +350,7 @@ export default function DocumentChatPanel({
                     ? "Deep Analysis: 50 pages (slower, more thorough)"
                     : "Quick Analysis: 30 pages (faster)"}
                 </p>
-                <p className="text-xs text-gray-400">Click to toggle</p>
+                <p className="text-xs text-stone-400">Click to toggle</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -359,32 +358,33 @@ export default function DocumentChatPanel({
             onClick={handleSend}
             disabled={loading || !input.trim()}
             size="icon"
+            className="h-9 w-9 bg-accent-cyan hover:bg-accent-cyan/90"
           >
             {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Send className="w-4 h-4" />
+              <Send className="h-3.5 w-3.5" />
             )}
           </Button>
         </div>
-        <div className="flex justify-between items-center mt-2">
-          <p className="text-xs text-gray-500">
-            Currently viewing:{" "}
+        <div className="mt-2 flex items-center justify-between">
+          <p className="truncate text-[11px] text-stone-500 dark:text-stone-400">
+            Viewing:{" "}
             <span className="font-medium">{document.name}</span>
           </p>
           <Badge
             variant={deepAnalysis ? "default" : "secondary"}
-            className={`text-xs ${deepAnalysis ? "bg-purple-100 text-purple-700" : ""}`}
+            className={`text-[10px] ${deepAnalysis ? "bg-accent-cyan/10 text-accent-cyan" : ""}`}
           >
             {deepAnalysis ? (
               <>
-                <Search className="w-3 h-3 mr-1" />
-                Deep (50 pages)
+                <Search className="mr-1 h-2.5 w-2.5" />
+                Deep
               </>
             ) : (
               <>
-                <Zap className="w-3 h-3 mr-1" />
-                Quick (30 pages)
+                <Zap className="mr-1 h-2.5 w-2.5" />
+                Quick
               </>
             )}
           </Badge>

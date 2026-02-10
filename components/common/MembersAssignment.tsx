@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -148,21 +147,21 @@ export function MembersAssignment({
   const usersToAdd = availableUsers.filter((u) => !memberUserIds.has(u.id));
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+      <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700">
+        <h3 className="flex items-center gap-2 text-base font-semibold text-stone-900 dark:text-stone-50">
           <Users className="w-5 h-5" />
           Members
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </h3>
+      </div>
+      <div className="p-5 space-y-4">
         {/* Add Member Form */}
         <div className="flex gap-2">
           <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="flex-1 border-stone-300 bg-white text-stone-900 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50">
               <SelectValue placeholder="Select a user to add..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800">
               {usersToAdd.length === 0 ? (
                 <SelectItem value="_none" disabled>
                   No users available
@@ -177,17 +176,17 @@ export function MembersAssignment({
             </SelectContent>
           </Select>
           <Select value={selectedRole} onValueChange={setSelectedRole}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-32 border-stone-300 bg-white text-stone-900 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800">
               <SelectItem value="employee">Employee</SelectItem>
               <SelectItem value="project_lead">Project Lead</SelectItem>
               <SelectItem value="dept_manager">Dept Manager</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={handleAddMember} disabled={adding || !selectedUserId}>
+          <Button onClick={handleAddMember} disabled={adding || !selectedUserId} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
             {adding ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
@@ -199,11 +198,11 @@ export function MembersAssignment({
         {/* Members List */}
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-stone-400 dark:text-stone-500" />
           </div>
         ) : members.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Users className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+          <div className="text-center py-8 text-stone-500 dark:text-stone-400">
+            <Users className="w-8 h-8 mx-auto mb-2 text-stone-300 dark:text-stone-600" />
             <p>No members assigned yet</p>
           </div>
         ) : (
@@ -211,20 +210,20 @@ export function MembersAssignment({
             {members.map((member) => (
               <div
                 key={member.userId}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-stone-50 dark:bg-stone-800/50 rounded-lg border border-stone-200 dark:border-stone-700"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-blue-600">
+                  <div className="w-8 h-8 bg-accent-cyan/10 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-accent-cyan">
                       {(member.userName || member.userEmail || "U")[0].toUpperCase()}
                     </span>
                   </div>
                   <div>
-                    <div className="font-medium text-sm">
+                    <div className="font-medium text-sm text-stone-900 dark:text-stone-50">
                       {member.userName || member.userEmail || member.userId}
                     </div>
                     {member.userEmail && member.userName && (
-                      <div className="text-xs text-gray-500">{member.userEmail}</div>
+                      <div className="text-xs text-stone-500 dark:text-stone-400">{member.userEmail}</div>
                     )}
                   </div>
                 </div>
@@ -238,7 +237,7 @@ export function MembersAssignment({
                     variant="ghost"
                     size="sm"
                     onClick={() => setRemovingMember(member)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -277,7 +276,7 @@ export function MembersAssignment({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

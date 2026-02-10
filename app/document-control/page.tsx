@@ -1,27 +1,51 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
-import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
 import { useDocuments } from "@/lib/hooks/useDocuments";
-import { DocumentDetails } from "@/features/documents/components/DocumentDetails";
-import { DocumentStats } from "@/features/documents/components/DocumentStats";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
-import { Document, Folder, UserResponse, DocumentTypeDto, DocumentSearchRequest, DocumentSearchResults, DocumentSearchResult } from "@/types/bms";
+import {
+  Document,
+  Folder,
+  UserResponse,
+  DocumentTypeDto,
+  DocumentSearchRequest,
+  DocumentSearchResults,
+  DocumentSearchResult,
+} from "@/types/bms";
 import { toast } from "sonner";
 import FolderTreeView from "@/features/documents/components/FolderTreeView";
-import { DocumentSearchBar } from "@/features/documents/components/search/DocumentSearchBar";
-import { DocumentFilterPanel } from "@/features/documents/components/search/DocumentFilterPanel";
-import { Upload, Plus, RefreshCw, Search, FileText, SlidersHorizontal } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import DocumentPreview from "@/features/documents/components/DocumentPreview";
+import DocumentChatPanel from "@/features/documents/components/DocumentChatPanel";
+import {
+  Upload,
+  Plus,
+  FolderPlus,
+  RefreshCw,
+  Search,
+  FileText,
+  SlidersHorizontal,
+  X,
+  Clock,
+  Edit as EditIcon,
+} from "lucide-react";
 import { useDocumentSearch } from "@/lib/hooks/useDocumentSearch";
-import type { UploadFormData, UserAccess } from "@/features/documents/components/UploadDocumentModal";
+import { useDocumentWorkflow } from "@/lib/hooks/useDocumentWorkflow";
+import { DocumentVersionHistory } from "@/features/documents/components/versions/DocumentVersionHistory";
+import { DocumentSharePanel } from "@/features/documents/components/sharing/DocumentSharePanel";
+import { DocumentPermissionsPanel } from "@/features/documents/components/permissions/DocumentPermissionsPanel";
+import { WorkflowTimeline } from "@/features/documents/components/workflow/WorkflowTimeline";
+import { WorkflowStatusBadge } from "@/features/documents/components/workflow/WorkflowStatusBadge";
+import { ClassificationBadge } from "@/components/ui/classification-badge";
+import type {
+  UploadFormData,
+  UserAccess,
+} from "@/features/documents/components/UploadDocumentModal";
 
 const UploadDocumentModal = dynamic(
   () =>
@@ -38,10 +62,29 @@ const EditMetadataModal = dynamic(
   () => import("@/features/documents/components/EditMetadataModal"),
   { ssr: false }
 );
-const DocumentViewModal = dynamic(
-  () => import("@/features/documents/components/DocumentViewModal"),
-  { ssr: false }
-);
+
+const formatFileSize = (bytes?: number | null): string => {
+  if (!bytes) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  let size = bytes;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex++;
+  }
+  return `${size.toFixed(1)} ${units[unitIndex]}`;
+};
+
+const formatDate = (date?: string | null): string => {
+  if (!date) return "N/A";
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const initialFormData: UploadFormData = {
   name: "",
@@ -71,16 +114,16 @@ export default function DocumentControlPage() {
   const [departments, setDepartments] = useState<
     { id: string; name: string }[]
   >([]);
-  const [users, setUsers] = useState<{ id: string; name: string; email: string }[]>([]);
-  const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
+  const [users, setUsers] = useState<
+    { id: string; name: string; email: string }[]
+  >([]);
+  const [properties, setProperties] = useState<
+    { id: string; name: string }[]
+  >([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentTypeDto[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(
-    null
-  );
   const [selectedDocumentForModal, setSelectedDocumentForModal] =
     useState<Document | null>(null);
-  const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
   const [parentFolderForCreation, setParentFolderForCreation] = useState<
@@ -93,11 +136,36 @@ export default function DocumentControlPage() {
     null
   );
   const [formData, setFormData] = useState<UploadFormData>(initialFormData);
+  const [activeTab, setActiveTab] = useState("preview");
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const dragCounter = React.useRef(0);
+
+  // Workflow hook for inline workflow tab
+  const {
+    currentWorkflow,
+    loading: workflowLoading,
+    loadWorkflowStatus,
+  } = useDocumentWorkflow(selectedDocumentForModal?.id || "");
 
   // Search state
-  const { results: searchResults, loading: searchLoading, search, clearResults } = useDocumentSearch();
-  const [showSearch, setShowSearch] = useState(false);
+  const {
+    results: searchResults,
+    loading: searchLoading,
+    search,
+    clearResults,
+  } = useDocumentSearch();
+  const [searchQuery, setSearchQuery] = useState("");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterClassification, setFilterClassification] = useState("");
+
+  const activeFilterCount = [filterStatus, filterClassification].filter(
+    Boolean
+  ).length;
+
+  // ──────────────────────────────────────────────
+  // Data loading
+  // ──────────────────────────────────────────────
 
   const loadFolders = useCallback(async () => {
     try {
@@ -111,7 +179,6 @@ export default function DocumentControlPage() {
   const loadProjects = useCallback(async () => {
     try {
       const response = await bmsApi.projects.getAll();
-      // Handle both array and paginated response formats
       const data = Array.isArray(response)
         ? response
         : (response as any)?.items || (response as any)?.data || [];
@@ -124,7 +191,6 @@ export default function DocumentControlPage() {
   const loadDepartments = useCallback(async () => {
     try {
       const response = await bmsApi.departments.getAll();
-      // Handle both array and paginated response formats
       const data = Array.isArray(response)
         ? response
         : (response as any)?.items || (response as any)?.data || [];
@@ -137,7 +203,6 @@ export default function DocumentControlPage() {
   const loadUsers = useCallback(async () => {
     try {
       const response = await bmsApi.users.getAll();
-      // Handle both array and paginated response formats
       const data = Array.isArray(response)
         ? response
         : (response as any)?.items || (response as any)?.data || [];
@@ -156,7 +221,6 @@ export default function DocumentControlPage() {
   const loadProperties = useCallback(async () => {
     try {
       const response = await bmsApi.properties.getAll();
-      // Handle both array and paginated response formats
       const data = Array.isArray(response)
         ? response
         : (response as any)?.items || (response as any)?.data || [];
@@ -169,7 +233,6 @@ export default function DocumentControlPage() {
   const loadDocumentTypes = useCallback(async () => {
     try {
       const response = await bmsApi.admin.documentTypes.list();
-      // Handle both array and paginated response formats
       const data = Array.isArray(response)
         ? response
         : (response as any)?.items || (response as any)?.data || [];
@@ -199,7 +262,32 @@ export default function DocumentControlPage() {
     loadUsers();
     loadProperties();
     loadDocumentTypes();
-  }, [router, loadDocuments, loadFolders, loadProjects, loadDepartments, loadUsers, loadProperties, loadDocumentTypes]);
+  }, [
+    router,
+    loadDocuments,
+    loadFolders,
+    loadProjects,
+    loadDepartments,
+    loadUsers,
+    loadProperties,
+    loadDocumentTypes,
+  ]);
+
+  // Reset tab when a different document is selected
+  useEffect(() => {
+    setActiveTab("preview");
+  }, [selectedDocumentForModal?.id]);
+
+  // Load workflow when workflow tab is opened
+  useEffect(() => {
+    if (selectedDocumentForModal?.id && activeTab === "workflow") {
+      loadWorkflowStatus();
+    }
+  }, [selectedDocumentForModal?.id, activeTab, loadWorkflowStatus]);
+
+  // ──────────────────────────────────────────────
+  // Handlers
+  // ──────────────────────────────────────────────
 
   const findFolderById = (
     folderId: string,
@@ -227,14 +315,12 @@ export default function DocumentControlPage() {
     templateId?: string
   ) => {
     try {
-      // Create the folder first
-      const folder = await bmsApi.folders.create({
+      const folder = (await bmsApi.folders.create({
         name,
         description,
         parentFolderId: parentFolderId || undefined,
-      }) as { id?: string };
+      })) as { id?: string };
 
-      // If a template is selected, apply it to the newly created folder
       if (templateId && folder?.id) {
         try {
           await bmsApi.folders.createFromTemplate({
@@ -245,10 +331,12 @@ export default function DocumentControlPage() {
           });
           toast.success(`Folder "${name}" created with template structure!`);
         } catch (templateErr) {
-          // Folder was created but template failed - still notify user
           toast.success(`Folder "${name}" created successfully!`);
           toast.error("Failed to apply template structure", {
-            description: templateErr instanceof Error ? templateErr.message : "Template application failed",
+            description:
+              templateErr instanceof Error
+                ? templateErr.message
+                : "Template application failed",
           });
         }
       } else {
@@ -290,10 +378,15 @@ export default function DocumentControlPage() {
       await bmsApi.documents.delete(documentId);
       toast.success("Document deleted successfully");
       setDocuments((prev) => prev.filter((d) => d.id !== documentId));
+      if (selectedDocumentForModal?.id === documentId) {
+        setSelectedDocumentForModal(null);
+      }
       await loadFolders();
     } catch (err) {
       const errorMessage =
-        err instanceof BmsApiError ? err.message : "Failed to delete document";
+        err instanceof BmsApiError
+          ? err.message
+          : "Failed to delete document";
       toast.error(errorMessage);
     }
   };
@@ -302,30 +395,42 @@ export default function DocumentControlPage() {
     try {
       await bmsApi.documents.approve(documentId);
       toast.success("Document approved successfully");
-      // Update local state to reflect new status
       setDocuments((prev) =>
-        prev.map((d) => (d.id === documentId ? { ...d, status: "approved" } : d))
+        prev.map((d) =>
+          d.id === documentId ? { ...d, status: "approved" } : d
+        )
       );
       await loadFolders();
     } catch (err) {
       const errorMessage =
-        err instanceof BmsApiError ? err.message : "Failed to approve document";
+        err instanceof BmsApiError
+          ? err.message
+          : "Failed to approve document";
       toast.error(errorMessage);
     }
   };
 
-  const handleDocumentReject = async (documentId: string, reason?: string) => {
+  const handleDocumentReject = async (
+    documentId: string,
+    reason?: string
+  ) => {
     try {
-      await bmsApi.documents.reject(documentId, reason ? { reason } : undefined);
+      await bmsApi.documents.reject(
+        documentId,
+        reason ? { reason } : undefined
+      );
       toast.success("Document rejected");
-      // Update local state to reflect new status
       setDocuments((prev) =>
-        prev.map((d) => (d.id === documentId ? { ...d, status: "rejected" } : d))
+        prev.map((d) =>
+          d.id === documentId ? { ...d, status: "rejected" } : d
+        )
       );
       await loadFolders();
     } catch (err) {
       const errorMessage =
-        err instanceof BmsApiError ? err.message : "Failed to reject document";
+        err instanceof BmsApiError
+          ? err.message
+          : "Failed to reject document";
       toast.error(errorMessage);
     }
   };
@@ -342,10 +447,22 @@ export default function DocumentControlPage() {
         id: document.id,
         companyId: document.companyId,
         uploadedByUserId: document.uploadedByUserId,
-        folderId: updates.folderId !== undefined ? updates.folderId : document.folderId,
-        projectId: updates.projectId !== undefined ? updates.projectId : document.projectId,
-        departmentId: updates.departmentId !== undefined ? updates.departmentId : document.departmentId,
-        propertyId: updates.propertyId !== undefined ? updates.propertyId : document.propertyId,
+        folderId:
+          updates.folderId !== undefined
+            ? updates.folderId
+            : document.folderId,
+        projectId:
+          updates.projectId !== undefined
+            ? updates.projectId
+            : document.projectId,
+        departmentId:
+          updates.departmentId !== undefined
+            ? updates.departmentId
+            : document.departmentId,
+        propertyId:
+          updates.propertyId !== undefined
+            ? updates.propertyId
+            : document.propertyId,
         name: updates.name || document.name,
         fileType: document.fileType,
         fileSizeBytes: document.fileSizeBytes,
@@ -366,15 +483,62 @@ export default function DocumentControlPage() {
       toast.success("Metadata updated successfully");
 
       setDocuments((prev) =>
-        prev.map((d) => (d.id === documentId ? { ...document, ...updates } : d))
+        prev.map((d) =>
+          d.id === documentId ? { ...document, ...updates } : d
+        )
       );
       await loadFolders();
       setShowEditMetadataModal(false);
       setEditingDocumentId(null);
     } catch (err) {
       const errorMessage =
-        err instanceof BmsApiError ? err.message : "Failed to update metadata";
+        err instanceof BmsApiError
+          ? err.message
+          : "Failed to update metadata";
       throw new Error(errorMessage);
+    }
+  };
+
+  // Drag and drop handlers for center panel
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsDraggingOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) {
+      setIsDraggingOver(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    dragCounter.current = 0;
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+      setFormData({
+        ...initialFormData,
+        name: nameWithoutExt,
+        folderId: selectedFolderId,
+      });
+      setShowUploadModal(true);
     }
   };
 
@@ -413,9 +577,11 @@ export default function DocumentControlPage() {
       if (formData.projectId) {
         formDataUpload.append("context", `project:${formData.projectId}`);
       }
-      // Add first department to context if any selected (for GCS organization)
       if (formData.departmentIds.length > 0) {
-        formDataUpload.append("context", `dept:${formData.departmentIds[0]}`);
+        formDataUpload.append(
+          "context",
+          `dept:${formData.departmentIds[0]}`
+        );
       }
 
       if (formData.gcpFolderPath && formData.gcpFolderPath.trim()) {
@@ -456,17 +622,13 @@ export default function DocumentControlPage() {
       }
 
       const uploadResult = await uploadResponse.json();
-      console.log("📤 Upload result from /documents/upload:", uploadResult);
+      console.log("Upload result from /documents/upload:", uploadResult);
 
-      // Generate a new UUID for the document
       const documentId = crypto.randomUUID();
 
-      // Map upload response fields to document payload
-      // Upload returns: fileId, fileType, fileSizeBytes, contentHash, originalFileName
-      // Backend CreateDocumentRequest requires: documentId, storagePath, name
       const payload: Record<string, unknown> = {
         documentId: documentId,
-        storagePath: uploadResult.fileId, // fileId is the GCS path (gs://...)
+        storagePath: uploadResult.fileId,
         name: formData.name,
         fileType: uploadResult.fileType || selectedFile.type || "unknown",
         fileSizeBytes: uploadResult.fileSizeBytes || selectedFile.size,
@@ -476,20 +638,22 @@ export default function DocumentControlPage() {
         folderId: formData.folderId === "root" ? null : formData.folderId,
       };
 
-      // Optional fields
       if (formData.projectId) payload.projectId = formData.projectId;
       if (formData.propertyId) payload.propertyId = formData.propertyId;
       if (formData.category) payload.category = formData.category;
-      if (formData.documentTypeId) payload.documentTypeId = formData.documentTypeId;
-      if (formData.classification) payload.classification = formData.classification;
+      if (formData.documentTypeId)
+        payload.documentTypeId = formData.documentTypeId;
+      if (formData.classification)
+        payload.classification = formData.classification;
       if (formData.description) payload.description = formData.description;
 
-      // Multi-level access control fields
       if (formData.departmentIds.length > 0) {
         payload.departmentIds = JSON.stringify(formData.departmentIds);
       }
       if (formData.userAccess.length > 0) {
-        payload.userIds = JSON.stringify(formData.userAccess.map(u => u.userId));
+        payload.userIds = JSON.stringify(
+          formData.userAccess.map((u) => u.userId)
+        );
       }
 
       if (formData.tags?.trim()) {
@@ -502,31 +666,41 @@ export default function DocumentControlPage() {
         uploadDate: new Date().toISOString(),
       });
 
-      console.log("📝 Payload being sent to POST /documents:", JSON.stringify(payload, null, 2));
+      console.log(
+        "Payload being sent to POST /documents:",
+        JSON.stringify(payload, null, 2)
+      );
 
       const newDocument = await bmsApi.documents.create(payload);
       const docId = (newDocument as Document).id;
 
-      // Step 3 (optional): Assign departments if selected
       if (formData.departmentIds.length > 0 && docId) {
         for (const deptId of formData.departmentIds) {
           try {
             await bmsApi.documents.assignDepartment(docId, deptId);
-            console.log(`✅ Department ${deptId} assigned to document`);
+            console.log(`Department ${deptId} assigned to document`);
           } catch (deptErr) {
             console.warn(`Failed to assign department ${deptId}:`, deptErr);
           }
         }
       }
 
-      // Step 4 (optional): Grant user access if selected
       if (formData.userAccess.length > 0 && docId) {
         for (const user of formData.userAccess) {
           try {
-            await bmsApi.documents.grantUserAccess(docId, user.userId, user.accessLevel);
-            console.log(`✅ User ${user.userName} granted ${user.accessLevel} access`);
+            await bmsApi.documents.grantUserAccess(
+              docId,
+              user.userId,
+              user.accessLevel
+            );
+            console.log(
+              `User ${user.userName} granted ${user.accessLevel} access`
+            );
           } catch (userErr) {
-            console.warn(`Failed to grant access to user ${user.userName}:`, userErr);
+            console.warn(
+              `Failed to grant access to user ${user.userName}:`,
+              userErr
+            );
           }
         }
       }
@@ -539,7 +713,9 @@ export default function DocumentControlPage() {
       resetForm();
     } catch (err) {
       const errorMessage =
-        err instanceof BmsApiError ? err.message : "Failed to upload document";
+        err instanceof BmsApiError
+          ? err.message
+          : "Failed to upload document";
       toast.error(errorMessage);
       console.error("Error uploading document:", err);
     } finally {
@@ -560,11 +736,47 @@ export default function DocumentControlPage() {
     loadFolders();
   };
 
-  const handleSearch = async (request: DocumentSearchRequest) => {
-    await search(request);
+  // ──────────────────────────────────────────────
+  // Search handlers
+  // ──────────────────────────────────────────────
+
+  const handleSearchKeyDown = async (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      if (
+        !searchQuery.trim() &&
+        !filterStatus &&
+        !filterClassification
+      ) {
+        clearResults();
+        return;
+      }
+      await search({
+        query: searchQuery || undefined,
+        status: filterStatus || undefined,
+        classifications: filterClassification
+          ? [filterClassification]
+          : undefined,
+        sortBy: "updatedAt",
+        sortDirection: "desc",
+        page: 1,
+        pageSize: 25,
+      });
+    }
   };
 
-  const handleClearSearch = () => {
+  const handleSearchResultClick = (searchResult: DocumentSearchResult) => {
+    const fullDoc = documents.find((d) => d.id === searchResult.id);
+    if (fullDoc) {
+      setSelectedDocumentForModal(fullDoc);
+    } else {
+      router.push(`/document-control/${searchResult.id}`);
+    }
+  };
+
+  const handleClearAllSearch = () => {
+    setSearchQuery("");
+    setFilterStatus("");
+    setFilterClassification("");
     clearResults();
   };
 
@@ -573,9 +785,15 @@ export default function DocumentControlPage() {
     const traverse = (folderList: Folder[], prefix = "") => {
       for (const f of folderList) {
         if (!f.id) continue;
-        result.push({ id: f.id, name: prefix ? `${prefix} / ${f.name}` : f.name });
+        result.push({
+          id: f.id,
+          name: prefix ? `${prefix} / ${f.name}` : f.name,
+        });
         if (f.childFolders?.length) {
-          traverse(f.childFolders, prefix ? `${prefix} / ${f.name}` : f.name);
+          traverse(
+            f.childFolders,
+            prefix ? `${prefix} / ${f.name}` : f.name
+          );
         }
       }
     };
@@ -583,268 +801,642 @@ export default function DocumentControlPage() {
     return result;
   }, [folders]);
 
+  // ──────────────────────────────────────────────
+  // Render
+  // ──────────────────────────────────────────────
+
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {!selectedDocument ? (
-          <>
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Document Control
-                </h1>
-                <p className="text-gray-600">
-                  Manage and track all organizational documents
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={showSearch ? "default" : "outline"}
-                  onClick={() => { setShowSearch(!showSearch); if (showSearch) { handleClearSearch(); setShowAdvancedFilters(false); } }}
-                >
-                  <Search className="w-4 h-4 mr-2" />
-                  Search
-                </Button>
-                <Button variant="outline" onClick={handleRefresh}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleOpenCreateFolderModal()}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Folder
-                </Button>
-                {authService.hasPermission("create", "document") && (
-                  <Button
-                    onClick={() => {
-                      setFormData({ ...initialFormData, folderId: selectedFolderId });
-                      setSelectedFile(null);
-                      setShowUploadModal(true);
-                    }}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Document
-                  </Button>
-                )}
-              </div>
+      {/* Mobile Layout */}
+      <div className="flex flex-col md:hidden -mx-4 -my-4" style={{ height: 'calc(100vh - 3.5rem)' }}>
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between border-b border-stone-200 bg-white px-4 py-3 dark:border-stone-700 dark:bg-stone-900">
+          <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">
+            Documents
+          </span>
+          <div className="flex gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => handleOpenCreateFolderModal()}
+              title="New folder"
+            >
+              <FolderPlus className="h-3.5 w-3.5" />
+            </Button>
+            {authService.hasPermission("create", "document") && (
+              <Button
+                size="sm"
+                className="h-8 bg-accent-cyan hover:bg-accent-cyan/90 text-white"
+                onClick={() => {
+                  setFormData({
+                    ...initialFormData,
+                    folderId: selectedFolderId,
+                  });
+                  setSelectedFile(null);
+                  setShowUploadModal(true);
+                }}
+              >
+                <Upload className="mr-1 h-3.5 w-3.5" />
+                Upload
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Content */}
+        <div className="flex-1 overflow-y-auto p-3 scrollbar-modern">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
             </div>
+          ) : error ? (
+            <div className="py-12 text-center">
+              <p className="text-sm text-stone-500">{error.message}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                className="mt-3"
+              >
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <FolderTreeView
+              folders={folders}
+              selectedFolderId={selectedFolderId}
+              onFolderSelect={setSelectedFolderId}
+              onDocumentSelect={(doc) =>
+                router.push(`/document-control/${doc.id}`)
+              }
+              onFolderCreate={handleOpenCreateFolderModal}
+              onFolderDelete={handleFolderDelete}
+              showDocuments={true}
+            />
+          )}
+        </div>
+      </div>
 
-            {/* Stats Overview */}
-            <DocumentStats documents={documents} className="hidden" />
+      {/* Desktop Three-Column Layout */}
+      <div
+        className="hidden md:flex -mx-4 md:-mx-6 -my-4 md:-my-6"
+        style={{ height: 'calc(100vh - 3.5rem)' }}
+      >
+        {/* ─── Left Panel: Tree, Search, Filters ─── */}
+        <div className="flex w-[300px] shrink-0 flex-col border-r border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-stone-200 px-3 py-3 dark:border-stone-700">
+            <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">
+              Documents
+            </span>
+            <div className="flex gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => handleOpenCreateFolderModal()}
+                title="New folder"
+              >
+                <FolderPlus className="h-3.5 w-3.5" />
+              </Button>
+              {authService.hasPermission("create", "document") && (
+                <button
+                  onClick={() => {
+                    setFormData({
+                      ...initialFormData,
+                      folderId: selectedFolderId,
+                    });
+                    setSelectedFile(null);
+                    setShowUploadModal(true);
+                  }}
+                  className="flex items-center gap-1 rounded-md bg-accent-cyan px-2.5 py-1.5 text-[12px] font-medium text-white hover:bg-accent-cyan/90 transition-colors"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  Upload
+                </button>
+              )}
+            </div>
+          </div>
 
-            {/* Search Bar */}
-            {showSearch && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className={showAdvancedFilters ? "md:col-span-3" : "md:col-span-4"}>
-                  <DocumentSearchBar
-                    onSearch={handleSearch}
-                    onClear={handleClearSearch}
-                    loading={searchLoading}
-                    onToggleFilters={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                    showFiltersToggle={true}
-                    filtersActive={showAdvancedFilters}
+          {/* Search Bar */}
+          <div className="border-b border-stone-200 p-3 dark:border-stone-700">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search documents..."
+                className="w-full rounded-md border border-stone-200 bg-white py-2 pl-8 pr-3 text-[13px] outline-none transition-colors placeholder:text-stone-400 focus:border-accent-cyan focus:ring-1 focus:ring-accent-cyan dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50 dark:placeholder:text-stone-500"
+              />
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                onClick={() =>
+                  setShowAdvancedFilters(!showAdvancedFilters)
+                }
+                className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[12px] transition-colors ${
+                  showAdvancedFilters
+                    ? "border-accent-cyan/30 bg-accent-cyan/5 text-accent-cyan"
+                    : "border-stone-200 text-stone-500 hover:border-stone-300 hover:text-stone-700 dark:border-stone-600 dark:text-stone-400"
+                }`}
+              >
+                <SlidersHorizontal className="h-3 w-3" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent-cyan px-1 text-[10px] font-medium text-white">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+              {(searchResults || searchQuery) && (
+                <button
+                  onClick={handleClearAllSearch}
+                  className="text-[12px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={handleRefresh}
+                className="ml-auto rounded-md p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-800 dark:hover:text-stone-300"
+                title="Refresh"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Inline Filter Panel */}
+          {showAdvancedFilters && (
+            <div className="space-y-2 border-b border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800/50">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-[12px] dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50"
+              >
+                <option value="">All Statuses</option>
+                <option value="draft">Draft</option>
+                <option value="pending_review">Pending Review</option>
+                <option value="approved">Approved</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+              <select
+                value={filterClassification}
+                onChange={(e) => setFilterClassification(e.target.value)}
+                className="w-full rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-[12px] dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50"
+              >
+                <option value="">All Classifications</option>
+                <option value="public">Public</option>
+                <option value="internal">Internal</option>
+                <option value="confidential">Confidential</option>
+                <option value="restricted">Restricted</option>
+              </select>
+              <button
+                onClick={() => {
+                  setFilterStatus("");
+                  setFilterClassification("");
+                }}
+                className="w-full rounded-md bg-stone-200 px-2.5 py-1.5 text-[12px] text-stone-600 hover:bg-stone-300 dark:bg-stone-700 dark:text-stone-300 dark:hover:bg-stone-600"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+
+          {/* Search Results or Folder Tree */}
+          <div className="flex-1 overflow-y-auto p-2 scrollbar-modern">
+            {searchResults ? (
+              <>
+                <div className="mb-2 flex items-center justify-between px-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                    Results ({searchResults.total || 0})
+                  </span>
+                  <button
+                    onClick={() => clearResults()}
+                    className="text-[11px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                  >
+                    Clear
+                  </button>
+                </div>
+                {searchResults.documents &&
+                searchResults.documents.length > 0 ? (
+                  <div className="space-y-0.5">
+                    {searchResults.documents.map(
+                      (doc: DocumentSearchResult) => (
+                        <button
+                          key={doc.id}
+                          onClick={() => handleSearchResultClick(doc)}
+                          className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-stone-100 dark:hover:bg-stone-800"
+                        >
+                          <FileText className="h-4 w-4 shrink-0 text-stone-400" />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[13px] font-medium text-stone-900 dark:text-stone-50">
+                              {doc.name}
+                            </div>
+                            <div className="truncate text-[11px] text-stone-400">
+                              {doc.category && `${doc.category} · `}
+                              {doc.fileType?.toUpperCase()}
+                              {doc.folderPath &&
+                                ` · ${doc.folderPath}`}
+                            </div>
+                          </div>
+                          {doc.status && (
+                            <StatusBadge
+                              status={doc.status}
+                              size="sm"
+                            />
+                          )}
+                        </button>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-[12px] text-stone-400">
+                    No documents found
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
+                  </div>
+                ) : error ? (
+                  <div className="py-8 text-center">
+                    <p className="text-sm text-stone-500">
+                      {error.message === "Failed to fetch"
+                        ? "Could not connect to server"
+                        : error.message}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefresh}
+                      className="mt-3"
+                    >
+                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                      Retry
+                    </Button>
+                  </div>
+                ) : (
+                  <FolderTreeView
+                    folders={folders}
+                    selectedFolderId={selectedFolderId}
+                    selectedDocumentId={
+                      selectedDocumentForModal?.id
+                    }
+                    onFolderSelect={setSelectedFolderId}
+                    onDocumentSelect={(doc) =>
+                      setSelectedDocumentForModal(doc)
+                    }
+                    onFolderCreate={handleOpenCreateFolderModal}
+                    onFolderDelete={handleFolderDelete}
+                    showDocuments={true}
                   />
+                )}
+              </>
+            )}
+          </div>
+        </div>
 
-                  {/* Search Results */}
-                  {searchResults && (
-                    <Card className="mt-4">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base flex items-center justify-between">
-                          <span>Search Results ({searchResults.total || 0})</span>
-                          <Button variant="ghost" size="sm" onClick={handleClearSearch}>
-                            Clear
-                          </Button>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {searchResults.documents && searchResults.documents.length > 0 ? (
-                          <div className="space-y-2 max-h-96 overflow-y-auto">
-                            {searchResults.documents.map((doc: DocumentSearchResult) => (
-                              <div
-                                key={doc.id}
-                                className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 cursor-pointer"
-                                onClick={() => {
-                                  // Navigate to document detail page
-                                  window.location.href = `/document-control/${doc.id}`;
-                                }}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <FileText className="w-5 h-5 text-blue-500" />
-                                  <div>
-                                    <div className="font-medium text-sm">{doc.name}</div>
-                                    <div className="text-xs text-gray-500">
-                                      {doc.category && `${doc.category} · `}
-                                      {doc.fileType?.toUpperCase()}
-                                      {doc.folderPath && ` · ${doc.folderPath}`}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {doc.status && (
-                                    <Badge variant="secondary" className="text-xs">{doc.status}</Badge>
-                                  )}
-                                  {doc.classification && (
-                                    <Badge variant="outline" className="text-xs">{doc.classification}</Badge>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-6 text-gray-500 text-sm">
-                            No documents found matching your search criteria.
-                          </div>
+        {/* ─── Center Panel: Document Preview + Tabs ─── */}
+        <div
+          className={`flex flex-1 flex-col overflow-hidden bg-stone-50 dark:bg-stone-950 relative ${isDraggingOver ? "ring-2 ring-inset ring-accent-cyan" : ""}`}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+        >
+          {selectedDocumentForModal ? (
+            <>
+              {/* Document Action Bar */}
+              <div className="shrink-0 border-b border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900">
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="min-w-0">
+                      <h2 className="truncate text-sm font-semibold text-stone-900 dark:text-stone-50">
+                        {selectedDocumentForModal.name}
+                      </h2>
+                      <div className="mt-0.5 flex items-center gap-2">
+                        {selectedDocumentForModal.status && (
+                          <StatusBadge
+                            status={selectedDocumentForModal.status}
+                            size="sm"
+                          />
                         )}
-                      </CardContent>
-                    </Card>
-                  )}
+                        <span className="text-[11px] text-stone-400">
+                          {selectedDocumentForModal.fileType?.toUpperCase()}
+                        </span>
+                        {selectedDocumentForModal.version && (
+                          <span className="text-[11px] text-stone-400">
+                            v{selectedDocumentForModal.version}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {selectedDocumentForModal.id && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-[12px] border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-800"
+                        onClick={() =>
+                          handleDocumentEdit(
+                            selectedDocumentForModal.id!
+                          )
+                        }
+                      >
+                        <EditIcon className="mr-1 h-3 w-3" />
+                        Edit
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() =>
+                        setSelectedDocumentForModal(null)
+                      }
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                {/* Advanced Filter Panel */}
-                {showAdvancedFilters && (
-                  <div className="md:col-span-1">
-                    <DocumentFilterPanel
-                      onSearch={handleSearch}
-                      onClose={() => setShowAdvancedFilters(false)}
-                      loading={searchLoading}
-                      documentTypes={documentTypes}
-                      folders={flatFolders()}
-                      departments={departments}
-                      projects={projects}
+                {/* Tab Buttons */}
+                <div className="flex gap-1 px-4 pb-2">
+                  {["preview", "details", "versions", "permissions", "workflow", "shares", "audit"].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                        activeTab === tab
+                          ? "bg-accent-cyan/10 text-accent-cyan font-medium"
+                          : "text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300"
+                      }`}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tab Content */}
+              <div className="flex-1 overflow-auto">
+                {activeTab === "preview" && (
+                  <div className="h-full">
+                    <DocumentPreview
+                      document={selectedDocumentForModal}
+                      onDownload={(doc) =>
+                        window.open(
+                          `/api/document-download/${doc.id}`,
+                          "_blank"
+                        )
+                      }
                     />
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* Folder Tree */}
-            <div className="grid grid-cols-1 gap-6">
-              <Card className="h-[calc(100vh-12rem)]">
-                <CardHeader>
-                  <CardTitle className="text-base">Folders</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                      <div className="text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                        <p className="text-sm text-gray-600">Loading documents...</p>
-                      </div>
-                    </div>
-                  ) : error ? (
-                    <div className="flex items-center justify-center h-64">
-                      <div className="text-center">
-                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <span className="text-red-600 text-xl">!</span>
+                {activeTab === "details" && (
+                  <div className="p-4 space-y-4">
+                    {/* Document Information */}
+                    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-5">
+                      <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-50 mb-4">Document Information</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-stone-500 dark:text-stone-400">Status</span>
+                          <StatusBadge status={selectedDocumentForModal.status || "draft"} />
                         </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          Unable to load documents
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-4 max-w-md">
-                          {error.message === "Failed to fetch"
-                            ? "Could not connect to the server. Please check your connection and try again."
-                            : error.message}
-                        </p>
-                        <Button variant="outline" onClick={handleRefresh}>
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          Try Again
-                        </Button>
+                        {(selectedDocumentForModal as any).classification && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-stone-500 dark:text-stone-400">Classification</span>
+                            <ClassificationBadge level={(selectedDocumentForModal as any).classification} />
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-stone-500 dark:text-stone-400">Category</span>
+                          <span className="text-sm font-medium text-stone-900 dark:text-stone-50">{selectedDocumentForModal.category || "N/A"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-stone-500 dark:text-stone-400">File Type</span>
+                          <span className="text-sm font-medium text-stone-900 dark:text-stone-50 uppercase">{selectedDocumentForModal.fileType || "N/A"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-stone-500 dark:text-stone-400">Version</span>
+                          <span className="text-sm font-medium text-stone-900 dark:text-stone-50">v{selectedDocumentForModal.version || 1}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-stone-500 dark:text-stone-400">File Size</span>
+                          <span className="text-sm font-medium text-stone-900 dark:text-stone-50">{formatFileSize(selectedDocumentForModal.fileSizeBytes)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-stone-500 dark:text-stone-400">Access Level</span>
+                          <span className="text-sm font-medium text-stone-900 dark:text-stone-50 capitalize">{selectedDocumentForModal.accessLevel || "N/A"}</span>
+                        </div>
                       </div>
                     </div>
-                  ) : (
-                    <FolderTreeView
-                      folders={folders}
-                      selectedFolderId={selectedFolderId}
-                      selectedDocumentId={selectedDocumentForModal?.id}
-                      onFolderSelect={setSelectedFolderId}
-                      onDocumentSelect={(doc) => {
-                        setSelectedDocumentForModal(doc);
-                        setShowDocumentModal(true);
-                      }}
-                      onFolderCreate={handleOpenCreateFolderModal}
-                      onFolderDelete={handleFolderDelete}
-                      onDocumentEdit={handleDocumentEdit}
-                      onDocumentDelete={handleDocumentDelete}
-                      onDocumentApprove={handleDocumentApprove}
-                      onDocumentReject={handleDocumentReject}
-                      showDocuments={true}
+
+                    {/* Timestamps */}
+                    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-5">
+                      <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-50 mb-4">Timestamps</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-stone-500 dark:text-stone-400">Created</span>
+                          <span className="text-sm font-medium text-stone-900 dark:text-stone-50">{formatDate(selectedDocumentForModal.createdAt)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-stone-500 dark:text-stone-400">Last Updated</span>
+                          <span className="text-sm font-medium text-stone-900 dark:text-stone-50">{formatDate(selectedDocumentForModal.updatedAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tags */}
+                    {selectedDocumentForModal.tags && (
+                      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-5">
+                        <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-50 mb-3">Tags</h3>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(typeof selectedDocumentForModal.tags === "string"
+                            ? (() => { try { return JSON.parse(selectedDocumentForModal.tags as string); } catch { return (selectedDocumentForModal.tags as string).split(","); } })()
+                            : selectedDocumentForModal.tags
+                          ).map((tag: string, i: number) => (
+                            <span
+                              key={i}
+                              className="rounded-md bg-stone-100 dark:bg-stone-800 px-2 py-0.5 text-xs text-stone-600 dark:text-stone-300"
+                            >
+                              {tag.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "versions" && selectedDocumentForModal.id && (
+                  <div className="p-4">
+                    <DocumentVersionHistory
+                      documentId={selectedDocumentForModal.id}
+                      currentVersion={selectedDocumentForModal.version}
                     />
-                  )}
-                </CardContent>
-              </Card>
+                  </div>
+                )}
+
+                {activeTab === "permissions" && selectedDocumentForModal.id && (
+                  <div className="p-4">
+                    <DocumentPermissionsPanel
+                      documentId={selectedDocumentForModal.id}
+                      documentName={selectedDocumentForModal.name || undefined}
+                    />
+                  </div>
+                )}
+
+                {activeTab === "workflow" && selectedDocumentForModal.id && (
+                  <div className="p-4">
+                    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-5">
+                      <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-50 mb-4">Workflow Status</h3>
+                      {workflowLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
+                        </div>
+                      ) : !currentWorkflow ? (
+                        <div className="py-8 text-center text-sm text-stone-500 dark:text-stone-400">
+                          No active workflow for this document.
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium text-stone-900 dark:text-stone-50">{currentWorkflow.workflowName}</div>
+                              <div className="text-xs text-stone-500 dark:text-stone-400">
+                                Started {formatDate(currentWorkflow.startedAt)}
+                              </div>
+                            </div>
+                            <WorkflowStatusBadge
+                              status={currentWorkflow.status}
+                              currentStep={currentWorkflow.currentStepName}
+                            />
+                          </div>
+                          <WorkflowTimeline workflow={currentWorkflow} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "shares" && selectedDocumentForModal.id && (
+                  <div className="p-4">
+                    <DocumentSharePanel
+                      documentId={selectedDocumentForModal.id}
+                      documentName={selectedDocumentForModal.name || undefined}
+                    />
+                  </div>
+                )}
+
+                {activeTab === "audit" && (
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-stone-200 dark:bg-stone-800">
+                      <Clock className="h-6 w-6 text-stone-400 dark:text-stone-500" />
+                    </div>
+                    <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
+                      Audit Trail
+                    </p>
+                    <p className="mt-1 text-xs text-stone-400 dark:text-stone-500">
+                      Coming soon
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-stone-200 dark:bg-stone-800">
+                <FileText className="h-8 w-8 text-stone-400 dark:text-stone-500" />
+              </div>
+              <p className="text-sm text-stone-500 dark:text-stone-400">
+                Select a document to preview
+              </p>
+              <p className="mt-1 text-xs text-stone-400 dark:text-stone-500">
+                or drag files here to upload
+              </p>
             </div>
-          </>
-        ) : (
-          <DocumentDetails
-            document={selectedDocument}
-            onBack={() => setSelectedDocument(null)}
-          />
-        )}
+          )}
 
-        {/* Modals */}
-        <UploadDocumentModal
-          open={showUploadModal}
-          onOpenChange={setShowUploadModal}
-          formData={formData}
-          setFormData={setFormData}
-          selectedFile={selectedFile}
-          setSelectedFile={setSelectedFile}
-          isUploading={isUploading}
-          folders={folders}
-          projects={projects}
-          departments={departments}
-          properties={properties}
-          users={users}
-          documentTypes={documentTypes}
-          onSubmit={handleSubmit}
-          onFileChange={handleFileChange}
-        />
+          {/* Drag overlay */}
+          {isDraggingOver && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-accent-cyan/5 backdrop-blur-[2px]">
+              <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-accent-cyan bg-white/90 dark:bg-stone-900/90 px-12 py-10">
+                <Upload className="h-10 w-10 text-accent-cyan" />
+                <p className="text-sm font-medium text-stone-900 dark:text-stone-50">Drop file to upload</p>
+                <p className="text-xs text-stone-500 dark:text-stone-400">File will be uploaded to the current folder</p>
+              </div>
+            </div>
+          )}
+        </div>
 
-        <CreateFolderModal
-          isOpen={showCreateFolderModal}
-          onClose={() => {
-            setShowCreateFolderModal(false);
-            setParentFolderForCreation(null);
-          }}
-          onSubmit={handleCreateFolder}
-          parentFolderId={parentFolderForCreation || undefined}
-          parentFolderName={
-            parentFolderForCreation
-              ? findFolderById(parentFolderForCreation)?.name
-              : undefined
-          }
-        />
-
-        <EditMetadataModal
-          isOpen={showEditMetadataModal}
-          onClose={() => {
-            setShowEditMetadataModal(false);
-            setEditingDocumentId(null);
-          }}
-          document={
-            editingDocumentId
-              ? documents.find((d) => d.id === editingDocumentId) || null
-              : null
-          }
-          onSave={handleSaveMetadata}
-          folders={folders}
-          projects={projects}
-          departments={departments}
-          properties={properties}
-        />
-
-        <DocumentViewModal
-          document={selectedDocumentForModal}
-          open={showDocumentModal}
-          onClose={() => {
-            setShowDocumentModal(false);
-            setSelectedDocumentForModal(null);
-          }}
-        />
+        {/* ─── Right Panel: AI Chat ─── */}
+        <div className="hidden w-[320px] shrink-0 border-l border-stone-200 bg-white lg:flex lg:flex-col dark:border-stone-700 dark:bg-stone-900">
+          <DocumentChatPanel document={selectedDocumentForModal} />
+        </div>
       </div>
+
+      {/* ─── Modals ─── */}
+      <UploadDocumentModal
+        open={showUploadModal}
+        onOpenChange={setShowUploadModal}
+        formData={formData}
+        setFormData={setFormData}
+        selectedFile={selectedFile}
+        setSelectedFile={setSelectedFile}
+        isUploading={isUploading}
+        folders={folders}
+        projects={projects}
+        departments={departments}
+        properties={properties}
+        users={users}
+        onSubmit={handleSubmit}
+        onFileChange={handleFileChange}
+      />
+
+      <CreateFolderModal
+        isOpen={showCreateFolderModal}
+        onClose={() => {
+          setShowCreateFolderModal(false);
+          setParentFolderForCreation(null);
+        }}
+        onSubmit={handleCreateFolder}
+        parentFolderId={parentFolderForCreation || undefined}
+        parentFolderName={
+          parentFolderForCreation
+            ? findFolderById(parentFolderForCreation)?.name
+            : undefined
+        }
+      />
+
+      <EditMetadataModal
+        isOpen={showEditMetadataModal}
+        onClose={() => {
+          setShowEditMetadataModal(false);
+          setEditingDocumentId(null);
+        }}
+        document={
+          editingDocumentId
+            ? documents.find((d) => d.id === editingDocumentId) || null
+            : null
+        }
+        onSave={handleSaveMetadata}
+        onDelete={handleDocumentDelete}
+        folders={folders}
+        projects={projects}
+        departments={departments}
+        properties={properties}
+      />
     </AppLayout>
   );
 }

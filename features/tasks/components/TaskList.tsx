@@ -92,8 +92,8 @@ export function TaskList({
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-sm text-gray-600">Loading tasks...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-cyan mx-auto mb-4"></div>
+          <p className="text-sm text-stone-600 dark:text-stone-400">Loading tasks...</p>
         </div>
       </div>
     )
@@ -105,10 +105,10 @@ export function TaskList({
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
           <div className="relative flex-1 sm:max-w-xs">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+            <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 dark:text-stone-500" />
             <Input
               placeholder="Search tasks..."
-              className="pl-10"
+              className="pl-10 border-stone-300 bg-white text-stone-900 placeholder:text-stone-400 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50 dark:placeholder:text-stone-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -117,6 +117,7 @@ export function TaskList({
             variant={showFilters ? "secondary" : "outline"}
             size="icon"
             onClick={() => setShowFilters(!showFilters)}
+            className={showFilters ? "" : "border-stone-300 text-stone-600 hover:bg-stone-100 hover:text-stone-900 dark:border-stone-600 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-200"}
           >
             <Filter className="w-4 h-4" />
           </Button>
@@ -147,13 +148,13 @@ export function TaskList({
 
       {/* Filters */}
       {showFilters && (
-        <div className="flex flex-wrap gap-3 p-3 bg-gray-50 rounded-lg">
+        <div className="flex flex-wrap gap-3 p-3 bg-stone-50 dark:bg-stone-800/50 rounded-lg border border-stone-200 dark:border-stone-700">
           <div className="w-40">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="border-stone-300 bg-white text-stone-900 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800">
                 <SelectItem value="all">All Statuses</SelectItem>
                 {TASK_STATUS_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
@@ -165,10 +166,10 @@ export function TaskList({
           </div>
           <div className="w-40">
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="border-stone-300 bg-white text-stone-900 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50">
                 <SelectValue placeholder="Priority" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800">
                 <SelectItem value="all">All Priorities</SelectItem>
                 {TASK_PRIORITY_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
@@ -184,12 +185,12 @@ export function TaskList({
       {/* Task Views */}
       {filteredTasks.length === 0 ? (
         <div className="text-center py-12">
-          <CheckSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <CheckSquare className="w-12 h-12 text-stone-400 dark:text-stone-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-stone-900 dark:text-stone-50 mb-2">
             {emptyMessage}
           </h3>
           {hasFilters && (
-            <p className="text-gray-600 mb-4">Try adjusting your filters</p>
+            <p className="text-stone-600 dark:text-stone-400 mb-4">Try adjusting your filters</p>
           )}
         </div>
       ) : view === "list" ? (
@@ -215,13 +216,13 @@ export function TaskList({
           {TASK_STATUS_OPTIONS.filter(s => s.value !== "cancelled").map((status) => (
             <div
               key={status.value}
-              className="bg-gray-50 rounded-lg p-3 min-w-[250px]"
+              className="bg-stone-50 dark:bg-stone-800/50 rounded-lg p-3 min-w-[250px] border border-stone-200 dark:border-stone-700"
             >
               <div className="flex items-center justify-between mb-3">
                 <Badge className={getTaskStatusColor(status.value)}>
                   {status.label}
                 </Badge>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-stone-500 dark:text-stone-400">
                   {tasksByStatus[status.value]?.length || 0}
                 </span>
               </div>
@@ -241,7 +242,7 @@ export function TaskList({
                   />
                 ))}
                 {!tasksByStatus[status.value]?.length && (
-                  <p className="text-sm text-gray-400 text-center py-4">
+                  <p className="text-sm text-stone-400 dark:text-stone-500 text-center py-4">
                     No tasks
                   </p>
                 )}

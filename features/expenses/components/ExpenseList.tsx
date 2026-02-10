@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Card replaced with plain divs for consistent styling
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -95,7 +95,7 @@ function getCategoryBadge(category: string | null | undefined) {
     contractor: "bg-purple-100 text-purple-800",
     equipment: "bg-orange-100 text-orange-800",
     travel: "bg-teal-100 text-teal-800",
-    other: "bg-gray-100 text-gray-800",
+    other: "bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300",
   };
   return (
     <Badge className={`${colors[category] || colors.other} hover:opacity-90`}>
@@ -302,25 +302,25 @@ export function ExpenseList({ projectId, projectName, onBudgetUpdate }: ExpenseL
       <ExpenseSummaryCard summary={summary} loading={summaryLoading} />
 
       {/* Expense List */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+        <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-stone-900 dark:text-stone-50">
             <FileText className="w-5 h-5" />
             Expenses
-          </CardTitle>
-          <Button onClick={() => setShowAddForm(true)} size="sm">
+          </h3>
+          <Button onClick={() => setShowAddForm(true)} size="sm" className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
             <Plus className="w-4 h-4 mr-2" />
             Add Expense
           </Button>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-5">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-stone-400 dark:text-stone-500" />
             </div>
           ) : expenses.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <div className="text-center py-8 text-stone-500 dark:text-stone-400">
+              <FileText className="w-12 h-12 mx-auto mb-3 text-stone-300 dark:text-stone-600" />
               <p>No expenses yet</p>
               <p className="text-sm">Add your first expense to track project spending</p>
             </div>
@@ -329,18 +329,18 @@ export function ExpenseList({ projectId, projectName, onBudgetUpdate }: ExpenseL
               {expenses.map((expense) => (
                 <div
                   key={expense.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-800/50 rounded-lg border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-gray-900 truncate">
+                      <span className="font-medium text-stone-900 dark:text-stone-50 truncate">
                         {expense.description}
                       </span>
                       {getStatusBadge(expense.status)}
                       {getCategoryBadge(expense.category)}
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span className="font-semibold text-gray-900">
+                    <div className="flex items-center gap-4 text-sm text-stone-600 dark:text-stone-400">
+                      <span className="font-semibold text-stone-900 dark:text-stone-50">
                         {expense.amountFormatted || `$${expense.amount?.toLocaleString()}`}
                       </span>
                       <span>{expense.submittedTimeAgo || "Just now"}</span>
@@ -348,7 +348,7 @@ export function ExpenseList({ projectId, projectName, onBudgetUpdate }: ExpenseL
                       {expense.hasInvoice && (
                         <button
                           onClick={() => handleDownloadInvoice(expense)}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                          className="flex items-center gap-1 text-accent-cyan hover:text-accent-cyan/80"
                         >
                           <Download className="w-3 h-3" />
                           Invoice
@@ -438,15 +438,15 @@ export function ExpenseList({ projectId, projectName, onBudgetUpdate }: ExpenseL
                     )}
 
                     {uploadingExpenseId === expense.id && (
-                      <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                      <Loader2 className="w-4 h-4 animate-spin text-stone-400 dark:text-stone-500" />
                     )}
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Hidden file input for invoice upload */}
       <input

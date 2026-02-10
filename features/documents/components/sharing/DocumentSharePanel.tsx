@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -117,24 +116,24 @@ export function DocumentSharePanel({
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+        <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-stone-900 dark:text-stone-50">
             <Share2 className="w-5 h-5" />
             External Shares
-          </CardTitle>
-          <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-            <Share2 className="w-4 h-4 mr-2" />
+          </h3>
+          <Button size="sm" onClick={() => setCreateDialogOpen(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white text-xs">
+            <Share2 className="w-4 h-4 mr-1" />
             Create Share
           </Button>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-5">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-stone-400 dark:text-stone-500" />
             </div>
           ) : shares.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-stone-500 dark:text-stone-400">
               No external shares created yet
             </div>
           ) : (
@@ -144,8 +143,8 @@ export function DocumentSharePanel({
                   key={share.id}
                   className={`p-4 rounded-lg border ${
                     isActive(share)
-                      ? "bg-green-50 border-green-200"
-                      : "bg-gray-50 border-gray-200 opacity-60"
+                      ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800"
+                      : "bg-stone-50 border-stone-200 dark:bg-stone-800 dark:border-stone-700 opacity-60"
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -153,7 +152,7 @@ export function DocumentSharePanel({
                       <div className="flex items-center gap-2 mb-2">
                         <Badge
                           variant={isActive(share) ? "default" : "secondary"}
-                          className={isActive(share) ? "bg-green-100 text-green-800" : ""}
+                          className={isActive(share) ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400" : ""}
                         >
                           {isActive(share) ? "Active" : isExpired(share) ? "Expired" : "Revoked"}
                         </Badge>
@@ -170,7 +169,7 @@ export function DocumentSharePanel({
                         )}
                       </div>
 
-                      <div className="text-sm text-gray-600 space-y-1">
+                      <div className="text-sm text-stone-500 dark:text-stone-400 space-y-1">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-3 h-3" />
                           {share.expiresAt
@@ -182,7 +181,7 @@ export function DocumentSharePanel({
                           {share.accessCount || 0} views
                           {share.maxAccessCount && ` / ${share.maxAccessCount} max`}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-stone-400 dark:text-stone-500">
                           Created {share.createdAt
                             ? formatDistanceToNow(new Date(share.createdAt), { addSuffix: true })
                             : "recently"}
@@ -226,11 +225,11 @@ export function DocumentSharePanel({
                   </div>
 
                   {isActive(share) && share.accessToken && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="mt-3 pt-3 border-t border-stone-200 dark:border-stone-700">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Access Token:</span>
+                        <span className="text-stone-500 dark:text-stone-400">Access Token:</span>
                         <div className="flex items-center gap-2">
-                          <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                          <code className="bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded text-xs text-stone-700 dark:text-stone-300">
                             {share.accessToken.slice(0, 8)}...
                           </code>
                           <Button
@@ -248,8 +247,8 @@ export function DocumentSharePanel({
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <ConfirmDialog
         open={!!confirmRevokeId}
@@ -297,7 +296,7 @@ export function DocumentSharePanel({
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Require Password</Label>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-stone-500 dark:text-stone-400">
                   Recipient must enter password to view
                 </div>
               </div>
@@ -310,7 +309,7 @@ export function DocumentSharePanel({
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Allow Download</Label>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-stone-500 dark:text-stone-400">
                   Recipient can download the file
                 </div>
               </div>
@@ -331,7 +330,7 @@ export function DocumentSharePanel({
                 }
                 min={1}
               />
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-stone-500 dark:text-stone-400">
                 Link will stop working after this many views
               </div>
             </div>

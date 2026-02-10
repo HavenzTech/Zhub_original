@@ -16,7 +16,7 @@ import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import { Project } from "@/types/bms";
 import { toast } from "sonner";
-import { FolderOpen, Plus, Search, RefreshCw } from "lucide-react";
+import { FolderOpen, Plus, Search, RefreshCw, Target } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,7 +80,6 @@ export default function ProjectsPage() {
       name: formData.name.trim(),
       status: formData.status,
       priority: formData.priority,
-      // progress is now auto-calculated from tasks - removed from payload
     };
 
     if (formData.description?.trim())
@@ -166,18 +165,18 @@ export default function ProjectsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-50">Projects</h1>
+            <p className="text-stone-500 dark:text-stone-400">
               Manage and track all organizational projects
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={loadProjects}>
+            <Button variant="outline" onClick={loadProjects} className="border-stone-300 dark:border-stone-600">
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
             {authService.hasPermission("create", "project") && (
-              <Button onClick={() => setShowAddForm(true)}>
+              <Button onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Project
               </Button>
@@ -189,20 +188,20 @@ export default function ProjectsPage() {
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-sm text-gray-600">Loading projects...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-cyan mx-auto mb-4"></div>
+              <p className="text-sm text-stone-500 dark:text-stone-400">Loading projects...</p>
             </div>
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-red-600 text-xl">!</span>
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-950 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-red-600 dark:text-red-400 text-xl">!</span>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-stone-900 dark:text-stone-50 mb-2">
                 Unable to load projects
               </h3>
-              <p className="text-sm text-gray-600 mb-4 max-w-md">
+              <p className="text-sm text-stone-500 dark:text-stone-400 mb-4 max-w-md">
                 {error.message === "Failed to fetch"
                   ? "Could not connect to the server. Please check your connection and try again."
                   : error.message}
@@ -221,10 +220,10 @@ export default function ProjectsPage() {
             {/* Search */}
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 dark:text-stone-500" />
                 <Input
                   placeholder="Search projects..."
-                  className="pl-10"
+                  className="pl-10 bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700 rounded-xl"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -235,31 +234,115 @@ export default function ProjectsPage() {
               </Badge>
             </div>
 
-            {/* Projects Grid */}
+            {/* Projects Table */}
             {filteredProjects.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    onViewDetails={handleViewDetails}
-                    onDelete={handleDeleteClick}
-                  />
-                ))}
+              <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Project</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Budget</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Progress</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Timeline</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Team Lead</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-stone-500 dark:text-stone-400"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredProjects.map((project) => {
+                        const progress = project.progress ?? 0;
+                        const budget = project.budgetAllocated
+                          ? `$${(project.budgetAllocated / 1000).toFixed(0)}K`
+                          : "-";
+                        const startDate = project.startDate
+                          ? new Date(project.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                          : "";
+                        const endDate = project.endDate
+                          ? new Date(project.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                          : "";
+                        const timeline = startDate && endDate ? `${startDate} - ${endDate}` : startDate || endDate || "-";
+
+                        return (
+                          <tr
+                            key={project.id}
+                            onClick={() => handleViewDetails(project)}
+                            className="border-b border-stone-100 dark:border-stone-800 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+                          >
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
+                                  <FolderOpen className="w-5 h-5" />
+                                </div>
+                                <div>
+                                  <div className="font-medium text-stone-900 dark:text-stone-50">{project.name}</div>
+                                  {project.description && (
+                                    <div className="text-xs text-stone-500 dark:text-stone-400 truncate max-w-[200px]">{project.description}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className={`inline-flex items-center text-xs px-2.5 py-1 rounded-md font-medium ${
+                                project.status === "active" || project.status === "completed"
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                                  : project.status === "in_progress"
+                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400"
+                                  : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                              }`}>
+                                {project.status?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Unknown"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{budget}</td>
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-2">
+                                <div className="w-20 h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-accent-cyan rounded-full"
+                                    style={{ width: `${progress}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs text-stone-500 dark:text-stone-400 w-8">{progress}%</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-xs text-stone-500 dark:text-stone-400">{timeline}</td>
+                            <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{project.teamLead || "-"}</td>
+                            <td className="px-4 py-4 text-right">
+                              {authService.isSuperAdmin() && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteClick(project);
+                                  }}
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                                >
+                                  Delete
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : (
               <div className="text-center py-12">
-                <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <FolderOpen className="w-12 h-12 text-stone-300 dark:text-stone-600 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-stone-900 dark:text-stone-50 mb-2">
                   No projects found
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-stone-500 dark:text-stone-400 mb-4">
                   {searchTerm
                     ? "Try adjusting your search criteria"
                     : "Get started by adding your first project"}
                 </p>
                 {authService.hasPermission("create", "project") && (
-                  <Button onClick={() => setShowAddForm(true)}>
+                  <Button onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
                     <Plus className="w-4 h-4 mr-2" />
                     Add First Project
                   </Button>

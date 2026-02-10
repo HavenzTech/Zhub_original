@@ -358,7 +358,7 @@ export default function ZAiPage() {
     <AppLayout>
       <div className="h-full flex">
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-white">
+        <div className="flex-1 flex flex-col bg-white dark:bg-stone-900">
           <ChatHeader aiMode={aiMode} onModeChange={setAiMode} />
 
           {/* Chat Messages */}
