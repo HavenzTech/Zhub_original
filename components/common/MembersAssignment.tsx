@@ -53,7 +53,8 @@ export function MembersAssignment({
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [selectedRole, setSelectedRole] = useState<string>("employee");
+  const defaultRole = entityType === "department" ? "member" : "contributor";
+  const [selectedRole, setSelectedRole] = useState<string>(defaultRole);
   const [removingMember, setRemovingMember] = useState<Member | null>(null);
 
   const loadMembers = useCallback(async () => {
@@ -110,7 +111,7 @@ export function MembersAssignment({
       }
       toast.success("Member added successfully");
       setSelectedUserId("");
-      setSelectedRole("employee");
+      setSelectedRole(defaultRole);
       await loadMembers();
     } catch (err) {
       console.error("Error adding member:", err);
@@ -176,14 +177,24 @@ export function MembersAssignment({
             </SelectContent>
           </Select>
           <Select value={selectedRole} onValueChange={setSelectedRole}>
-            <SelectTrigger className="w-32 border-stone-300 bg-white text-stone-900 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50">
+            <SelectTrigger className="w-36 border-stone-300 bg-white text-stone-900 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800">
-              <SelectItem value="employee">Employee</SelectItem>
-              <SelectItem value="project_lead">Project Lead</SelectItem>
-              <SelectItem value="dept_manager">Dept Manager</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
+              {entityType === "project" ? (
+                <>
+                  <SelectItem value="lead">Lead</SelectItem>
+                  <SelectItem value="contributor">Contributor</SelectItem>
+                  <SelectItem value="viewer">Viewer</SelectItem>
+                  <SelectItem value="member">Member</SelectItem>
+                </>
+              ) : (
+                <>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="lead">Lead</SelectItem>
+                  <SelectItem value="member">Member</SelectItem>
+                </>
+              )}
             </SelectContent>
           </Select>
           <Button onClick={handleAddMember} disabled={adding || !selectedUserId} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
