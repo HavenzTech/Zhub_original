@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Company, IotMetric } from "@/types/bms";
-import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
+import { Company } from "@/types/bms";
 import { authService } from "@/lib/services/auth";
-import { toast } from "sonner";
 import {
   Building2,
   Edit,
@@ -26,7 +24,6 @@ import {
   formatDate,
   getTimeAgo,
 } from "../utils/companyHelpers";
-import { IotMetricsDashboard } from "./IotMetricsDashboard";
 
 interface CompanyDetailsProps {
   company: Company;
@@ -34,29 +31,7 @@ interface CompanyDetailsProps {
 }
 
 export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
-  const [iotMetrics, setIotMetrics] = useState<IotMetric[]>([]);
-  const [loadingMetrics, setLoadingMetrics] = useState(false);
   const [imageError, setImageError] = useState(false);
-
-  const loadIotMetrics = async () => {
-    if (!company.id) return;
-    try {
-      setLoadingMetrics(true);
-      const data = await bmsApi.iotMetrics.getByCompany(company.id);
-      setIotMetrics(data as IotMetric[]);
-    } catch (err) {
-      const errorMessage =
-        err instanceof BmsApiError ? err.message : "Failed to load IoT metrics";
-      toast.error(errorMessage);
-      console.error("Error loading IoT metrics:", err);
-    } finally {
-      setLoadingMetrics(false);
-    }
-  };
-
-  useEffect(() => {
-    loadIotMetrics();
-  }, [company.id]);
 
   return (
     <div className="space-y-6">
@@ -212,12 +187,6 @@ export function CompanyDetails({ company, onEdit }: CompanyDetailsProps) {
         </Card>
       </div>
 
-      {/* IoT Metrics Dashboard */}
-      <IotMetricsDashboard
-        metrics={iotMetrics}
-        loading={loadingMetrics}
-        onRefresh={loadIotMetrics}
-      />
     </div>
   );
 }
