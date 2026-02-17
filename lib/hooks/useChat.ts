@@ -21,6 +21,11 @@ export interface Message {
     file_size?: number
   }>
   company?: string
+  toolUsed?: string
+  elapsedTime?: number
+  tokenUsage?: { input_tokens?: number; output_tokens?: number; chunks_retrieved?: number }
+  tierUsed?: string
+  retrievalMethod?: string
 }
 
 interface UseChatReturn {
@@ -172,12 +177,20 @@ export function useChat(): UseChatReturn {
             timestamp: formatMessageTimestamp(),
             type: "analysis",
             sourceDocuments:
-              data.source_documents?.map((doc: any) => ({
-                title: doc.metadata?.title || "Unknown Document",
-                relevance_score: doc.metadata?.relevance_score || 0,
-                parent_folder: doc.metadata?.parent_folder || "",
-              })) || [],
+              data.source_documents?.map((doc: any) => {
+                const meta = doc.metadata || {};
+                return {
+                  title: doc.section_title || meta.section_title || meta.title || "Unknown Document",
+                  relevance_score: doc.relevance_score || meta.relevance_score || 0,
+                  parent_folder: doc.parent_folder || meta.parent_folder || "",
+                };
+              }) || [],
             generatedImages: data.generated_images || [],
+            toolUsed: data.tool_used,
+            elapsedTime: data.metadata?.elapsed_time,
+            tokenUsage: data.metadata?.token_usage,
+            tierUsed: data.metadata?.tier_used,
+            retrievalMethod: data.metadata?.retrieval_method,
           }
 
           setMessages((prev) => [...prev, aiResponse])

@@ -2,6 +2,8 @@
 "use client"
 
 import { useState } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -352,11 +354,14 @@ export default function VirtualChatbotsPage() {
         content: data.response || data.answer || "I apologize, but I couldn't process your request at the moment.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         relatedDocuments: data.sources || data.documents || getRelatedDocuments(currentInput),
-        sourceDocuments: data.source_documents?.map((doc: any) => ({
-          title: doc.metadata?.title || "Unknown Document",
-          relevance_score: doc.metadata?.relevance_score || 0,
-          parent_folder: doc.metadata?.parent_folder || ""
-        })) || []
+        sourceDocuments: data.source_documents?.map((doc: any) => {
+          const meta = doc.metadata || {};
+          return {
+            title: doc.section_title || meta.section_title || meta.title || "Unknown Document",
+            relevance_score: doc.relevance_score || meta.relevance_score || 0,
+            parent_folder: doc.parent_folder || meta.parent_folder || ""
+          };
+        }) || []
       }
       
       setChatMessages(prev => [...prev, aiResponse])
@@ -585,11 +590,19 @@ export default function VirtualChatbotsPage() {
               {messages.map((message, index) => (
                 <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[80%] p-3 rounded-lg ${
-                    message.role === 'user' 
-                      ? 'bg-blue-600 text-white' 
+                    message.role === 'user'
+                      ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-900'
                   }`}>
-                    <p className="text-sm">{message.content}</p>
+                    {message.role === "user" ? (
+                      <p className="text-sm">{message.content}</p>
+                    ) : (
+                      <div className="text-sm prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-table:text-sm prose-th:px-3 prose-th:py-1.5 prose-td:px-3 prose-td:py-1.5 prose-table:border-collapse prose-th:border prose-td:border">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                     <p className={`text-xs mt-1 ${message.role === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
                       {message.timestamp}
                     </p>
@@ -689,11 +702,14 @@ export default function VirtualChatbotsPage() {
           content: data.response || data.answer || "I apologize, but I couldn't process your request at the moment.",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           relatedDocuments: data.sources || data.documents || getRelatedDocuments(currentInput),
-          sourceDocuments: data.source_documents?.map((doc: any) => ({
-            title: doc.metadata?.title || "Unknown Document",
-            relevance_score: doc.metadata?.relevance_score || 0,
-            parent_folder: doc.metadata?.parent_folder || ""
-          })) || []
+          sourceDocuments: data.source_documents?.map((doc: any) => {
+            const meta = doc.metadata || {};
+            return {
+              title: doc.section_title || meta.section_title || meta.title || "Unknown Document",
+              relevance_score: doc.relevance_score || meta.relevance_score || 0,
+              parent_folder: doc.parent_folder || meta.parent_folder || ""
+            };
+          }) || []
         }
         
         setLocalChatMessages(prev => [...prev, aiResponse])
@@ -1238,9 +1254,17 @@ export default function VirtualChatbotsPage() {
                             ? "bg-gray-50 border-gray-200" 
                             : "bg-blue-50 border-blue-200"
                         )}>
-                          <p className="text-sm whitespace-pre-wrap leading-relaxed text-gray-900">
-                            {message.content}
-                          </p>
+                          {message.role === "user" ? (
+                            <p className="text-sm whitespace-pre-wrap leading-relaxed text-gray-900">
+                              {message.content}
+                            </p>
+                          ) : (
+                            <div className="text-sm leading-relaxed text-gray-900 prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-table:text-sm prose-th:px-3 prose-th:py-1.5 prose-td:px-3 prose-td:py-1.5 prose-table:border-collapse prose-th:border prose-td:border">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {message.content}
+                              </ReactMarkdown>
+                            </div>
+                          )}
                           
                           {(message.sourceDocuments && message.sourceDocuments.length > 0) ? (
                             <div className="mt-3 pt-3 border-t border-blue-200">
