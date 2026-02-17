@@ -56,14 +56,21 @@ export async function POST(request: NextRequest) {
     const formattedResponse = {
       response: data.answer || "Sorry, I couldn't generate a response.",
       answer: data.answer || "Sorry, I couldn't generate a response.",
-      sources: data.source_documents?.map((doc: any) => doc.metadata?.title || doc.metadata?.source || "Unknown document") || [],
+      sources: data.source_documents?.map((doc: any) => doc.document_name || doc.metadata?.title || doc.metadata?.source || "Unknown document") || [],
       source_documents: data.source_documents || [], // Include full source documents for Z AI
       documents_found: data.source_documents?.length || 0,
       search_type: data.search_type,
-      tool_used: data.tool_used || "chat_with_documents",
+      tool_used: data.tool_used || "chat",
       agent_used: data.agent_used || true,
       session_id: data.session_id,
-      generated_images: data.generated_images || [] // Pass through generated images
+      generated_images: data.generated_images || [], // Pass through generated images
+      metadata: {
+        elapsed_time: data.metadata?.elapsed_time || null,
+        token_usage: data.metadata?.token_usage || null,
+        tier_used: data.metadata?.tier_used || null,
+        retrieval_method: data.retrieval_method || null,
+        routing_mode: data.routing_mode || null,
+      },
     }
 
     console.log('Formatted response:', formattedResponse)

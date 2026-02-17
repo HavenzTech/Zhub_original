@@ -178,6 +178,14 @@ export function AiAssistantSidebar() {
   );
 }
 
+const TOOL_LABELS: Record<string, string> = {
+  "smart_document_query": "RAG",
+  "smart_business_query": "Business Query",
+  "chat": "Chat",
+  "chat_with_documents": "RAG",
+  "list_files": "File Listing",
+}
+
 function MessageBubble({ message }: { message: Message }) {
   const isUser = message.role === "user";
 
@@ -205,6 +213,13 @@ function MessageBubble({ message }: { message: Message }) {
                 {doc.title}
               </div>
             ))}
+          </div>
+        )}
+        {/* Response Metadata */}
+        {!isUser && (message.toolUsed || message.elapsedTime) && (
+          <div className="mt-1.5 pt-1 border-t border-stone-200/30 dark:border-stone-700/30 text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-2">
+            {message.toolUsed && <span>{TOOL_LABELS[message.toolUsed] || message.toolUsed}</span>}
+            {message.elapsedTime != null && <span>{message.elapsedTime.toFixed(1)}s</span>}
           </div>
         )}
       </div>

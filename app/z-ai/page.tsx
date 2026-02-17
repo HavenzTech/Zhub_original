@@ -151,15 +151,15 @@ export default function ZAiPage() {
               const meta = doc.metadata || {};
 
               return {
-                // Display info
-                title: meta.section_title || meta.title || "Unknown Section",
-                name: meta.name || meta.source || "Unknown Document",  // Filename
-                relevance_score: meta.relevance_score || 0,
-                parent_folder: meta.parent_folder || "",
+                // Display info - check flat fields FIRST, then fall back to metadata
+                title: doc.section_title || meta.section_title || meta.title || "Unknown Section",
+                name: doc.document_name || meta.name || meta.source || "Unknown Document",  // Filename
+                relevance_score: doc.relevance_score || meta.relevance_score || 0,
+                parent_folder: doc.parent_folder || meta.parent_folder || "",
                 // For document preview
-                document_id: doc.document_id || meta.document_id || "",  // Check top-level first
-                page_start: meta.page_start || 1,
-                page_end: meta.page_end || meta.page_start || 1,
+                document_id: doc.document_id || meta.document_id || "",
+                page_start: doc.page_number || meta.page_start || 1,
+                page_end: doc.page_end || meta.page_end || meta.page_start || 1,
                 // Local PDF path (for local files not in PostgreSQL)
                 pdf_path: doc.pdf_path || "",
               };

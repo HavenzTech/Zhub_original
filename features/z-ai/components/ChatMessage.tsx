@@ -1,5 +1,7 @@
 import { memo } from "react"
 import Image from "next/image"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,6 +13,8 @@ import {
   ThumbsDown,
   FileText,
   Eye,
+  Clock,
+  Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Message } from "@/lib/hooks/useChat"
@@ -20,6 +24,21 @@ import {
   getMessageAvatarBg,
   getMessageContentBg,
 } from "../utils/chatHelpers"
+
+const TOOL_LABELS: Record<string, string> = {
+  "smart_document_query": "RAG",
+  "smart_business_query": "Business Query",
+  "chat": "Chat",
+  "chat_with_documents": "RAG",
+  "list_files": "File Listing",
+}
+
+function formatTokens(usage: any): string | null {
+  if (!usage) return null
+  const total = (usage.input_tokens || 0) + (usage.output_tokens || 0) + (usage.chunks_retrieved || 0)
+  if (total === 0) return null
+  return total >= 1000 ? `${(total / 1000).toFixed(1)}k tokens` : `${total} tokens`
+}
 
 interface ChatMessageProps {
   message: Message
@@ -68,9 +87,41 @@ export const ChatMessage = memo(function ChatMessage({ message, onDocumentPrevie
         </div>
 
         <div className={cn("p-4 rounded-lg border", getMessageContentBg(message.role))}>
-          <p className="text-sm whitespace-pre-wrap leading-relaxed text-stone-900 dark:text-stone-50">
-            {message.content}
-          </p>
+          {message.role === "user" ? (
+            <p className="text-sm whitespace-pre-wrap leading-relaxed text-stone-900 dark:text-stone-50">
+              {message.content}
+            </p>
+          ) : (
+            <div className="text-sm leading-relaxed text-stone-900 dark:text-stone-50 prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-table:text-sm prose-th:px-3 prose-th:py-1.5 prose-td:px-3 prose-td:py-1.5 prose-table:border-collapse prose-th:border prose-td:border prose-th:border-stone-300 prose-td:border-stone-300 dark:prose-th:border-stone-600 dark:prose-td:border-stone-600 prose-th:bg-stone-100 dark:prose-th:bg-stone-800">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.content}
+              </ReactMarkdown>
+            </div>
+          )}
+
+          {/* Response Metadata */}
+          {message.role !== "user" && (message.toolUsed || message.elapsedTime || message.tierUsed) && (
+            <div className="mt-3 pt-2 border-t border-stone-200/50 dark:border-stone-700/50 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-stone-400 dark:text-stone-500">
+              {message.toolUsed && (
+                <span className="flex items-center gap-1">
+                  <Zap className="w-3 h-3" />
+                  {TOOL_LABELS[message.toolUsed] || message.toolUsed}
+                </span>
+              )}
+              {message.elapsedTime != null && (
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {message.elapsedTime.toFixed(1)}s
+                </span>
+              )}
+              {formatTokens(message.tokenUsage) && (
+                <span>{formatTokens(message.tokenUsage)}</span>
+              )}
+              {message.tierUsed && (
+                <span>Tier: {message.tierUsed}</span>
+              )}
+            </div>
+          )}
 
           {/* Generated Images */}
           {message.generatedImages && message.generatedImages.length > 0 && (
