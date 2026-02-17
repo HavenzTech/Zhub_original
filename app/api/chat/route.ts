@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call your RAG backend (using LangGraph agent with smart tool selection)
-    const response = await fetch(`${RAG_BACKEND_URL}/chat/agent`, {
+    const response = await fetch(`${RAG_BACKEND_URL}/chat/smart`, {
       method: 'POST',
       headers,
       body: JSON.stringify(ragRequest)
