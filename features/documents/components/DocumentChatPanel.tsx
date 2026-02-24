@@ -89,9 +89,6 @@ export default function DocumentChatPanel({
         document.id
       );
 
-      const pythonApiUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8001";
-
       // Strategy: Use same approach as DocumentPreview
       // 1. Check if local file (storagePath contains local path)
       // 2. If GCS file, get signed URL from ASP.NET
@@ -126,21 +123,20 @@ export default function DocumentChatPanel({
         }
       }
 
-      console.log("[Chat] Using Python API URL:", pythonApiUrl);
-
       // Page analysis modes:
       // -30 = Quick (first 30 pages) - fast, covers ToC + intro
       // -50 = Deep (first 50 pages) - slower, more comprehensive
       const pageNum = deepAnalysis ? -50 : -30;
       console.log(`[Chat] Analysis mode: ${deepAnalysis ? 'Deep (50 pages)' : 'Quick (30 pages)'}`);
 
-      const response = await fetch(`${pythonApiUrl}/analyze-document`, {
+      // Use Next.js API proxy to avoid CORS/mixed-content issues
+      const response = await fetch("/api/analyze-document", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          document_id: documentIdentifier, // Signed URL, local path, or document_id (UUID)
+          document_id: documentIdentifier,
           query: input,
           page_num: pageNum,
         }),
