@@ -194,12 +194,19 @@ export default function ZAiPage() {
     } catch (error) {
       console.error("Error calling RAG backend:", error);
 
-      // Fallback to simulated response for Internal Z on error
+      // Build a user-friendly error message based on the failure type
+      let errorContent: string;
+      if (error instanceof Error && error.message.includes("504")) {
+        errorContent = "The request took too long. The AI is processing — please try again in a moment.";
+      } else if (error instanceof Error && error.message.includes("503")) {
+        errorContent = "The AI backend is currently unreachable. Please try again later.";
+      } else {
+        errorContent = "Something went wrong connecting to the AI. Please try again.";
+      }
+
       const fallbackResponse: Message = {
         role: "internal-z",
-        content: `Error: was not able to generate answer due to ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`,
+        content: errorContent,
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",

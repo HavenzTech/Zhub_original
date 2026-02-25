@@ -1,15 +1,38 @@
 // app/api/chat/route.ts - Proxy endpoint to RAG backend
+
 import { NextRequest, NextResponse } from 'next/server'
 
-// Python AI Backend URL - uses env variable or falls back to localhost
+// Tell Vercel to allow up to 60 seconds for this function (Pro plan; Hobby is capped at 10s)
+export const maxDuration = 60
+
+// Never cache this route — it is a live proxy
+export const dynamic = 'force-dynamic'
+
+// Python AI Backend URL — must be set in Vercel environment variables
 const RAG_BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
 
+// Abort the upstream fetch 5 seconds before Vercel kills the function so we
+// can return a clean timeout response instead of a hard 504/500.
+const FETCH_TIMEOUT_MS = 55_000
+
 export async function POST(request: NextRequest) {
+  // Log on every cold-start so Vercel logs show whether the env var is wired up
+  if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+    console.warn(
+      'NEXT_PUBLIC_API_BASE_URL is not set — falling back to http://localhost:8001. ' +
+      'Set this variable in the Vercel dashboard for production.'
+    )
+  } else {
+    console.log('RAG backend URL:', RAG_BACKEND_URL)
+  }
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
   try {
     const body = await request.json()
 
     console.log('Sending to RAG backend:', JSON.stringify(body, null, 2))
-    console.log('RAG backend URL:', RAG_BACKEND_URL)
 
     // Prepare request for HavenzHub-AI backend (matches BACKEND_API.md spec)
     const ragRequest = {
@@ -39,15 +62,16 @@ export async function POST(request: NextRequest) {
     const response = await fetch(`${RAG_BACKEND_URL}/chat/smart`, {
       method: 'POST',
       headers,
-      body: JSON.stringify(ragRequest)
+      body: JSON.stringify(ragRequest),
+      signal: controller.signal,
     })
 
     console.log('RAG backend response status:', response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.log('RAG backend error response:', errorText)
-      throw new Error(`RAG backend responded with status: ${response.status} - ${errorText}`)
+      console.error('RAG backend error response:', errorText)
+      throw new Error(`RAG backend responded with HTTP ${response.status}: ${errorText}`)
     }
 
     const data = await response.json()
@@ -85,15 +109,61 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('RAG backend proxy error:', error)
+    // Distinguish the three failure modes so the client (and Vercel logs) are informative
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error(`RAG backend timed out after ${FETCH_TIMEOUT_MS / 1000}s`)
+      return NextResponse.json(
+        {
+          error: 'Request timed out',
+          message: `The AI backend did not respond within ${FETCH_TIMEOUT_MS / 1000} seconds. Please try again.`,
+          response: 'The request took too long to complete. Please try your question again.',
+          answer: 'The request took too long to complete. Please try your question again.',
+        },
+        {
+          status: 504,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          },
+        }
+      )
+    }
 
-    // Return error response
+    const isNetworkError =
+      error instanceof TypeError &&
+      (error.message.includes('fetch failed') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('network'))
+
+    if (isNetworkError) {
+      console.error('RAG backend unreachable:', error)
+      return NextResponse.json(
+        {
+          error: 'Backend unreachable',
+          message: `Could not connect to the AI backend at ${RAG_BACKEND_URL}. Check that NEXT_PUBLIC_API_BASE_URL is set correctly in Vercel.`,
+          response: 'The document search system is currently unreachable. Please try again later.',
+          answer: 'The document search system is currently unreachable. Please try again later.',
+        },
+        {
+          status: 503,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          },
+        }
+      )
+    }
+
+    // Fallback: non-200 from backend or unexpected error
+    console.error('RAG backend proxy error:', error)
     return NextResponse.json(
       {
         error: 'Failed to connect to RAG backend',
         message: error instanceof Error ? error.message : 'Unknown error',
         response: 'I apologize, but I cannot connect to the document search system at the moment. Please try again later.',
-        answer: 'I apologize, but I cannot connect to the document search system at the moment. Please try again later.'
+        answer: 'I apologize, but I cannot connect to the document search system at the moment. Please try again later.',
       },
       {
         status: 500,
@@ -104,6 +174,8 @@ export async function POST(request: NextRequest) {
         },
       }
     )
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 
