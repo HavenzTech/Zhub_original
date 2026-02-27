@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   keywords: ["organizational management", "business intelligence", "document control", "workflow automation"],
   authors: [{ name: "Havenz Hub Team" }],
   robots: "index, follow",
+  icons: {
+    icon: "/logos/H_favicon.png",
+    apple: "/logos/H_favicon.png",
+  },
 }
 
 // Separate viewport export (required for Next.js 14+)
