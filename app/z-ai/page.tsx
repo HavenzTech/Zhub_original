@@ -8,6 +8,7 @@ import { Message, useChat } from "@/lib/hooks/useChat";
 import { ChatHeader } from "@/features/z-ai/components/ChatHeader";
 import { ChatMessage } from "@/features/z-ai/components/ChatMessage";
 import { ChatInput } from "@/features/z-ai/components/ChatInput";
+import { TypingIndicator } from "@/features/z-ai/components/TypingIndicator";
 import { QuickActionsSidebar } from "@/features/z-ai/components/QuickActionsSidebar";
 import DocumentViewModal from "@/features/documents/components/DocumentViewModal";
 import { bmsApi } from "@/lib/services/bmsApi";
@@ -379,6 +380,9 @@ export default function ZAiPage() {
                     onDocumentPreview={handleDocumentPreview}
                   />
                 ))}
+                {(chatIsLoading || isLoading) && (
+                  <TypingIndicator aiMode={aiMode} />
+                )}
               </div>
             </ScrollArea>
           </div>
