@@ -188,6 +188,16 @@ const config: Config = {
             transform: 'translateY(-2px)',
           },
         },
+        'typing-dot': {
+          '0%, 60%, 100%': {
+            transform: 'translateY(0)',
+            opacity: '0.4',
+          },
+          '30%': {
+            transform: 'translateY(-4px)',
+            opacity: '1',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -196,6 +206,9 @@ const config: Config = {
         'slide-in-right': 'slide-in-right 0.3s ease-out',
         'gentle-pulse': 'gentle-pulse 2s ease-in-out infinite',
         'bounce-subtle': 'bounce-subtle 1s ease-in-out infinite',
+        'typing-dot-1': 'typing-dot 1.4s ease-in-out infinite',
+        'typing-dot-2': 'typing-dot 1.4s ease-in-out 0.2s infinite',
+        'typing-dot-3': 'typing-dot 1.4s ease-in-out 0.4s infinite',
       },
       boxShadow: {
         'soft': '0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 4px 16px -4px rgba(0, 0, 0, 0.05)',
