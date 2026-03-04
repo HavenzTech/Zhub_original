@@ -2,14 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { useUsers } from './useUsers'
 
-// Mock bmsApi
+// Mock bmsApi - using adminUsers endpoints
 vi.mock('@/lib/services/bmsApi', () => ({
   bmsApi: {
-    users: {
+    adminUsers: {
       getAll: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
-      delete: vi.fn(),
+      deactivate: vi.fn(),
     },
   },
 }))
@@ -25,9 +25,10 @@ vi.mock('sonner', () => ({
 import { bmsApi } from '@/lib/services/bmsApi'
 import { toast } from 'sonner'
 
-const mockUsers = [
-  { id: '1', email: 'alice@example.com', name: 'Alice', pictureUrl: '', createdAt: '2024-01-01', updatedAt: '2024-01-01', role: 'admin' },
-  { id: '2', email: 'bob@example.com', name: 'Bob', pictureUrl: '', createdAt: '2024-01-01', updatedAt: '2024-01-01', role: 'user' },
+// Admin API returns userId, not id
+const mockAdminUsers = [
+  { userId: '1', email: 'alice@example.com', name: 'Alice', pictureUrl: '', createdAt: '2024-01-01', role: 'admin' },
+  { userId: '2', email: 'bob@example.com', name: 'Bob', pictureUrl: '', createdAt: '2024-01-01', role: 'user' },
 ]
 
 describe('useUsers', () => {
@@ -45,8 +46,8 @@ describe('useUsers', () => {
   })
 
   describe('loadUsers', () => {
-    it('should load users from API', async () => {
-      vi.mocked(bmsApi.users.getAll).mockResolvedValue(mockUsers)
+    it('should load users from admin API and normalize userId to id', async () => {
+      vi.mocked(bmsApi.adminUsers.getAll).mockResolvedValue(mockAdminUsers)
 
       const { result } = renderHook(() => useUsers())
 
@@ -54,13 +55,15 @@ describe('useUsers', () => {
         await result.current.loadUsers()
       })
 
-      expect(result.current.users).toEqual(mockUsers)
+      expect(result.current.users).toHaveLength(2)
+      expect(result.current.users[0].id).toBe('1')
+      expect(result.current.users[1].id).toBe('2')
       expect(result.current.loading).toBe(false)
       expect(result.current.error).toBeNull()
     })
 
     it('should handle paginated response with data wrapper', async () => {
-      vi.mocked(bmsApi.users.getAll).mockResolvedValue({ data: mockUsers } as any)
+      vi.mocked(bmsApi.adminUsers.getAll).mockResolvedValue({ data: mockAdminUsers } as any)
 
       const { result } = renderHook(() => useUsers())
 
@@ -68,11 +71,12 @@ describe('useUsers', () => {
         await result.current.loadUsers()
       })
 
-      expect(result.current.users).toEqual(mockUsers)
+      expect(result.current.users).toHaveLength(2)
+      expect(result.current.users[0].id).toBe('1')
     })
 
     it('should set error and show toast on failure', async () => {
-      vi.mocked(bmsApi.users.getAll).mockRejectedValue(new Error('Network error'))
+      vi.mocked(bmsApi.adminUsers.getAll).mockRejectedValue(new Error('Network error'))
 
       const { result } = renderHook(() => useUsers())
 
@@ -89,17 +93,16 @@ describe('useUsers', () => {
   })
 
   describe('createUser', () => {
-    it('should create a user and add to list with CreateUserResponse conversion', async () => {
+    it('should create a user and add to list with normalized userId', async () => {
       const createUserResponse = {
-        id: '3',
+        userId: '3',
         email: 'charlie@example.com',
         name: 'Charlie',
-        pictureUrl: '',
-        createdAt: '2024-02-01',
         role: 'user',
         temporaryPassword: 'temp123',
+        faceEnrollmentRequired: false,
       }
-      vi.mocked(bmsApi.users.create).mockResolvedValue(createUserResponse)
+      vi.mocked(bmsApi.adminUsers.create).mockResolvedValue(createUserResponse)
 
       const { result } = renderHook(() => useUsers())
 
@@ -111,24 +114,21 @@ describe('useUsers', () => {
         } as any)
       })
 
-      // Returns the full CreateUserResponse (with temporaryPassword)
-      expect(created).toEqual(createUserResponse)
-      // But adds a converted UserResponse to the list (updatedAt = createdAt)
+      // Returns the normalized response (userId mapped to id)
+      expect(created.id).toBe('3')
+      expect(created.userId).toBe('3')
+      expect(created.temporaryPassword).toBe('temp123')
+      // Adds a UserResponse to the list
       expect(result.current.users).toHaveLength(1)
-      expect(result.current.users[0]).toEqual({
-        id: '3',
-        email: 'charlie@example.com',
-        name: 'Charlie',
-        pictureUrl: '',
-        createdAt: '2024-02-01',
-        updatedAt: '2024-02-01',
-        role: 'user',
-      })
+      expect(result.current.users[0].id).toBe('3')
+      expect(result.current.users[0].email).toBe('charlie@example.com')
+      expect(result.current.users[0].name).toBe('Charlie')
+      expect(result.current.users[0].role).toBe('user')
       expect(toast.success).toHaveBeenCalledWith('User created successfully')
     })
 
     it('should return null and show toast on failure', async () => {
-      vi.mocked(bmsApi.users.create).mockRejectedValue(new Error('Validation error'))
+      vi.mocked(bmsApi.adminUsers.create).mockRejectedValue(new Error('Validation error'))
 
       const { result } = renderHook(() => useUsers())
 
@@ -146,8 +146,8 @@ describe('useUsers', () => {
 
   describe('updateUser', () => {
     it('should update a user in the list', async () => {
-      vi.mocked(bmsApi.users.getAll).mockResolvedValue(mockUsers)
-      vi.mocked(bmsApi.users.update).mockResolvedValue(undefined)
+      vi.mocked(bmsApi.adminUsers.getAll).mockResolvedValue(mockAdminUsers)
+      vi.mocked(bmsApi.adminUsers.update).mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useUsers())
 
@@ -167,7 +167,7 @@ describe('useUsers', () => {
     })
 
     it('should return false and show toast on failure', async () => {
-      vi.mocked(bmsApi.users.update).mockRejectedValue(new Error('Not found'))
+      vi.mocked(bmsApi.adminUsers.update).mockRejectedValue(new Error('Not found'))
 
       const { result } = renderHook(() => useUsers())
 
@@ -184,9 +184,9 @@ describe('useUsers', () => {
   })
 
   describe('deleteUser', () => {
-    it('should delete a user from the list', async () => {
-      vi.mocked(bmsApi.users.getAll).mockResolvedValue(mockUsers)
-      vi.mocked(bmsApi.users.delete).mockResolvedValue(undefined)
+    it('should deactivate a user and remove from the list', async () => {
+      vi.mocked(bmsApi.adminUsers.getAll).mockResolvedValue(mockAdminUsers)
+      vi.mocked(bmsApi.adminUsers.deactivate).mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useUsers())
 
@@ -207,7 +207,7 @@ describe('useUsers', () => {
     })
 
     it('should return false and show toast on failure', async () => {
-      vi.mocked(bmsApi.users.delete).mockRejectedValue(new Error('Forbidden'))
+      vi.mocked(bmsApi.adminUsers.deactivate).mockRejectedValue(new Error('Forbidden'))
 
       const { result } = renderHook(() => useUsers())
 

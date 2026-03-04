@@ -4,6 +4,11 @@ import { extractArray } from "@/lib/utils/api"
 import type { UserResponse, CreateUserRequest, CreateUserResponse } from "@/types/bms"
 import { toast } from "sonner"
 
+/** Normalize admin API responses (userId → id) for consistent frontend usage */
+function normalizeUser<T extends { userId?: string; id?: string }>(user: T): T & { id: string | undefined } {
+  return { ...user, id: user.id ?? user.userId }
+}
+
 interface UseUsersReturn {
   users: UserResponse[]
   loading: boolean
@@ -16,8 +21,8 @@ interface UseUsersReturn {
 }
 
 /**
- * Hook for managing users
- * Handles fetching, creating, updating, and deleting users
+ * Hook for managing users via admin endpoints (/api/admin/users)
+ * Handles fetching, creating, updating, and deactivating users
  */
 export function useUsers(): UseUsersReturn {
   const [users, setUsers] = useState<UserResponse[]>([])
@@ -28,8 +33,9 @@ export function useUsers(): UseUsersReturn {
     try {
       setLoading(true)
       setError(null)
-      const data = await bmsApi.users.getAll()
-      setUsers(extractArray<UserResponse>(data))
+      const data = await bmsApi.adminUsers.getAll()
+      const normalized = extractArray<UserResponse>(data).map(normalizeUser)
+      setUsers(normalized)
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load users")
       setError(error)
@@ -44,22 +50,21 @@ export function useUsers(): UseUsersReturn {
   const createUser = useCallback(
     async (userData: CreateUserRequest): Promise<CreateUserResponse | null> => {
       try {
-        const newUser = (await bmsApi.users.create(userData)) as CreateUserResponse
+        const newUser = (await bmsApi.adminUsers.create(userData)) as CreateUserResponse
+        const normalized = normalizeUser(newUser)
 
         // Add to users list (convert CreateUserResponse to UserResponse)
         const userResponse: UserResponse = {
-          id: newUser.id,
-          email: newUser.email,
-          name: newUser.name,
-          pictureUrl: newUser.pictureUrl,
-          createdAt: newUser.createdAt,
-          updatedAt: newUser.createdAt,
-          role: newUser.role,
+          id: normalized.id,
+          email: normalized.email,
+          name: normalized.name,
+          role: normalized.role,
+          faceEnrollmentRequired: normalized.faceEnrollmentRequired,
         }
         setUsers((prev: UserResponse[]) => [...prev, userResponse])
 
         toast.success("User created successfully")
-        return newUser
+        return normalized
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Failed to create user")
         toast.error("Failed to create user", {
@@ -74,7 +79,7 @@ export function useUsers(): UseUsersReturn {
   const updateUser = useCallback(
     async (id: string, userData: Partial<UserResponse>): Promise<boolean> => {
       try {
-        await bmsApi.users.update(id, userData)
+        await bmsApi.adminUsers.update(id, userData)
         setUsers((prev: UserResponse[]) =>
           prev.map((user: UserResponse) =>
             user.id === id ? { ...user, ...userData } : user
@@ -95,7 +100,7 @@ export function useUsers(): UseUsersReturn {
 
   const deleteUser = useCallback(async (id: string): Promise<boolean> => {
     try {
-      await bmsApi.users.delete(id)
+      await bmsApi.adminUsers.deactivate(id)
       setUsers((prev: UserResponse[]) =>
         prev.filter((user: UserResponse) => user.id !== id)
       )

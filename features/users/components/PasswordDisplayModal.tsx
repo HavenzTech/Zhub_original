@@ -52,29 +52,29 @@ export function PasswordDisplayModal({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="p-4 bg-muted rounded-lg space-y-2">
+          <div className="p-4 bg-stone-50 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Email:</span>
-              <span className="text-sm">{createdUser?.email}</span>
+              <span className="text-sm font-medium text-stone-500 dark:text-stone-400">Email:</span>
+              <span className="text-sm text-stone-900 dark:text-stone-100">{createdUser?.email}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Name:</span>
-              <span className="text-sm">{createdUser?.name}</span>
+              <span className="text-sm font-medium text-stone-500 dark:text-stone-400">Name:</span>
+              <span className="text-sm text-stone-900 dark:text-stone-100">{createdUser?.name}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Role:</span>
+              <span className="text-sm font-medium text-stone-500 dark:text-stone-400">Role:</span>
               <Badge className={getRoleBadgeColor(createdUser?.role)}>
                 {getRoleLabel(createdUser?.role)}
               </Badge>
             </div>
           </div>
-          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg space-y-2">
-            <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg space-y-2">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
               <Eye className="w-4 h-4" />
               <span className="text-sm font-semibold">Temporary Password</span>
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <code className="flex-1 p-2 bg-white dark:bg-gray-800 rounded border border-yellow-300 dark:border-yellow-700 font-mono text-sm">
+              <code className="flex-1 p-2 bg-white dark:bg-stone-900 rounded border border-amber-200 dark:border-amber-800 font-mono text-sm text-stone-900 dark:text-stone-100">
                 {createdUser?.temporaryPassword}
               </code>
               <Button
@@ -96,7 +96,7 @@ export function PasswordDisplayModal({
                 )}
               </Button>
             </div>
-            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
               Send this password to the user via a secure channel (email, Slack,
               etc.)
             </p>

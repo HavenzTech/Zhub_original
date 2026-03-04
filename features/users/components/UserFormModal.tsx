@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { UserResponse, CreateUserRequest, UserRole } from "@/types/bms";
+import { Switch } from "@/components/ui/switch";
 import { UserPlus, Check, Loader2, Upload, X, User } from "lucide-react";
 import { getRoleBadgeColor, getRoleLabel } from "../utils/userHelpers";
 
@@ -104,7 +105,7 @@ export function UserFormModal({
                 type="email"
                 value={editingUser.email ?? ""}
                 disabled
-                className="bg-muted"
+                className="bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 opacity-100"
               />
             </div>
             <div className="space-y-2">
@@ -269,6 +270,24 @@ export function UserFormModal({
                 <SelectItem value="super_admin">Super Admin - Platform-wide access</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          {/* Face Enrollment */}
+          <div className="flex items-center justify-between rounded-lg border border-stone-200 dark:border-stone-700 p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="face-enrollment" className="text-sm font-medium">
+                Require Face Enrollment
+              </Label>
+              <p className="text-xs text-stone-500 dark:text-stone-400">
+                User must enroll their face via the mobile app during onboarding
+              </p>
+            </div>
+            <Switch
+              id="face-enrollment"
+              checked={formData.faceEnrollmentRequired ?? false}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, faceEnrollmentRequired: checked })
+              }
+            />
           </div>
           {/* Avatar Upload */}
           <div className="space-y-2">

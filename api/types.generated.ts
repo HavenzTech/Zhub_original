@@ -169,7 +169,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     userId: string;
@@ -184,9 +187,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -208,7 +211,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     propertyId: string;
@@ -223,9 +229,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -247,7 +253,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     deviceId: string;
@@ -262,9 +271,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -286,7 +295,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     companyId: string;
@@ -301,9 +313,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -325,7 +337,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     accessType: string;
@@ -340,9 +355,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -367,6 +382,8 @@ export interface paths {
                 query?: {
                     startDate?: string;
                     endDate?: string;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -380,9 +397,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -404,7 +421,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -417,9 +437,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -441,7 +461,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -454,9 +477,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -480,6 +503,8 @@ export interface paths {
             parameters: {
                 query?: {
                     status?: string;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path: {
@@ -688,6 +713,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    page?: number;
+                    pageSize?: number;
                     areaType?: string;
                     floorLevel?: number;
                     includeInactive?: boolean;
@@ -706,7 +733,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AreaDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AreaDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Not Found */
@@ -1490,7 +1517,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     propertyId: string;
@@ -1505,9 +1535,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -1529,7 +1559,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     type: string;
@@ -1544,9 +1577,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -1568,7 +1601,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     status: string;
@@ -1583,9 +1619,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -1607,7 +1643,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     companyId: string;
@@ -1622,9 +1661,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -1646,7 +1685,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -1659,9 +1701,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -2103,7 +2145,11 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    search?: string;
+                };
                 header?: never;
                 path: {
                     id: string;
@@ -2118,7 +2164,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.UserSummaryDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.UserSummaryDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Unauthorized */
@@ -2599,7 +2645,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     departmentId: string;
@@ -2614,7 +2663,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.DepartmentMemberDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DepartmentMemberDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Unauthorized */
@@ -4194,7 +4243,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    limit?: number;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path: {
@@ -4210,9 +4260,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.DocumentAccessLogDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentAccessLogDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentAccessLogDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentAccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentAccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentAccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -4503,7 +4553,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     documentId: string;
@@ -4518,7 +4571,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentPermissionDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentPermissionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -4760,7 +4813,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     documentId: string;
@@ -4775,9 +4831,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.RetentionScheduleDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.RetentionScheduleDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.RetentionScheduleDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RetentionScheduleDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RetentionScheduleDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RetentionScheduleDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -5049,7 +5105,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     documentId: string;
@@ -5064,7 +5123,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentShareDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentShareDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -5245,7 +5304,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    limit?: number;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path: {
@@ -5262,7 +5322,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.ShareAccessLogDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ShareAccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Not Found */
@@ -5295,6 +5355,8 @@ export interface paths {
             parameters: {
                 query?: {
                     includeInactive?: boolean;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -5308,9 +5370,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.DocumentTypeDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentTypeDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentTypeDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentTypeDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentTypeDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentTypeDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Unauthorized */
@@ -5637,7 +5699,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     documentId: string;
@@ -5652,7 +5717,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentVersionDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentVersionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Not Found */
@@ -6054,7 +6119,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     documentId: string;
@@ -6069,9 +6137,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.WorkflowInstanceDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.WorkflowInstanceDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.WorkflowInstanceDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowInstanceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowInstanceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowInstanceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -6949,7 +7017,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     userId: string;
@@ -6964,9 +7035,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -6988,7 +7059,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     companyId: string;
@@ -7003,9 +7077,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -7027,7 +7101,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     status: string;
@@ -7042,9 +7119,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -7066,6 +7143,169 @@ export interface paths {
         };
         get: {
             parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FacialRecognitionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/FacialRecognition/enroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        frames?: string[];
+                        notes?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentResponse"];
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentResponse"];
+                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/FacialRecognition/enroll/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        frames?: string[];
+                        notes?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentResponse"];
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentResponse"];
+                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/FacialRecognition/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/FacialRecognition/enroll/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
                 query?: never;
                 header?: never;
                 path?: never;
@@ -7079,9 +7319,48 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FacialRecognitionDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentStatusResponse"];
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentStatusResponse"];
+                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentStatusResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/FacialRecognition/enroll/status/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentStatusResponse"];
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentStatusResponse"];
+                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FaceEnrollmentStatusResponse"];
                     };
                 };
             };
@@ -7419,7 +7698,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     folderId: string;
@@ -7434,7 +7716,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Unauthorized */
@@ -7579,7 +7861,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     folderId: string;
@@ -7594,7 +7879,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentPermissionDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentPermissionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -7728,6 +8013,8 @@ export interface paths {
             parameters: {
                 query?: {
                     includeInactive?: boolean;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -7741,9 +8028,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FolderTemplateDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FolderTemplateDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FolderTemplateDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FolderTemplateDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FolderTemplateDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FolderTemplateDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -8012,7 +8299,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     scopeType: string;
@@ -8027,9 +8317,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FolderTemplateDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FolderTemplateDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FolderTemplateDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FolderTemplateDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FolderTemplateDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FolderTemplateDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -8319,7 +8609,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     deviceId: string;
@@ -8334,9 +8627,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -8358,7 +8651,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     propertyId: string;
@@ -8373,9 +8669,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -8397,7 +8693,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     companyId: string;
@@ -8412,9 +8711,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -8436,7 +8735,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     metricType: string;
@@ -8451,9 +8753,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -8478,6 +8780,8 @@ export interface paths {
                 query?: {
                     startDate?: string;
                     endDate?: string;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -8491,9 +8795,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -8515,7 +8819,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -8528,9 +8835,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -8552,7 +8859,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     severity: string;
@@ -8567,9 +8877,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.IotMetricDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.IotMetricDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -9567,7 +9877,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     projectId: string;
@@ -9582,7 +9895,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.ProjectMemberDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectMemberDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Unauthorized */
@@ -9931,7 +10244,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     projectId: string;
@@ -9946,7 +10262,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.ProjectDepartmentDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectDepartmentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Unauthorized */
@@ -10385,6 +10701,8 @@ export interface paths {
             parameters: {
                 query?: {
                     includeInactive?: boolean;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -10398,9 +10716,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.RetentionPolicyDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.RetentionPolicyDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.RetentionPolicyDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RetentionPolicyDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RetentionPolicyDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RetentionPolicyDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -10654,6 +10972,8 @@ export interface paths {
             parameters: {
                 query?: {
                     includeShared?: boolean;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -10667,9 +10987,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.SavedSearchDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.SavedSearchDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.SavedSearchDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.SavedSearchDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.SavedSearchDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.SavedSearchDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -11181,6 +11501,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    page?: number;
+                    pageSize?: number;
                     status?: string;
                 };
                 header?: never;
@@ -11195,7 +11517,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.TaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Unauthorized */
@@ -11226,7 +11548,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path: {
                     projectId: string;
@@ -11241,7 +11566,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskDto"][];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.TaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Unauthorized */
@@ -12429,7 +12754,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    limit?: number;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -12443,9 +12769,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.RecentDocumentDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.RecentDocumentDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.RecentDocumentDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RecentDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RecentDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RecentDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -12467,7 +12793,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -12480,9 +12809,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.FavoriteDocumentDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FavoriteDocumentDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.FavoriteDocumentDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FavoriteDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FavoriteDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FavoriteDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -12665,6 +12994,8 @@ export interface paths {
             parameters: {
                 query?: {
                     daysAhead?: number;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -12678,9 +13009,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.DocumentNeedsReviewDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentNeedsReviewDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.DocumentNeedsReviewDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentNeedsReviewDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentNeedsReviewDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentNeedsReviewDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -12704,6 +13035,8 @@ export interface paths {
             parameters: {
                 query?: {
                     userId?: string;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -12717,9 +13050,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.CheckedOutDocumentDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.CheckedOutDocumentDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.CheckedOutDocumentDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.CheckedOutDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.CheckedOutDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.CheckedOutDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -12741,7 +13074,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -12754,9 +13090,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.CheckedOutDocumentDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.CheckedOutDocumentDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.CheckedOutDocumentDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.CheckedOutDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.CheckedOutDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.CheckedOutDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -12872,6 +13208,112 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/webhooks/failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/webhooks/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/webhooks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/havenzhub/admin/workflows": {
         parameters: {
             query?: never;
@@ -12883,6 +13325,8 @@ export interface paths {
             parameters: {
                 query?: {
                     includeInactive?: boolean;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -12896,9 +13340,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.WorkflowDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.WorkflowDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.WorkflowDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
                 /** @description Unauthorized */
@@ -13222,6 +13666,8 @@ export interface paths {
             parameters: {
                 query?: {
                     pendingOnly?: boolean;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -13235,9 +13681,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.WorkflowTaskDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.WorkflowTaskDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.WorkflowTaskDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowTaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowTaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowTaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -13261,6 +13707,8 @@ export interface paths {
             parameters: {
                 query?: {
                     pendingOnly?: boolean;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path: {
@@ -13276,9 +13724,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.WorkflowTaskDto"][];
-                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.WorkflowTaskDto"][];
-                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.WorkflowTaskDto"][];
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowTaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowTaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowTaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
             };
@@ -13890,6 +14338,51 @@ export interface components {
             recordedAt?: string;
             equipment?: components["schemas"]["DomainModel.HavenzHub.Equipment"];
         };
+        "DomainModel.HavenzHub.FaceEnrollmentFrame": {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            sessionId: string;
+            /** Format: int32 */
+            frameIndex?: number;
+            storagePath: string;
+            contentHash: string;
+            fileName?: string | null;
+            contentType?: string | null;
+            /** Format: int64 */
+            fileSizeBytes?: number | null;
+            /** Format: date-time */
+            createdAt?: string;
+            session?: components["schemas"]["DomainModel.HavenzHub.FaceEnrollmentSession"];
+        };
+        "DomainModel.HavenzHub.FaceEnrollmentSession": {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            userId: string;
+            /** Format: uuid */
+            companyId: string;
+            status: string;
+            /** Format: double */
+            livenessScore?: number | null;
+            livenessPassed?: boolean | null;
+            /** Format: int32 */
+            frameCount?: number;
+            /** Format: uuid */
+            initiatedBy: string;
+            notes?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            completedAt?: string | null;
+            /** Format: date-time */
+            updatedAt?: string;
+            user?: components["schemas"]["DomainModel.HavenzHub.User"];
+            company?: components["schemas"]["DomainModel.HavenzHub.Company"];
+            initiatedByUser?: components["schemas"]["DomainModel.HavenzHub.User"];
+            frames?: components["schemas"]["DomainModel.HavenzHub.FaceEnrollmentFrame"][] | null;
+            facialRecognitions?: components["schemas"]["DomainModel.HavenzHub.FacialRecognition"][] | null;
+        };
         "DomainModel.HavenzHub.FacialRecognition": {
             /** Format: uuid */
             id?: string;
@@ -13918,12 +14411,17 @@ export interface components {
             /** Format: date-time */
             expiryDate?: string | null;
             notes?: string | null;
+            enrollmentStoragePath?: string | null;
+            photoContentHash?: string | null;
+            /** Format: uuid */
+            enrollmentSessionId?: string | null;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
             user?: components["schemas"]["DomainModel.HavenzHub.User"];
             company?: components["schemas"]["DomainModel.HavenzHub.Company"];
+            enrollmentSession?: components["schemas"]["DomainModel.HavenzHub.FaceEnrollmentSession"];
         };
         "DomainModel.HavenzHub.Folder": {
             /** Format: uuid */
@@ -14106,6 +14604,8 @@ export interface components {
             /** Format: date-time */
             backupCodesGeneratedAt?: string | null;
             totpSecret?: string | null;
+            faceEnrollmentRequired?: boolean;
+            faceEnrollmentExempt?: boolean;
             /** Format: date-time */
             tokensValidAfter?: string | null;
             userCompanies?: components["schemas"]["DomainModel.HavenzHub.UserCompany"][] | null;
@@ -14220,6 +14720,7 @@ export interface components {
             pictureUrl?: string | null;
             role?: string | null;
             departmentIds?: string[] | null;
+            faceEnrollmentRequired?: boolean;
         };
         "WebApp.Controllers.Admin.CreateUserResponse": {
             /** Format: uuid */
@@ -14227,6 +14728,7 @@ export interface components {
             email?: string | null;
             name?: string | null;
             role?: string | null;
+            faceEnrollmentRequired?: boolean;
             temporaryPassword?: string | null;
             message?: string | null;
         };
@@ -14314,6 +14816,7 @@ export interface components {
             mfaEnabled?: boolean;
             /** Format: date-time */
             mfaConfiguredAt?: string | null;
+            faceEnrollmentRequired?: boolean;
             /** Format: date-time */
             createdAt?: string;
             departments?: components["schemas"]["WebApp.Controllers.Admin.DepartmentInfo"][] | null;
@@ -14480,6 +14983,7 @@ export interface components {
             requiredActions?: string[] | null;
             requiresPasswordChange?: boolean;
             requiresMfaSetup?: boolean;
+            requiresFaceEnrollment?: boolean;
         };
         "WebApp.Models.Auth.UserCompanyInfo": {
             /** Format: uuid */
@@ -14499,8 +15003,28 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AreaDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.AreaDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.BmsDeviceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.BmsDeviceDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.CheckedOutDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.CheckedOutDocumentDto"][] | null;
             /** Format: int32 */
             total?: number;
             /** Format: int32 */
@@ -14529,8 +15053,78 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DepartmentMemberDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.DepartmentMemberDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentAccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.DocumentAccessLogDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.DocumentDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentNeedsReviewDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.DocumentNeedsReviewDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentPermissionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.DocumentPermissionDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentShareDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.DocumentShareDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentTypeDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.DocumentTypeDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.DocumentVersionDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.DocumentVersionDto"][] | null;
             /** Format: int32 */
             total?: number;
             /** Format: int32 */
@@ -14559,8 +15153,28 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FavoriteDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.FavoriteDocumentDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FolderDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.FolderDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.FolderTemplateDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.FolderTemplateDto"][] | null;
             /** Format: int32 */
             total?: number;
             /** Format: int32 */
@@ -14589,6 +15203,16 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectDepartmentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.ProjectDepartmentDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.ProjectDto"][] | null;
             /** Format: int32 */
@@ -14599,8 +15223,68 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectMemberDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.ProjectMemberDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.PropertyDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.PropertyDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RecentDocumentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.RecentDocumentDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RetentionPolicyDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.RetentionPolicyDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.RetentionScheduleDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.RetentionScheduleDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.SavedSearchDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.SavedSearchDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ShareAccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.ShareAccessLogDto"][] | null;
             /** Format: int32 */
             total?: number;
             /** Format: int32 */
@@ -14621,6 +15305,46 @@ export interface components {
         };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.UserResponse, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.UserResponse"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.UserSummaryDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.UserSummaryDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.WorkflowDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowInstanceDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.WorkflowInstanceDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.WorkflowTaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.WorkflowTaskDto"][] | null;
             /** Format: int32 */
             total?: number;
             /** Format: int32 */
@@ -15988,6 +16712,30 @@ export interface components {
             extendDays: number;
             reason: string;
         };
+        "WebApp.Models.HavenzHub.FaceEnrollmentResponse": {
+            /** Format: uuid */
+            sessionId?: string;
+            status?: string | null;
+            /** Format: int32 */
+            frameCount?: number;
+            message?: string | null;
+        };
+        "WebApp.Models.HavenzHub.FaceEnrollmentStatusResponse": {
+            /** Format: uuid */
+            sessionId?: string | null;
+            status?: string | null;
+            /** Format: int32 */
+            frameCount?: number;
+            /** Format: int32 */
+            encodingCount?: number;
+            /** Format: double */
+            livenessScore?: number | null;
+            livenessPassed?: boolean | null;
+            /** Format: date-time */
+            enrolledAt?: string | null;
+            /** Format: date-time */
+            expiresAt?: string | null;
+        };
         "WebApp.Models.HavenzHub.FacialRecognitionDto": {
             /** Format: uuid */
             id?: string;
@@ -16713,6 +17461,12 @@ export interface components {
             category?: string | null;
             metadata?: string | null;
             tags?: string | null;
+            classification?: string | null;
+            description?: string | null;
+            /** Format: uuid */
+            documentTypeId?: string | null;
+            /** Format: uuid */
+            ownedByUserId?: string | null;
         };
         "WebApp.Models.HavenzHub.UpdateDocumentShareRequest": {
             name?: string | null;
