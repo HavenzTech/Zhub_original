@@ -27,6 +27,7 @@ const initialFormData: CreateUserRequest = {
   name: "",
   pictureUrl: "",
   role: "employee",
+  faceEnrollmentRequired: false,
 };
 
 const initialEditFormData = {
@@ -87,6 +88,7 @@ export function UserManagementPanel() {
         email: formData.email.trim(),
         name: formData.name.trim(),
         role: formData.role,
+        faceEnrollmentRequired: formData.faceEnrollmentRequired ?? false,
       };
 
       if (formData.pictureUrl?.trim()) {

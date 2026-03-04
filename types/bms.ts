@@ -17,6 +17,7 @@ export interface User {
 
 export interface UserResponse {
   id?: string;
+  userId?: string;
   email?: string | null;
   name?: string | null;
   pictureUrl?: string | null;
@@ -28,6 +29,8 @@ export interface UserResponse {
   accountAgeInDays?: number;
   createdTimeAgo?: string | null;
   updatedTimeAgo?: string | null;
+  faceEnrollmentRequired?: boolean;
+  mfaEnabled?: boolean;
 }
 
 export interface CreateUserRequest {
@@ -35,15 +38,20 @@ export interface CreateUserRequest {
   name: string;
   pictureUrl?: string | null;
   role: string;
+  departmentIds?: string[] | null;
+  faceEnrollmentRequired?: boolean;
 }
 
 export interface CreateUserResponse {
   id?: string;
+  userId?: string;
   email?: string | null;
   name?: string | null;
   pictureUrl?: string | null;
   role?: string | null;
+  faceEnrollmentRequired?: boolean;
   temporaryPassword?: string | null;
+  message?: string | null;
   passwordResetEmailSent?: boolean;
   createdAt?: string;
 }

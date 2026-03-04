@@ -71,6 +71,7 @@ import { authService } from './auth';
 // Environment variables - configured in .env.local
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const API_PREFIX = '/api/havenzhub';
+const ADMIN_PREFIX = '/api/admin';
 const TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
 
 if (!BASE_URL) {
@@ -95,6 +96,7 @@ interface RequestOptions extends RequestInit {
   timeout?: number;
   skipAuth?: boolean;
   _retryCount?: number; // Internal use for retry tracking
+  prefix?: string; // URL prefix override (default: API_PREFIX)
 }
 
 class BmsApiService {
@@ -123,9 +125,9 @@ class BmsApiService {
     endpoint: string,
     options: RequestOptions = {}
   ): Promise<T> {
-    const { timeout = TIMEOUT, skipAuth = false, _retryCount = 0, ...fetchOptions } = options;
+    const { timeout = TIMEOUT, skipAuth = false, _retryCount = 0, prefix, ...fetchOptions } = options;
 
-    const url = `${this.baseUrl}${API_PREFIX}${endpoint}`;
+    const url = `${this.baseUrl}${prefix ?? API_PREFIX}${endpoint}`;
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -404,6 +406,30 @@ class BmsApiService {
       formData.append('file', file);
       return this.postFormData(`/users/${id}/avatar/upload`, formData);
     },
+  };
+
+  // Admin User endpoints - Swagger: /api/admin/users
+  adminUsers = {
+    getAll: (params?: { search?: string; role?: string; departmentId?: string; page?: number; pageSize?: number }) => {
+      const query = params
+        ? '?' + new URLSearchParams(
+            Object.entries(params)
+              .filter(([, v]) => v != null)
+              .map(([k, v]) => [k, String(v)])
+          ).toString()
+        : '';
+      return this.get<any[]>(`/users${query}`, { prefix: ADMIN_PREFIX });
+    },
+    getById: (userId: string) =>
+      this.get(`/users/${userId}`, { prefix: ADMIN_PREFIX }),
+    create: (data: any) =>
+      this.post('/users', data, { prefix: ADMIN_PREFIX }),
+    update: (userId: string, data: any) =>
+      this.put(`/users/${userId}`, data, { prefix: ADMIN_PREFIX }),
+    deactivate: (userId: string) =>
+      this.post(`/users/${userId}/deactivate`, {}, { prefix: ADMIN_PREFIX }),
+    reactivate: (userId: string) =>
+      this.post(`/users/${userId}/reactivate`, {}, { prefix: ADMIN_PREFIX }),
   };
 
   // Company endpoints - Swagger: /api/havenzhub/companies

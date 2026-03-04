@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { UserResponse } from "@/types/bms";
-import { Mail, Shield, Calendar, Edit, Trash2 } from "lucide-react";
+import { Mail, Shield, Calendar, Edit, Trash2, ScanFace } from "lucide-react";
 import {
   getRoleBadgeColor,
   getRoleLabel,
@@ -72,6 +72,17 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
               {formatDate(user.createdAt)}
             </span>
           </div>
+          {user.faceEnrollmentRequired && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-stone-500 dark:text-stone-400 flex items-center gap-1.5">
+                <ScanFace className="w-3.5 h-3.5" />
+                Face ID
+              </span>
+              <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px]">
+                Required
+              </Badge>
+            </div>
+          )}
         </div>
       </div>
 
