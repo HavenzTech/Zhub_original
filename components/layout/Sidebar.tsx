@@ -169,9 +169,9 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
           <Image
             src="/logo.png"
             alt="Havenz Hub"
-            width={collapsed ? 28 : 32}
-            height={collapsed ? 28 : 32}
-            className="object-contain"
+            width={120}
+            height={32}
+            className={collapsed ? "h-7 object-contain" : "h-8 object-contain"}
           />
         </Link>
         {!collapsed && (
