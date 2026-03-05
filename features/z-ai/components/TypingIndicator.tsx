@@ -4,8 +4,7 @@ import { cn } from "@/lib/utils"
 import { getMessageAvatarBg } from "../utils/chatHelpers"
 
 const PHASES = [
-  { text: "Processing request", minDuration: 2000 },
-  { text: "Analyzing documents", minDuration: 3000 },
+  { text: "Processing request", minDuration: 3000 },
   { text: "Finalizing response", minDuration: 0 },
 ]
 
