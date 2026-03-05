@@ -11,8 +11,6 @@ import {
   Download,
   ThumbsUp,
   ThumbsDown,
-  FileText,
-  Eye,
   Clock,
   Zap,
 } from "lucide-react"
@@ -163,58 +161,7 @@ export const ChatMessage = memo(function ChatMessage({ message, onDocumentPrevie
             </div>
           )}
 
-          {/* Source Documents */}
-          {message.sourceDocuments && message.sourceDocuments.length > 0 ? (
-            <div className="mt-3 pt-3 border-t border-accent-cyan/20">
-              <p className="text-xs text-accent-cyan mb-2">
-                Source Documents (Top 3):
-              </p>
-              <div className="space-y-2">
-                {message.sourceDocuments.slice(0, 3).map((doc, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-2 bg-stone-50 dark:bg-stone-800/50 rounded-lg border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
-                  >
-                    <div
-                      className="flex items-center gap-2 flex-1 cursor-pointer"
-                      onClick={() => onDocumentPreview(doc)}
-                    >
-                      <FileText className="w-3 h-3 text-accent-cyan flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-accent-cyan truncate hover:text-accent-cyan/80 transition-colors">
-                          {doc.title}
-                        </p>
-                        <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
-                          {doc.parent_folder} {doc.page_start ? `• p.${doc.page_start}${doc.page_end && doc.page_end !== doc.page_start ? `-${doc.page_end}` : ''}` : ''}
-                        </p>
-                      </div>
-                      <Eye className="w-3 h-3 text-accent-cyan opacity-60 hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            message.relatedDocuments && (
-              <div className="mt-3 pt-3 border-t border-accent-cyan/20">
-                <p className="text-xs text-accent-cyan mb-2">
-                  Related Documents:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {message.relatedDocuments.map((doc, i) => (
-                    <Badge
-                      key={i}
-                      variant="secondary"
-                      className="text-xs cursor-pointer hover:bg-stone-200 dark:hover:bg-stone-700"
-                    >
-                      <FileText className="w-3 h-3 mr-1" />
-                      {doc}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )
-          )}
+          {/* Source Documents - temporarily hidden, will be re-enabled later */}
         </div>
 
         {/* Action Buttons for AI messages */}
