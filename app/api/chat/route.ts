@@ -15,24 +15,31 @@ const RAG_BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhos
 // can return a clean timeout response instead of a hard 504/500.
 const FETCH_TIMEOUT_MS = 55_000
 
-export async function POST(request: NextRequest) {
-  // Log on every cold-start so Vercel logs show whether the env var is wired up
-  if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-    console.warn(
-      'NEXT_PUBLIC_API_BASE_URL is not set — falling back to http://localhost:8001. ' +
-      'Set this variable in the Vercel dashboard for production.'
-    )
-  } else {
-    console.log('RAG backend URL:', RAG_BACKEND_URL)
+// Allowed origins for CORS — restrict to your own domain
+const ALLOWED_ORIGIN = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   }
+}
+
+export async function POST(request: NextRequest) {
+  // Auth check
+  const authHeader = request.headers.get('authorization')
+  const authCookie = request.cookies.get('auth-token')?.value
+  if (!authHeader && !authCookie) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: corsHeaders() })
+  }
+
 
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
 
   try {
     const body = await request.json()
-
-    console.log('Sending to RAG backend:', JSON.stringify(body, null, 2))
 
     // Prepare request for HavenzHub-AI backend (matches BACKEND_API.md spec)
     const ragRequest = {
@@ -66,11 +73,9 @@ export async function POST(request: NextRequest) {
       signal: controller.signal,
     })
 
-    console.log('RAG backend response status:', response.status)
-
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('RAG backend error response:', errorText)
+      console.error('RAG backend error:', response.status)
       throw new Error(`RAG backend responded with HTTP ${response.status}: ${errorText}`)
     }
 
@@ -81,13 +86,13 @@ export async function POST(request: NextRequest) {
       response: data.answer || "Sorry, I couldn't generate a response.",
       answer: data.answer || "Sorry, I couldn't generate a response.",
       sources: data.source_documents?.map((doc: any) => doc.document_name || doc.metadata?.title || doc.metadata?.source || "Unknown document") || [],
-      source_documents: data.source_documents || [], // Include full source documents for Z AI
+      source_documents: data.source_documents || [],
       documents_found: data.source_documents?.length || 0,
       search_type: data.search_type,
       tool_used: data.tool_used || "chat",
       agent_used: data.agent_used || true,
       session_id: data.session_id,
-      generated_images: data.generated_images || [], // Pass through generated images
+      generated_images: data.generated_images || [],
       metadata: {
         elapsed_time: data.metadata?.elapsed_time || null,
         token_usage: data.metadata?.token_usage || null,
@@ -97,21 +102,13 @@ export async function POST(request: NextRequest) {
       },
     }
 
-    console.log('Formatted response:', formattedResponse)
-
-    // Return the response with proper CORS headers
     return NextResponse.json(formattedResponse, {
       status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
+      headers: corsHeaders(),
     })
   } catch (error) {
-    // Distinguish the three failure modes so the client (and Vercel logs) are informative
     if (error instanceof Error && error.name === 'AbortError') {
-      console.error(`RAG backend timed out after ${FETCH_TIMEOUT_MS / 1000}s`)
+      console.error('RAG backend timed out')
       return NextResponse.json(
         {
           error: 'Request timed out',
@@ -119,14 +116,7 @@ export async function POST(request: NextRequest) {
           response: 'The request took too long to complete. Please try your question again.',
           answer: 'The request took too long to complete. Please try your question again.',
         },
-        {
-          status: 504,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-          },
-        }
+        { status: 504, headers: corsHeaders() }
       )
     }
 
@@ -137,27 +127,19 @@ export async function POST(request: NextRequest) {
         error.message.includes('network'))
 
     if (isNetworkError) {
-      console.error('RAG backend unreachable:', error)
+      console.error('RAG backend unreachable')
       return NextResponse.json(
         {
           error: 'Backend unreachable',
-          message: `Could not connect to the AI backend at ${RAG_BACKEND_URL}. Check that NEXT_PUBLIC_API_BASE_URL is set correctly in Vercel.`,
+          message: 'Could not connect to the AI backend. Please try again later.',
           response: 'The document search system is currently unreachable. Please try again later.',
           answer: 'The document search system is currently unreachable. Please try again later.',
         },
-        {
-          status: 503,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-          },
-        }
+        { status: 503, headers: corsHeaders() }
       )
     }
 
-    // Fallback: non-200 from backend or unexpected error
-    console.error('RAG backend proxy error:', error)
+    console.error('RAG backend proxy error:', error instanceof Error ? error.message : 'Unknown')
     return NextResponse.json(
       {
         error: 'Failed to connect to RAG backend',
@@ -165,14 +147,7 @@ export async function POST(request: NextRequest) {
         response: 'I apologize, but I cannot connect to the document search system at the moment. Please try again later.',
         answer: 'I apologize, but I cannot connect to the document search system at the moment. Please try again later.',
       },
-      {
-        status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-      }
+      { status: 500, headers: corsHeaders() }
     )
   } finally {
     clearTimeout(timeoutId)
@@ -180,13 +155,9 @@ export async function POST(request: NextRequest) {
 }
 
 // Handle preflight requests
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new Response(null, {
     status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
+    headers: corsHeaders(),
   })
 }

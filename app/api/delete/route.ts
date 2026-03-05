@@ -29,6 +29,13 @@ async function deleteRecursively(dirPath: string): Promise<void> {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Auth check
+  const authHeader = request.headers.get('authorization')
+  const authCookie = request.cookies.get('auth-token')?.value
+  if (!authHeader && !authCookie) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const itemPath = searchParams.get('path')

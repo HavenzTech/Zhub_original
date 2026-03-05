@@ -67,6 +67,7 @@ import {
   UpdateFavoriteOrderRequest,
 } from '@/types/bms';
 import { authService } from './auth';
+import { sanitizeInput } from '@/lib/utils/sanitize';
 
 // Environment variables - configured in .env.local
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -121,13 +122,38 @@ class BmsApiService {
     this.companyId = null;
   }
 
+  /**
+   * Recursively sanitize all string values in an object/array
+   * to strip SQL injection patterns before sending to the API.
+   */
+  private sanitizeBody(data: unknown): unknown {
+    if (typeof data === 'string') {
+      return sanitizeInput(data);
+    }
+    if (Array.isArray(data)) {
+      return data.map((item) => this.sanitizeBody(item));
+    }
+    if (data !== null && typeof data === 'object') {
+      const sanitized: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+        sanitized[key] = this.sanitizeBody(value);
+      }
+      return sanitized;
+    }
+    return data;
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestOptions = {}
   ): Promise<T> {
     const { timeout = TIMEOUT, skipAuth = false, _retryCount = 0, prefix, ...fetchOptions } = options;
 
-    const url = `${this.baseUrl}${prefix ?? API_PREFIX}${endpoint}`;
+    // Sanitize query parameters in the endpoint URL
+    const sanitizedEndpoint = endpoint.replace(/([?&][^=]+=)([^&]*)/g, (_match, key, value) => {
+      return key + encodeURIComponent(sanitizeInput(decodeURIComponent(value)));
+    });
+    const url = `${this.baseUrl}${prefix ?? API_PREFIX}${sanitizedEndpoint}`;
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -142,16 +168,15 @@ class BmsApiService {
       headers['X-Company-Id'] = this.companyId;
     }
 
-    // Debug logging
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🌐 API Request:', {
-        method: fetchOptions.method || 'GET',
-        url,
-        headers: {
-          ...headers,
-          Authorization: headers['Authorization'] ? `Bearer ${headers['Authorization'].substring(7, 27)}...` : 'none'
-        }
-      });
+    // Sanitize request body to prevent SQL injection
+    if (fetchOptions.body && typeof fetchOptions.body === 'string') {
+      try {
+        const parsed = JSON.parse(fetchOptions.body);
+        fetchOptions.body = JSON.stringify(this.sanitizeBody(parsed));
+      } catch {
+        // Not JSON, sanitize as plain string
+        fetchOptions.body = sanitizeInput(fetchOptions.body);
+      }
     }
 
     const controller = new AbortController();
@@ -278,22 +303,6 @@ class BmsApiService {
 
     if (!skipAuth && this.companyId) {
       headers['X-Company-Id'] = this.companyId;
-    }
-
-    // Debug logging for file uploads
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📤 FormData Upload:', {
-        url,
-        headers: { ...headers, Authorization: headers['Authorization'] ? 'Bearer ***' : 'none' },
-      });
-      // Log FormData contents
-      for (const [key, value] of data.entries()) {
-        if (value instanceof File) {
-          console.log(`  ${key}: File(${value.name}, ${value.type}, ${value.size} bytes)`);
-        } else {
-          console.log(`  ${key}: ${value}`);
-        }
-      }
     }
 
     const controller = new AbortController();

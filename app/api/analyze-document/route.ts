@@ -4,13 +4,15 @@ import { NextRequest, NextResponse } from 'next/server'
 const RAG_BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001'
 
 export async function POST(request: NextRequest) {
+  // Auth check
+  const authHeader = request.headers.get('authorization')
+  const authCookie = request.cookies.get('auth-token')?.value
+  if (!authHeader && !authCookie) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
-
-    console.log('[AnalyzeDocument] Proxying to:', `${RAG_BACKEND_URL}/analyze-document`)
-    console.log('[AnalyzeDocument] Document ID:', typeof body.document_id === 'string' ? body.document_id.substring(0, 80) : body.document_id)
-    console.log('[AnalyzeDocument] Query:', body.query)
-    console.log('[AnalyzeDocument] Page num:', body.page_num)
 
     const response = await fetch(`${RAG_BACKEND_URL}/analyze-document`, {
       method: 'POST',

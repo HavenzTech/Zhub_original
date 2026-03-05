@@ -82,12 +82,7 @@ export default function ZAiPage() {
         const token = authData ? JSON.parse(authData).token : null;
         const auth = authData ? JSON.parse(authData) : null;
 
-        // Debug logging
-        console.log("[Z-AI] Auth from localStorage:", auth);
-        console.log("[Z-AI] Sending to backend - company_id:", auth?.currentCompanyId || "(empty)");
-        console.log("[Z-AI] Sending to backend - department_ids:", auth?.departmentIds || []);
-        console.log("[Z-AI] Sending to backend - project_id:", auth?.currentProjectId || "(empty)");
-        console.log("[Z-AI] Sending to backend - user_id:", auth?.userId || "(empty)");
+        // Auth context loaded for API request
 
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
@@ -119,19 +114,7 @@ export default function ZAiPage() {
 
         const data = await response.json();
 
-        console.log("[Z-AI] Backend response:", data);
-        console.log("[Z-AI] Source documents:", data.source_documents);
-        if (data.source_documents && data.source_documents.length > 0) {
-          console.log(
-            "[Z-AI] First document metadata:",
-            data.source_documents[0].metadata
-          );
-        }
-        console.log("[Z-AI] Generated images:", data.generated_images);
-        console.log(
-          "[Z-AI] Generated images length:",
-          data.generated_images?.length
-        );
+        // Response received from backend
 
         const aiResponse: Message = {
           role: "internal-z",
@@ -146,9 +129,6 @@ export default function ZAiPage() {
           type: "analysis",
           sourceDocuments:
             data.source_documents?.map((doc: any) => {
-              console.log("[Z-AI] Processing doc - FULL OBJECT:", JSON.stringify(doc, null, 2));
-              console.log("[Z-AI] pdf_path from doc:", doc.pdf_path);
-
               const meta = doc.metadata || {};
 
               return {
@@ -167,12 +147,6 @@ export default function ZAiPage() {
             }) || [],
           generatedImages: data.generated_images || [],
         };
-
-        console.log("[Z-AI] AI Response message:", aiResponse);
-        console.log(
-          "[Z-AI] AI Response generatedImages:",
-          aiResponse.generatedImages
-        );
 
         setMessages((prev) => [...prev, aiResponse]);
       } else {
@@ -193,7 +167,7 @@ export default function ZAiPage() {
         }, 1500);
       }
     } catch (error) {
-      console.error("Error calling RAG backend:", error);
+      // Error handled by UI state
 
       // Build a user-friendly error message based on the failure type
       let errorContent: string;
@@ -253,7 +227,7 @@ export default function ZAiPage() {
 
   const handleDocumentPreview = async (doc: any) => {
     try {
-      console.log("[handleDocumentPreview] Source doc:", doc);
+      // Look up document for preview
 
       // Set up auth for API call
       const token = authService.getToken();
@@ -267,12 +241,10 @@ export default function ZAiPage() {
       // Check if document_id is a valid PostgreSQL UUID (36 chars with hyphens like "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
       const isValidUUID = docId && docId.length === 36 && docId.includes("-") && docId.split("-").length === 5;
 
-      console.log("[handleDocumentPreview] docId:", docId, "isValidUUID:", isValidUUID, "pdfPath:", pdfPath);
 
       // Priority 1: If we have pdf_path (local file), use Python backend directly
       // This takes priority because local files won't be in PostgreSQL
       if (pdfPath) {
-        console.log("[handleDocumentPreview] Using local pdf_path:", pdfPath);
         const docForPreview: Document = {
           id: `local_${Date.now()}`,
           name: doc.name || doc.source || doc.title || "Document",
@@ -291,7 +263,6 @@ export default function ZAiPage() {
 
       // Priority 2: If we have a valid PostgreSQL UUID, use ASP.NET API
       if (isValidUUID) {
-        console.log("[handleDocumentPreview] Using PostgreSQL document_id:", docId);
         const docForPreview: Document = {
           id: docId,
           name: doc.name || doc.source || doc.title || "Document",
@@ -308,7 +279,6 @@ export default function ZAiPage() {
       }
 
       // Priority 3: Fallback - search by name in PostgreSQL
-      console.log("[handleDocumentPreview] Searching by name...");
       const allDocs = await bmsApi.documents.getAll();
       const allDocsList = Array.isArray(allDocs)
         ? allDocs
@@ -338,21 +308,14 @@ export default function ZAiPage() {
       }
 
       if (matchedDoc) {
-        console.log("[handleDocumentPreview] Found by name match:", matchedDoc.name);
         setSelectedDocument(matchedDoc as Document);
         setDocumentInitialPage(doc.page_start || 1);
         setShowDocumentModal(true);
       } else {
-        console.error("[handleDocumentPreview] Document not found:", {
-          title: doc.title,
-          source: doc.source,
-          name: doc.name,
-          document_id: docId,
-          pdf_path: pdfPath
-        });
+        // Document not found in loaded documents
       }
     } catch (error) {
-      console.error("[handleDocumentPreview] Error:", error);
+      // Preview error handled silently
     }
   };
 

@@ -1,4 +1,5 @@
 import { useState, useRef } from "react"
+import Image from "next/image"
 import {
   Dialog,
   DialogContent,
@@ -352,10 +353,13 @@ export function CompanyFormModal({
                 {/* Logo Preview */}
                 <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50">
                   {displayLogoUrl ? (
-                    <img
+                    <Image
                       src={displayLogoUrl}
                       alt="Company logo"
+                      width={96}
+                      height={96}
                       className="w-full h-full object-contain"
+                      unoptimized
                     />
                   ) : (
                     <ImageIcon className="w-8 h-8 text-gray-400" />

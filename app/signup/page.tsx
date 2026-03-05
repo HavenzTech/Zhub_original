@@ -42,8 +42,22 @@ export default function SignupPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const passwordRequirements = [
+    { label: "At least 12 characters", test: (p: string) => p.length >= 12 },
+    { label: "Uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
+    { label: "Lowercase letter", test: (p: string) => /[a-z]/.test(p) },
+    { label: "Number", test: (p: string) => /\d/.test(p) },
+    { label: "Special character", test: (p: string) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const failedReqs = passwordRequirements.filter((r) => !r.test(formData.password));
+    if (failedReqs.length > 0) {
+      alert(`Password must have: ${failedReqs.map((r) => r.label).join(", ")}`);
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match");
       return;
@@ -59,7 +73,6 @@ export default function SignupPage() {
 
   const handleGoogleSignup = () => {
     // Add Google OAuth logic here
-    console.log("Google signup clicked");
   };
 
   return (

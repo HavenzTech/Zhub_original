@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -150,12 +151,13 @@ export default function MfaSetupPage() {
                   {/* QR Code */}
                   <div className="flex flex-col items-center gap-4">
                     <div className="p-4 bg-white rounded-lg shadow-inner">
-                      <img
+                      <Image
                         src={getQrCodeUrl(mfaData.qrCodeUri)}
                         alt="MFA QR Code"
                         width={200}
                         height={200}
                         className="rounded"
+                        unoptimized
                       />
                     </div>
                     <p className="text-sm text-muted-foreground text-center">

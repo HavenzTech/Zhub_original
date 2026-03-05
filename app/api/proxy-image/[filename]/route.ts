@@ -4,6 +4,13 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
 ) {
+  // Auth check
+  const authHeader = request.headers.get('authorization')
+  const authCookie = request.cookies.get('auth-token')?.value
+  if (!authHeader && !authCookie) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const { filename } = await params
 
@@ -19,13 +26,10 @@ export async function GET(
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5087'
     const imageUrl = `${backendUrl}/feedback_data/images/${filename}`
 
-    console.log(`[Image Proxy] Fetching: ${imageUrl}`)
-
     // Fetch image from backend
     const response = await fetch(imageUrl)
 
     if (!response.ok) {
-      console.error(`[Image Proxy] Backend returned ${response.status}`)
       return NextResponse.json(
         { error: 'Image not found' },
         { status: response.status }
@@ -34,8 +38,6 @@ export async function GET(
 
     // Get image buffer
     const imageBuffer = await response.arrayBuffer()
-
-    console.log(`[Image Proxy] Successfully proxied ${filename} (${imageBuffer.byteLength} bytes)`)
 
     // Determine content type from extension
     const ext = filename.split('.').pop()?.toLowerCase()
@@ -47,7 +49,6 @@ export async function GET(
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000, immutable',
-        'Access-Control-Allow-Origin': '*',
       },
     })
 
