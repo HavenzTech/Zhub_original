@@ -14,10 +14,7 @@ export function useAuth(redirectTo = '/login') {
   useEffect(() => {
     const authData = authService.getAuth()
 
-    // DEV MODE: Check if dev mode is enabled
-    const devMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
-
-    if (!authData && !devMode) {
+    if (!authData) {
       router.push(redirectTo)
       return
     }
@@ -27,10 +24,4 @@ export function useAuth(redirectTo = '/login') {
   }, [router, redirectTo])
 
   return { auth, loading, isAuthenticated: !!auth }
-}
-
-export function useRequireAuth(redirectTo = '/login') {
-  const { auth, loading } = useAuth(redirectTo)
-
-  return { auth, loading }
 }

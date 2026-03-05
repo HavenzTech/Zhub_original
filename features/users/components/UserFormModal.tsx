@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -137,10 +138,13 @@ export function UserFormModal({
               <div className="flex items-start gap-4">
                 <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center overflow-hidden bg-gray-50">
                   {displayAvatarUrl ? (
-                    <img
+                    <Image
                       src={displayAvatarUrl}
                       alt="Avatar"
+                      width={80}
+                      height={80}
                       className="w-full h-full object-cover"
+                      unoptimized
                     />
                   ) : (
                     <User className="w-8 h-8 text-gray-400" />
@@ -295,10 +299,13 @@ export function UserFormModal({
             <div className="flex items-start gap-4">
               <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center overflow-hidden bg-gray-50">
                 {displayAvatarUrl ? (
-                  <img
+                  <Image
                     src={displayAvatarUrl}
                     alt="Avatar"
+                    width={80}
+                    height={80}
                     className="w-full h-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <User className="w-8 h-8 text-gray-400" />

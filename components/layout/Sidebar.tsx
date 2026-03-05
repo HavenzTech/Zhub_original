@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -22,11 +22,13 @@ import {
   LogOut,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { authService } from "@/lib/services/auth";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { Company } from "@/types/bms";
 import { NotificationDropdown } from "@/components/common/NotificationDropdown";
+import { SidebarFlyout } from "@/components/layout/SidebarFlyout";
 
 export interface SidebarItem {
   id: string;
@@ -63,7 +65,34 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
   const [companies, setCompanies] = useState<Array<{ companyId: string; companyName: string; role: string }>>([]);
   const [currentCompanyId, setCurrentCompanyId] = useState("");
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
+  const [flyoutItemId, setFlyoutItemId] = useState<string | null>(null);
+  const flyoutEnterRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flyoutLeaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navItemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const pathname = usePathname();
+
+  const FLYOUT_ITEMS = useMemo(() => new Set(["departments", "projects", "properties", "workflow-tasks"]), []);
+
+  const handleNavMouseEnter = useCallback((itemId: string) => {
+    if (!FLYOUT_ITEMS.has(itemId)) return;
+    if (flyoutLeaveRef.current) clearTimeout(flyoutLeaveRef.current);
+    if (flyoutEnterRef.current) clearTimeout(flyoutEnterRef.current);
+    flyoutEnterRef.current = setTimeout(() => setFlyoutItemId(itemId), 400);
+  }, [FLYOUT_ITEMS]);
+
+  const handleNavMouseLeave = useCallback(() => {
+    if (flyoutEnterRef.current) clearTimeout(flyoutEnterRef.current);
+    flyoutLeaveRef.current = setTimeout(() => setFlyoutItemId(null), 200);
+  }, []);
+
+  const handleFlyoutMouseEnter = useCallback(() => {
+    if (flyoutLeaveRef.current) clearTimeout(flyoutLeaveRef.current);
+    if (flyoutEnterRef.current) clearTimeout(flyoutEnterRef.current);
+  }, []);
+
+  const handleFlyoutMouseLeave = useCallback(() => {
+    flyoutLeaveRef.current = setTimeout(() => setFlyoutItemId(null), 150);
+  }, []);
 
   const loadCompanyLogo = useCallback(async (companyId: string) => {
     try {
@@ -137,10 +166,12 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-4">
         <Link href="/" className="flex items-center">
-          <img
+          <Image
             src="/logo.png"
             alt="Havenz Hub"
-            className={collapsed ? "h-7 object-contain" : "h-8 object-contain"}
+            width={collapsed ? 28 : 32}
+            height={collapsed ? 28 : 32}
+            className="object-contain"
           />
         </Link>
         {!collapsed && (
@@ -169,10 +200,13 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-stone-100 dark:hover:bg-stone-800"
           >
             {companyLogoUrl ? (
-              <img
+              <Image
                 src={companyLogoUrl}
                 alt={currentCompany.companyName || "Company"}
-                className="h-8 w-8 shrink-0 rounded-lg object-contain"
+                width={32}
+                height={32}
+                className="shrink-0 rounded-lg object-contain"
+                unoptimized
               />
             ) : (
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-stone-200 dark:bg-stone-800 text-xs font-medium text-stone-600 dark:text-stone-300">
@@ -255,21 +289,32 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
         {visibleItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
+          const hasFlyout = FLYOUT_ITEMS.has(item.id);
           return (
             <Link
               key={item.id}
               href={item.path}
+              ref={(el) => { navItemRefs.current[item.id] = el; }}
+              onMouseEnter={() => handleNavMouseEnter(item.id)}
+              onMouseLeave={handleNavMouseLeave}
               className={cn(
                 "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] transition-colors",
                 active
                   ? "bg-accent-cyan/15 text-accent-cyan"
-                  : "text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-200"
+                  : "text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-200",
+                hasFlyout && flyoutItemId === item.id && !active && "bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-200"
               )}
               title={collapsed ? item.label : undefined}
             >
               <Icon className="h-[18px] w-[18px] shrink-0" />
               {!collapsed && (
                 <span className="font-medium">{item.label}</span>
+              )}
+              {!collapsed && hasFlyout && (
+                <ChevronRight className={cn(
+                  "ml-auto h-3 w-3 text-stone-300 dark:text-stone-600 transition-opacity",
+                  flyoutItemId === item.id ? "opacity-100" : "opacity-0"
+                )} />
               )}
               {!collapsed && item.badge != null && item.badge > 0 && (
                 <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-medium text-white">
@@ -346,6 +391,16 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
       >
         {sidebarContent}
       </aside>
+
+      {/* Sidebar flyout */}
+      {flyoutItemId && (
+        <SidebarFlyout
+          itemId={flyoutItemId}
+          collapsed={collapsed}
+          onMouseEnter={handleFlyoutMouseEnter}
+          onMouseLeave={handleFlyoutMouseLeave}
+        />
+      )}
 
       {/* Mobile toggle button */}
       <button

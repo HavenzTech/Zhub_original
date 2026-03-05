@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
@@ -30,6 +30,20 @@ export default function LoginPage() {
   const [totpCode, setTotpCode] = useState("");
   const [requiresMfa, setRequiresMfa] = useState(false);
 
+  // Rate limiting - brute force protection
+  const failedAttemptsRef = useRef(0);
+  const lockoutUntilRef = useRef<number>(0);
+  const [lockoutRemaining, setLockoutRemaining] = useState(0);
+
+  useEffect(() => {
+    if (lockoutRemaining <= 0) return;
+    const timer = setInterval(() => {
+      const remaining = Math.ceil((lockoutUntilRef.current - Date.now()) / 1000);
+      setLockoutRemaining(remaining > 0 ? remaining : 0);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutRemaining]);
+
   // Check if already authenticated
   useEffect(() => {
     const auth = authService.getAuth();
@@ -47,6 +61,14 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check if locked out
+    if (Date.now() < lockoutUntilRef.current) {
+      const remaining = Math.ceil((lockoutUntilRef.current - Date.now()) / 1000);
+      setError(`Too many failed attempts. Please wait ${remaining} seconds.`);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -67,8 +89,9 @@ export default function LoginPage() {
       // Store auth data
       authService.storeAuth(response);
 
-      // Get the return URL from query params
-      const returnTo = searchParams.get("from") || "/";
+      // Get the return URL from query params — validate to prevent open redirect
+      const rawReturnTo = searchParams.get("from") || "/";
+      const returnTo = rawReturnTo.startsWith("/") && !rawReturnTo.startsWith("//") ? rawReturnTo : "/";
 
       // Check for required actions and redirect accordingly
       if (response.requiresPasswordChange) {
@@ -79,8 +102,25 @@ export default function LoginPage() {
         router.push(returnTo);
       }
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message || "Login failed. Please try again.");
+      failedAttemptsRef.current += 1;
+
+      // Progressive lockout: 5 attempts = 30s, 10 = 60s, 15 = 120s
+      if (failedAttemptsRef.current >= 15) {
+        lockoutUntilRef.current = Date.now() + 120_000;
+        setLockoutRemaining(120);
+        setError("Account temporarily locked. Please wait 2 minutes before trying again.");
+      } else if (failedAttemptsRef.current >= 10) {
+        lockoutUntilRef.current = Date.now() + 60_000;
+        setLockoutRemaining(60);
+        setError("Too many failed attempts. Please wait 60 seconds.");
+      } else if (failedAttemptsRef.current >= 5) {
+        lockoutUntilRef.current = Date.now() + 30_000;
+        setLockoutRemaining(30);
+        setError("Too many failed attempts. Please wait 30 seconds.");
+      } else {
+        const apiError = err as ApiError;
+        setError(apiError.message || "Login failed. Please try again.");
+      }
       setIsLoading(false);
     }
   };
@@ -234,9 +274,11 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   className="w-full h-12 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg font-medium transition-all duration-200 hover:shadow-xl"
-                  disabled={isLoading}
+                  disabled={isLoading || lockoutRemaining > 0}
                 >
-                  {isLoading ? (
+                  {lockoutRemaining > 0 ? (
+                    <span>Locked ({lockoutRemaining}s)</span>
+                  ) : isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
                       Signing in...

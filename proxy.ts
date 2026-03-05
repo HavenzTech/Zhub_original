@@ -79,10 +79,8 @@ export function proxy(request: NextRequest) {
   const claims = decodeJwtPayload(token)
 
   if (claims) {
-    // Log JWT claims once in development to inspect backend token structure
     if (process.env.NODE_ENV === 'development' && !hasLoggedClaims) {
       hasLoggedClaims = true
-      console.log('[Proxy] JWT claims:', JSON.stringify(claims, null, 2))
     }
 
     // Check token expiry

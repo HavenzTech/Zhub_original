@@ -6,6 +6,8 @@ import { AiAssistantSidebar } from "./AiAssistantSidebar";
 import { CommandPalette } from "./CommandPalette";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
+import { useSessionTimeout } from "@/lib/hooks/useSessionTimeout";
+import { toast } from "sonner";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -15,6 +17,11 @@ function AppLayoutContent({ children }: AppLayoutProps) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   const openCommandPalette = useCallback(() => setCommandPaletteOpen(true), []);
+
+  // Auto-logout after 30 minutes of inactivity
+  useSessionTimeout(useCallback(() => {
+    toast.warning("Your session will expire in 2 minutes due to inactivity.", { duration: 10000 });
+  }, []));
 
   return (
     <div className="flex h-screen bg-stone-50 dark:bg-stone-900">

@@ -1,39 +1,50 @@
 // app/api/preview-document/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
-import { join } from 'path'
+import { join, resolve, basename } from 'path'
 import { existsSync } from 'fs'
 
+const DOCUMENTS_BASE = join(process.cwd(), '..', 'agentic_ai', 'tools', 'utils', 'gdrive_downloads', 'documents')
+
 export async function GET(request: NextRequest) {
+  // Auth check
+  const authHeader = request.headers.get('authorization')
+  const authCookie = request.cookies.get('auth-token')?.value
+  if (!authHeader && !authCookie) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams
     const fileName = searchParams.get('name')
 
-    console.log('[Preview API] Request for file:', fileName)
-
     if (!fileName) {
-      console.error('[Preview API] Missing file name')
       return new NextResponse('Missing file name', { status: 400 })
     }
 
-    // Path to gdrive_downloads folder (relative to project root)
-    const filePath = join(process.cwd(), '..', 'agentic_ai', 'tools', 'utils', 'gdrive_downloads', 'documents', fileName)
+    // Sanitize: only allow the basename to prevent path traversal
+    const safeName = basename(fileName)
 
-    console.log('[Preview API] Attempting to read from:', filePath)
-    console.log('[Preview API] File exists:', existsSync(filePath))
+    // Path to gdrive_downloads folder
+    const filePath = join(DOCUMENTS_BASE, safeName)
 
-    // Check if file exists first
+    // Security check: ensure resolved path is within the allowed directory
+    const resolvedPath = resolve(filePath)
+    const resolvedBase = resolve(DOCUMENTS_BASE)
+    if (!resolvedPath.startsWith(resolvedBase)) {
+      return NextResponse.json({ error: 'Invalid file path' }, { status: 403 })
+    }
+
+    // Check if file exists
     if (!existsSync(filePath)) {
-      console.error('[Preview API] File not found:', filePath)
-      return new NextResponse(`File not found: ${fileName}`, { status: 404 })
+      return new NextResponse('File not found', { status: 404 })
     }
 
     // Read the file
     const fileBuffer = await readFile(filePath)
-    console.log('[Preview API] File read successfully, size:', fileBuffer.length)
 
     // Determine content type based on file extension
-    const ext = fileName.split('.').pop()?.toLowerCase()
+    const ext = safeName.split('.').pop()?.toLowerCase()
     let contentType = 'application/octet-stream'
 
     if (ext === 'pdf') contentType = 'application/pdf'
@@ -48,7 +59,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(body, {
       headers: {
         'Content-Type': contentType,
-        'Content-Disposition': `inline; filename="${fileName}"`,
+        'Content-Disposition': `inline; filename="${safeName}"`,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0'
@@ -56,6 +67,6 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('[Preview API] Error:', error)
-    return new NextResponse(`Error: ${error}`, { status: 500 })
+    return new NextResponse('Error previewing file', { status: 500 })
   }
 }

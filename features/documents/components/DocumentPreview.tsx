@@ -46,9 +46,6 @@ export default function DocumentPreview({
       try {
         setLoading(true);
         setPreviewError(false);
-        console.log("[DocumentPreview] Document object:", document);
-        console.log("[DocumentPreview] Document ID:", document.id);
-        console.log("[DocumentPreview] Storage path:", document.storagePath);
 
         // Check if this is a local file (storagePath contains a local path)
         const storagePath = document.storagePath || "";
@@ -59,7 +56,6 @@ export default function DocumentPreview({
           storagePath.startsWith("/") ||  // Unix paths
           storagePath.match(/^[a-zA-Z]:/)  // Any Windows drive letter
         );
-        console.log("[DocumentPreview] isLocalFile:", isLocalFile, "storagePath:", storagePath);
 
         let downloadUrl: string | null = null;
 
@@ -67,7 +63,6 @@ export default function DocumentPreview({
           // Use Python backend for local files
           const pythonApiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8001";
           downloadUrl = `${pythonApiUrl}/preview-pdf?path=${encodeURIComponent(document.storagePath!)}&page=${initialPage}`;
-          console.log("[DocumentPreview] Using Python backend for local file:", downloadUrl);
         } else {
           // Use ASP.NET API for GCS-stored files
           const authData = localStorage.getItem("auth");
@@ -78,10 +73,8 @@ export default function DocumentPreview({
           }
 
           const downloadData: DocumentDownloadResponse = await bmsApi.documents.getDownloadUrl(document.id!);
-          console.log("[DocumentPreview] Download response:", downloadData);
 
           if (!downloadData.downloadUrl) {
-            console.error("[DocumentPreview] No download URL in response");
             if (!cancelled) setPreviewError(true);
             return;
           }
@@ -91,7 +84,6 @@ export default function DocumentPreview({
         const response = await fetch(downloadUrl);
 
         if (!response.ok) {
-          console.error("[DocumentPreview] Failed to fetch from GCS:", response.status);
           if (!cancelled) setPreviewError(true);
           return;
         }
@@ -102,11 +94,6 @@ export default function DocumentPreview({
           setBlobUrl(currentBlobUrl);
         }
       } catch (error: any) {
-        console.error("[DocumentPreview] Error fetching document:", error);
-        // Log more details for BmsApiError
-        if (error?.status) {
-          console.error("[DocumentPreview] API Status:", error.status, "Code:", error.code, "Details:", error.details);
-        }
         if (!cancelled) setPreviewError(true);
       } finally {
         if (!cancelled) setLoading(false);
@@ -121,7 +108,7 @@ export default function DocumentPreview({
         URL.revokeObjectURL(currentBlobUrl);
       }
     };
-  }, [document?.id, document?.storagePath, initialPage]);
+  }, [document, initialPage]);
 
   if (!document) {
     return (
