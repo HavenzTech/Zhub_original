@@ -2098,6 +2098,44 @@
         }
       }
     },
+    "/api/camera/event": {
+      "post": {
+        "tags": [
+          "CameraWebhook"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Controllers.Devices.CameraEventRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Controllers.Devices.CameraEventRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Controllers.Devices.CameraEventRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebApp.Controllers.Devices.CameraEventResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/havenzhub/companies": {
       "post": {
         "tags": [
@@ -3524,6 +3562,103 @@
         }
       }
     },
+    "/api/devices/verify-face": {
+      "post": {
+        "tags": [
+          "Device"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.FaceVerifyRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.FaceVerifyRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.FaceVerifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebApp.Models.HavenzHub.FaceVerifyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/devices/verify-face-image": {
+      "post": {
+        "tags": [
+          "Device"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "image": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebApp.Models.HavenzHub.FaceVerifyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/devices/config": {
       "get": {
         "tags": [
@@ -3757,6 +3892,110 @@
           },
           "403": {
             "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/devices/{deviceId}/area": {
+      "put": {
+        "tags": [
+          "DeviceCertificate"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.DeviceAreaAssignRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.DeviceAreaAssignRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.DeviceAreaAssignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/devices/{deviceId}/door-control": {
+      "put": {
+        "tags": [
+          "DeviceCertificate"
+        ],
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.DoorControlConfigRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.DoorControlConfigRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.DoorControlConfigRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
@@ -8877,6 +9116,147 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/havenzhub/FacialRecognition/admin/sessions": {
+      "get": {
+        "tags": [
+          "FacialRecognition"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebApp.Models.Common.PagedResult`1[[WebApp.Controllers.HavenzHub.EnrollmentSessionResponse, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebApp.Models.Common.PagedResult`1[[WebApp.Controllers.HavenzHub.EnrollmentSessionResponse, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebApp.Models.Common.PagedResult`1[[WebApp.Controllers.HavenzHub.EnrollmentSessionResponse, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/havenzhub/FacialRecognition/admin/exempt/{userId}": {
+      "put": {
+        "tags": [
+          "FacialRecognition"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "exempt",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/havenzhub/FacialRecognition/admin/require-enrollment": {
+      "post": {
+        "tags": [
+          "FacialRecognition"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Controllers.HavenzHub.BulkRequireEnrollmentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Controllers.HavenzHub.BulkRequireEnrollmentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Controllers.HavenzHub.BulkRequireEnrollmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/havenzhub/FacialRecognition/admin/enrollment/{userId}": {
+      "delete": {
+        "tags": [
+          "FacialRecognition"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -15167,6 +15547,319 @@
         }
       }
     },
+    "/api/admin/area-access": {
+      "post": {
+        "tags": [
+          "UserAreaAccess"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.AssignAreaAccessRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.AssignAreaAccessRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.AssignAreaAccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebApp.Models.HavenzHub.AreaAccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/area-access/bulk": {
+      "post": {
+        "tags": [
+          "UserAreaAccess"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.BulkAssignAreaAccessRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.BulkAssignAreaAccessRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.BulkAssignAreaAccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/area-access/{id}": {
+      "delete": {
+        "tags": [
+          "UserAreaAccess"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/area-access/emergency/revoke-user/{userId}": {
+      "post": {
+        "tags": [
+          "UserAreaAccess"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.EmergencyRevokeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.EmergencyRevokeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.EmergencyRevokeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/area-access/emergency/revoke-area/{areaId}": {
+      "post": {
+        "tags": [
+          "UserAreaAccess"
+        ],
+        "parameters": [
+          {
+            "name": "areaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.EmergencyRevokeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.EmergencyRevokeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.EmergencyRevokeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/area-access/emergency/lockdown": {
+      "post": {
+        "tags": [
+          "UserAreaAccess"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.EmergencyRevokeRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.EmergencyRevokeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApp.Models.HavenzHub.EmergencyRevokeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/area-access/user/{userId}": {
+      "get": {
+        "tags": [
+          "UserAreaAccess"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WebApp.Models.HavenzHub.AreaAccessResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/area-access/area/{areaId}": {
+      "get": {
+        "tags": [
+          "UserAreaAccess"
+        ],
+        "parameters": [
+          {
+            "name": "areaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WebApp.Models.HavenzHub.AreaAccessResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/havenzhub/documents/recent": {
       "get": {
         "tags": [
@@ -16753,6 +17446,11 @@
             "format": "double",
             "nullable": true
           },
+          "areaId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "timestamp": {
             "type": "string",
             "format": "date-time"
@@ -16772,6 +17470,9 @@
           },
           "device": {
             "$ref": "#/components/schemas/DomainModel.HavenzHub.BmsDevice"
+          },
+          "area": {
+            "$ref": "#/components/schemas/DomainModel.HavenzHub.Area"
           }
         },
         "additionalProperties": false
@@ -16969,6 +17670,35 @@
             "format": "date-time",
             "nullable": true
           },
+          "areaId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "doorControlType": {
+            "maxLength": 50,
+            "type": "string",
+            "nullable": true
+          },
+          "doorControlUrl": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          },
+          "altaEntryId": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "altaRelayId": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "doorUnlockDurationSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
           "notes": {
             "type": "string",
             "nullable": true
@@ -16991,6 +17721,9 @@
           },
           "property": {
             "$ref": "#/components/schemas/DomainModel.HavenzHub.Property"
+          },
+          "area": {
+            "$ref": "#/components/schemas/DomainModel.HavenzHub.Area"
           },
           "accessLogs": {
             "type": "array",
@@ -19571,6 +20304,9 @@
           "mfaEnabled": {
             "type": "boolean"
           },
+          "faceEnrollmentRequired": {
+            "type": "boolean"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -19848,6 +20584,66 @@
         },
         "additionalProperties": false
       },
+      "WebApp.Controllers.Devices.CameraEventRequest": {
+        "type": "object",
+        "properties": {
+          "ruleName": {
+            "type": "string",
+            "nullable": true
+          },
+          "deviceName": {
+            "type": "string",
+            "nullable": true
+          },
+          "deviceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "eventUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "snapshotUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "snapshotBase64": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebApp.Controllers.Devices.CameraEventResponse": {
+        "type": "object",
+        "properties": {
+          "processed": {
+            "type": "boolean"
+          },
+          "granted": {
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true
+          },
+          "score": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "WebApp.Controllers.Devices.DeviceCommand": {
         "type": "object",
         "properties": {
@@ -20010,6 +20806,25 @@
         },
         "additionalProperties": false
       },
+      "WebApp.Controllers.HavenzHub.BulkRequireEnrollmentRequest": {
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          },
+          "departmentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "WebApp.Controllers.HavenzHub.DefinitionsController.TypeDefinition": {
         "type": "object",
         "properties": {
@@ -20019,6 +20834,58 @@
           },
           "label": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebApp.Controllers.HavenzHub.EnrollmentSessionResponse": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "frameCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "livenessScore": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "livenessPassed": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "initiatedBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         },
@@ -20123,6 +20990,35 @@
               "format": "uuid"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebApp.Models.Common.PagedResult`1[[WebApp.Controllers.HavenzHub.EnrollmentSessionResponse, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebApp.Controllers.HavenzHub.EnrollmentSessionResponse"
+            },
+            "nullable": true
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "readOnly": true
           }
         },
         "additionalProperties": false
@@ -21378,6 +22274,60 @@
         },
         "additionalProperties": false
       },
+      "WebApp.Models.HavenzHub.AreaAccessResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true
+          },
+          "areaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "areaName": {
+            "type": "string",
+            "nullable": true
+          },
+          "accessLevel": {
+            "type": "string",
+            "nullable": true
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "effectiveUntil": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "grantedBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "grantedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "WebApp.Models.HavenzHub.AreaDetailDto": {
         "type": "object",
         "properties": {
@@ -21527,6 +22477,43 @@
         },
         "additionalProperties": false
       },
+      "WebApp.Models.HavenzHub.AssignAreaAccessRequest": {
+        "required": [
+          "areaId",
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "areaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accessLevel": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "effectiveUntil": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "WebApp.Models.HavenzHub.BmsDeviceDto": {
         "type": "object",
         "properties": {
@@ -21636,6 +22623,37 @@
           "deletedAt": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebApp.Models.HavenzHub.BulkAssignAreaAccessRequest": {
+        "required": [
+          "areaIds",
+          "userIds"
+        ],
+        "type": "object",
+        "properties": {
+          "userIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "areaIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "accessLevel": {
+            "maxLength": 20,
+            "type": "string",
             "nullable": true
           }
         },
@@ -23752,6 +24770,19 @@
         },
         "additionalProperties": false
       },
+      "WebApp.Models.HavenzHub.DeviceAreaAssignRequest": {
+        "required": [
+          "areaId"
+        ],
+        "type": "object",
+        "properties": {
+          "areaId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
       "WebApp.Models.HavenzHub.DocumentAccessLogDto": {
         "type": "object",
         "properties": {
@@ -24851,6 +25882,42 @@
         },
         "additionalProperties": false
       },
+      "WebApp.Models.HavenzHub.DoorControlConfigRequest": {
+        "required": [
+          "doorControlType"
+        ],
+        "type": "object",
+        "properties": {
+          "doorControlType": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string"
+          },
+          "doorControlUrl": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          },
+          "altaEntryId": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "altaRelayId": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "doorUnlockDurationSeconds": {
+            "maximum": 60,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "WebApp.Models.HavenzHub.EffectivePermissionsDto": {
         "type": "object",
         "properties": {
@@ -24898,6 +25965,16 @@
             "items": {
               "$ref": "#/components/schemas/WebApp.Models.HavenzHub.PermissionSourceDto"
             },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebApp.Models.HavenzHub.EmergencyRevokeRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -25574,6 +26651,51 @@
           "expiresAt": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebApp.Models.HavenzHub.FaceVerifyRequest": {
+        "required": [
+          "faceEncoding"
+        ],
+        "type": "object",
+        "properties": {
+          "faceEncoding": {
+            "type": "string",
+            "format": "byte"
+          },
+          "capturedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebApp.Models.HavenzHub.FaceVerifyResponse": {
+        "type": "object",
+        "properties": {
+          "granted": {
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true
+          },
+          "score": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -28101,7 +29223,7 @@
           "encodingAlgorithm": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(facenet|arcface|vggface|dlib|openface)$",
+            "pattern": "^(facenet|arcface|vggface|dlib|openface|insightface_w600k)$",
             "type": "string"
           },
           "encodingVersion": {

@@ -648,23 +648,20 @@ export default function DocumentControlPage() {
       if (formData.description) payload.description = formData.description;
 
       if (formData.departmentIds.length > 0) {
-        payload.departmentIds = JSON.stringify(formData.departmentIds);
+        payload.departmentIds = formData.departmentIds;
       }
       if (formData.userAccess.length > 0) {
-        payload.userIds = JSON.stringify(
-          formData.userAccess.map((u) => u.userId)
-        );
+        payload.userIds = formData.userAccess.map((u) => u.userId);
       }
 
       if (formData.tags?.trim()) {
-        const tagsArray = formData.tags.split(",").map((t) => t.trim());
-        payload.tags = JSON.stringify(tagsArray);
+        payload.tags = formData.tags.split(",").map((t) => t.trim());
       }
 
-      payload.metadata = JSON.stringify({
+      payload.metadata = {
         originalFileName: selectedFile.name,
         uploadDate: new Date().toISOString(),
-      });
+      };
 
       console.log(
         "Payload being sent to POST /documents:",
