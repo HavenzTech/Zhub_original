@@ -94,6 +94,17 @@ describe('chatHelpers', () => {
       const id2 = generateSessionId('bob@test.com')
       expect(id1).not.toBe(id2)
     })
+
+    it('should include company ID when provided', () => {
+      const id = generateSessionId('user@test.com', 'company-123')
+      expect(id).toBe('session_user@test.com_company-123_2025-01-15')
+    })
+
+    it('should generate different IDs for different companies', () => {
+      const id1 = generateSessionId('user@test.com', 'company-1')
+      const id2 = generateSessionId('user@test.com', 'company-2')
+      expect(id1).not.toBe(id2)
+    })
   })
 
   describe('getMessageRoleName', () => {

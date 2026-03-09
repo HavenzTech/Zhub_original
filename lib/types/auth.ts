@@ -32,6 +32,8 @@ export interface LoginResponse {
   requiresMfaSetup?: boolean
   // MFA challenge response (when MFA is enabled but code not provided)
   requiresMfa?: boolean
+  // Face enrollment required flag
+  requiresFaceEnrollment?: boolean
 }
 
 export interface LoginRequest {
@@ -72,6 +74,7 @@ export interface AuthState {
   requiredActions?: string[]
   requiresPasswordChange?: boolean
   requiresMfaSetup?: boolean
+  requiresFaceEnrollment?: boolean
 }
 
 export interface RefreshTokenRequest {

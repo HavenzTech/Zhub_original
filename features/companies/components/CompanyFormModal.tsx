@@ -47,6 +47,7 @@ interface CompanyFormModalProps {
   logoFile: File | null
   setLogoFile: (file: File | null) => void
   currentLogoUrl?: string
+  onRemoveLogo?: () => void
 }
 
 export function CompanyFormModal({
@@ -61,6 +62,7 @@ export function CompanyFormModal({
   logoFile,
   setLogoFile,
   currentLogoUrl,
+  onRemoveLogo,
 }: CompanyFormModalProps) {
   const isEditMode = mode === "edit"
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -393,6 +395,18 @@ export function CompanyFormModal({
                         onClick={handleRemoveLogo}
                       >
                         <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {isEditMode && currentLogoUrl && !logoFile && !logoPreview && onRemoveLogo && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={onRemoveLogo}
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Remove Logo
                       </Button>
                     )}
                   </div>

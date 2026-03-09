@@ -4,8 +4,8 @@ import { useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/services/auth";
 
-// Auto-logout after 30 minutes of inactivity
-const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+// Auto-logout after 60 minutes of inactivity
+const SESSION_TIMEOUT_MS = 60 * 60 * 1000;
 // Warn user 2 minutes before timeout
 const WARNING_BEFORE_MS = 2 * 60 * 1000;
 

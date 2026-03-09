@@ -358,8 +358,8 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
         {!collapsed && (
           <div className="mt-1 px-2 space-y-2">
             <button
-              onClick={() => {
-                authService.logout();
+              onClick={async () => {
+                await authService.logout();
                 router.push("/login");
               }}
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-stone-500 transition-colors hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-red-400"

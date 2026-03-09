@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { AiAssistantSidebar } from "./AiAssistantSidebar";
 import { CommandPalette } from "./CommandPalette";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import { useSessionTimeout } from "@/lib/hooks/useSessionTimeout";
+import { authService } from "@/lib/services/auth";
 import { toast } from "sonner";
 
 interface AppLayoutProps {
@@ -14,14 +16,31 @@ interface AppLayoutProps {
 }
 
 function AppLayoutContent({ children }: AppLayoutProps) {
+  const router = useRouter();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   const openCommandPalette = useCallback(() => setCommandPaletteOpen(true), []);
 
-  // Auto-logout after 30 minutes of inactivity
+  // Auto-logout after 60 minutes of inactivity
   useSessionTimeout(useCallback(() => {
     toast.warning("Your session will expire in 2 minutes due to inactivity.", { duration: 10000 });
   }, []));
+
+  // Enforce required actions — block access until completed
+  useEffect(() => {
+    const auth = authService.getAuth();
+    if (!auth) {
+      router.push("/login");
+      return;
+    }
+    if (auth.requiresPasswordChange) {
+      router.push("/change-password");
+    } else if (auth.requiresMfaSetup) {
+      router.push("/mfa-setup");
+    } else if (auth.requiresFaceEnrollment) {
+      router.push("/face-enrollment");
+    }
+  }, [router]);
 
   return (
     <div className="flex h-screen bg-stone-50 dark:bg-stone-900">

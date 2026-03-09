@@ -62,11 +62,12 @@ export const formatMessageTimestamp = (): string => {
 }
 
 /**
- * Generate session ID for user
+ * Generate session ID for user, scoped to their current company
  */
-export const generateSessionId = (userEmail: string): string => {
+export const generateSessionId = (userEmail: string, companyId?: string): string => {
   const date = new Date().toISOString().split("T")[0]
-  return `session_${userEmail}_${date}`
+  const companyPart = companyId ? `_${companyId}` : ""
+  return `session_${userEmail}${companyPart}_${date}`
 }
 
 /**
