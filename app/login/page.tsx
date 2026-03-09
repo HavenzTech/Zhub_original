@@ -53,6 +53,8 @@ export default function LoginPage() {
         router.push("/change-password");
       } else if (auth.requiresMfaSetup) {
         router.push("/mfa-setup");
+      } else if (auth.requiresFaceEnrollment) {
+        router.push("/face-enrollment");
       } else {
         router.push("/");
       }
@@ -98,6 +100,8 @@ export default function LoginPage() {
         router.push("/change-password");
       } else if (response.requiresMfaSetup) {
         router.push("/mfa-setup");
+      } else if (response.requiresFaceEnrollment) {
+        router.push("/face-enrollment");
       } else {
         router.push(returnTo);
       }

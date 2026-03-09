@@ -71,6 +71,7 @@ export interface Company {
   logoUrl?: string | null;
   industry?: string | null;
   status: string;
+  // GET response uses these names
   locationAddress?: string | null;
   locationCity?: string | null;
   locationProvince?: string | null;

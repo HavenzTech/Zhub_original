@@ -58,8 +58,8 @@ class AuthService {
       name: authData.name,
       pictureUrl: authData.pictureUrl || null,
       companies: authData.companies,
-      // Keep existing company selection if available, otherwise default to first
-      currentCompanyId: existingAuth?.currentCompanyId || authData.companies[0]?.companyId || null,
+      // Priority: saved preference > existing selection > first in list
+      currentCompanyId: this.getSavedCompanyPreference(authData.companies) || existingAuth?.currentCompanyId || authData.companies[0]?.companyId || null,
       expiresAt: authData.expiresAt,
       // Multi-level access control fields
       departmentIds: authData.departmentIds || [],
@@ -68,6 +68,7 @@ class AuthService {
       requiredActions: authData.requiredActions || [],
       requiresPasswordChange: authData.requiresPasswordChange || false,
       requiresMfaSetup: authData.requiresMfaSetup || false,
+      requiresFaceEnrollment: authData.requiresFaceEnrollment || false,
     };
 
     // Store in localStorage for client-side access
@@ -235,7 +236,7 @@ class AuthService {
   }
 
   /**
-   * Set current company ID
+   * Set current company ID and persist preference
    */
   setCurrentCompanyId(companyId: string): void {
     const auth = this.getAuth();
@@ -243,6 +244,21 @@ class AuthService {
 
     auth.currentCompanyId = companyId;
     localStorage.setItem("auth", JSON.stringify(auth));
+    // Persist preference so it survives across logins
+    localStorage.setItem("preferred_company_id", companyId);
+    // Notify listeners (e.g. chat) that the company context changed
+    window.dispatchEvent(new Event("company-changed"));
+  }
+
+  /**
+   * Get saved company preference if user still belongs to that company
+   */
+  private getSavedCompanyPreference(companies: { companyId: string }[]): string | null {
+    if (typeof window === "undefined") return null;
+    const saved = localStorage.getItem("preferred_company_id");
+    if (!saved) return null;
+    // Only use if user still belongs to this company
+    return companies.some(c => c.companyId === saved) ? saved : null;
   }
 
   /**
@@ -417,6 +433,7 @@ class AuthService {
     const auth = this.getAuthRaw();
     if (auth?.requiresPasswordChange) return "CHANGE_PASSWORD";
     if (auth?.requiresMfaSetup) return "CONFIGURE_MFA";
+    if (auth?.requiresFaceEnrollment) return "FACE_ENROLLMENT";
     return auth?.requiredActions?.[0] || null;
   }
 

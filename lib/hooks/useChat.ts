@@ -45,51 +45,42 @@ export function useChat(): UseChatReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [currentSessionId, setCurrentSessionId] = useState<string>("")
 
-  // Load session from localStorage on mount
+  // Load session from localStorage on mount, and re-load when company changes
   useEffect(() => {
-    console.log("[Session] Initializing session...")
-    const authData = localStorage.getItem("auth")
-    console.log("[Session] Auth data:", authData ? "Found" : "Not found")
+    const loadSession = () => {
+      const authData = localStorage.getItem("auth")
+      if (!authData) return
 
-    if (!authData) {
-      console.log("[Session] No auth data, skipping session load")
-      return
-    }
+      const auth = JSON.parse(authData)
+      const userEmail = auth.email
+      const companyId = auth.currentCompanyId
 
-    const auth = JSON.parse(authData)
-    const userEmail = auth.email
-    console.log("[Session] User email:", userEmail)
+      if (!userEmail) return
 
-    if (!userEmail) {
-      console.log("[Session] No user email, skipping session load")
-      return
-    }
+      // Generate session ID scoped to user + company + date
+      const sessionId = generateSessionId(userEmail, companyId)
+      setCurrentSessionId(sessionId)
 
-    // Generate session ID based on date and user
-    const sessionId = generateSessionId(userEmail)
-    console.log("[Session] Session ID:", sessionId)
-    setCurrentSessionId(sessionId)
-
-    // Load existing messages for this session
-    const savedMessages = localStorage.getItem(sessionId)
-    console.log(
-      "[Session] Saved messages:",
-      savedMessages ? `Found (${savedMessages.length} chars)` : "Not found"
-    )
-
-    if (savedMessages) {
-      try {
-        const parsed = JSON.parse(savedMessages)
-        setMessages(parsed)
-        console.log(
-          `[Session] ✅ Loaded ${parsed.length} messages from session ${sessionId}`
-        )
-      } catch (e) {
-        console.error("[Session] ❌ Failed to parse saved messages:", e)
+      // Load existing messages for this company's session
+      const savedMessages = localStorage.getItem(sessionId)
+      if (savedMessages) {
+        try {
+          const parsed = JSON.parse(savedMessages)
+          setMessages(parsed)
+        } catch (e) {
+          console.error("[Session] Failed to parse saved messages:", e)
+          setMessages([])
+        }
+      } else {
+        setMessages([])
       }
-    } else {
-      console.log("[Session] No previous messages for this session")
     }
+
+    loadSession()
+
+    // Listen for company switch events so chat reloads with the new company's session
+    window.addEventListener("company-changed", loadSession)
+    return () => window.removeEventListener("company-changed", loadSession)
   }, [])
 
   // Save messages to localStorage whenever they change
@@ -132,9 +123,10 @@ export function useChat(): UseChatReturn {
               text: msg.content,
             }))
 
-          // Get auth token from localStorage
+          // Get auth context from localStorage
           const authData = localStorage.getItem("auth")
-          const token = authData ? JSON.parse(authData).token : null
+          const auth = authData ? JSON.parse(authData) : null
+          const token = auth?.token || null
 
           const headers: Record<string, string> = {
             "Content-Type": "application/json",
@@ -151,7 +143,9 @@ export function useChat(): UseChatReturn {
               query: content,
               chat_history: formattedHistory,
               search_type: "general",
-              user_email: "", // Will be extracted from token by backend
+              user_email: auth?.email || "",
+              company_id: auth?.currentCompanyId || "",
+              user_id: auth?.userId || "",
             }),
           })
 

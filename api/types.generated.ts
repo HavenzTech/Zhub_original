@@ -1716,6 +1716,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/camera/event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Controllers.Devices.CameraEventRequest"];
+                    "text/json": components["schemas"]["WebApp.Controllers.Devices.CameraEventRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Controllers.Devices.CameraEventRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Controllers.Devices.CameraEventResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/havenzhub/companies": {
         parameters: {
             query?: never;
@@ -3048,6 +3089,107 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/devices/verify-face": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.FaceVerifyRequest"];
+                    "text/json": components["schemas"]["WebApp.Models.HavenzHub.FaceVerifyRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Models.HavenzHub.FaceVerifyRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FaceVerifyResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/devices/verify-face-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /** Format: binary */
+                        image?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.FaceVerifyResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/devices/config": {
         parameters: {
             query?: never;
@@ -3317,6 +3459,106 @@ export interface paths {
             };
         };
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/devices/{deviceId}/area": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    deviceId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.DeviceAreaAssignRequest"];
+                    "text/json": components["schemas"]["WebApp.Models.HavenzHub.DeviceAreaAssignRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Models.HavenzHub.DeviceAreaAssignRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/devices/{deviceId}/door-control": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    deviceId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.DoorControlConfigRequest"];
+                    "text/json": components["schemas"]["WebApp.Models.HavenzHub.DoorControlConfigRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Models.HavenzHub.DoorControlConfigRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -7368,6 +7610,158 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/FacialRecognition/admin/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Controllers.HavenzHub.EnrollmentSessionResponse, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Controllers.HavenzHub.EnrollmentSessionResponse, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                        "text/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Controllers.HavenzHub.EnrollmentSessionResponse, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/FacialRecognition/admin/exempt/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: {
+                    exempt?: boolean;
+                };
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/FacialRecognition/admin/require-enrollment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Controllers.HavenzHub.BulkRequireEnrollmentRequest"];
+                    "text/json": components["schemas"]["WebApp.Controllers.HavenzHub.BulkRequireEnrollmentRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Controllers.HavenzHub.BulkRequireEnrollmentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/FacialRecognition/admin/enrollment/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -12744,6 +13138,352 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/area-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.AssignAreaAccessRequest"];
+                    "text/json": components["schemas"]["WebApp.Models.HavenzHub.AssignAreaAccessRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Models.HavenzHub.AssignAreaAccessRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AreaAccessResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/area-access/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.BulkAssignAreaAccessRequest"];
+                    "text/json": components["schemas"]["WebApp.Models.HavenzHub.BulkAssignAreaAccessRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Models.HavenzHub.BulkAssignAreaAccessRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/area-access/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/area-access/emergency/revoke-user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.EmergencyRevokeRequest"];
+                    "text/json": components["schemas"]["WebApp.Models.HavenzHub.EmergencyRevokeRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Models.HavenzHub.EmergencyRevokeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/area-access/emergency/revoke-area/{areaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    areaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.EmergencyRevokeRequest"];
+                    "text/json": components["schemas"]["WebApp.Models.HavenzHub.EmergencyRevokeRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Models.HavenzHub.EmergencyRevokeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/area-access/emergency/lockdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.EmergencyRevokeRequest"];
+                    "text/json": components["schemas"]["WebApp.Models.HavenzHub.EmergencyRevokeRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Models.HavenzHub.EmergencyRevokeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/area-access/user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AreaAccessResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/area-access/area/{areaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    areaId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.AreaAccessResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/havenzhub/documents/recent": {
         parameters: {
             query?: never;
@@ -13954,6 +14694,8 @@ export interface components {
             videoClipUrl?: string | null;
             /** Format: double */
             temperatureReading?: number | null;
+            /** Format: uuid */
+            areaId?: string | null;
             /** Format: date-time */
             timestamp?: string;
             notes?: string | null;
@@ -13961,6 +14703,7 @@ export interface components {
             company?: components["schemas"]["DomainModel.HavenzHub.Company"];
             property?: components["schemas"]["DomainModel.HavenzHub.Property"];
             device?: components["schemas"]["DomainModel.HavenzHub.BmsDevice"];
+            area?: components["schemas"]["DomainModel.HavenzHub.Area"];
         };
         "DomainModel.HavenzHub.Area": {
             /** Format: uuid */
@@ -14021,6 +14764,14 @@ export interface components {
             maintenanceSchedule?: string | null;
             /** Format: date-time */
             lastMaintenanceDate?: string | null;
+            /** Format: uuid */
+            areaId?: string | null;
+            doorControlType?: string | null;
+            doorControlUrl?: string | null;
+            altaEntryId?: string | null;
+            altaRelayId?: string | null;
+            /** Format: int32 */
+            doorUnlockDurationSeconds?: number;
             notes?: string | null;
             /** Format: date-time */
             createdAt?: string;
@@ -14030,6 +14781,7 @@ export interface components {
             deletedAt?: string | null;
             company?: components["schemas"]["DomainModel.HavenzHub.Company"];
             property?: components["schemas"]["DomainModel.HavenzHub.Property"];
+            area?: components["schemas"]["DomainModel.HavenzHub.Area"];
             accessLogs?: components["schemas"]["DomainModel.HavenzHub.AccessLog"][] | null;
             iotMetrics?: components["schemas"]["DomainModel.HavenzHub.IotMetric"][] | null;
         };
@@ -14830,6 +15582,7 @@ export interface components {
             pictureUrl?: string | null;
             role?: string | null;
             mfaEnabled?: boolean;
+            faceEnrollmentRequired?: boolean;
             /** Format: date-time */
             createdAt?: string;
         };
@@ -14903,6 +15656,24 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
+        "WebApp.Controllers.Devices.CameraEventRequest": {
+            ruleName?: string | null;
+            deviceName?: string | null;
+            deviceId?: string | null;
+            eventUrl?: string | null;
+            snapshotUrl?: string | null;
+            snapshotBase64?: string | null;
+        };
+        "WebApp.Controllers.Devices.CameraEventResponse": {
+            processed?: boolean;
+            granted?: boolean;
+            /** Format: uuid */
+            userId?: string | null;
+            userName?: string | null;
+            /** Format: float */
+            score?: number | null;
+            reason?: string | null;
+        };
         "WebApp.Controllers.Devices.DeviceCommand": {
             /** Format: uuid */
             commandId?: string;
@@ -14964,9 +15735,34 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        "WebApp.Controllers.HavenzHub.BulkRequireEnrollmentRequest": {
+            userIds?: string[] | null;
+            /** Format: uuid */
+            departmentId?: string | null;
+        };
         "WebApp.Controllers.HavenzHub.DefinitionsController.TypeDefinition": {
             value?: string | null;
             label?: string | null;
+        };
+        "WebApp.Controllers.HavenzHub.EnrollmentSessionResponse": {
+            /** Format: uuid */
+            sessionId?: string;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+            status?: string | null;
+            /** Format: int32 */
+            frameCount?: number;
+            /** Format: double */
+            livenessScore?: number | null;
+            livenessPassed?: boolean | null;
+            /** Format: uuid */
+            initiatedBy?: string;
+            notes?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            completedAt?: string | null;
         };
         "WebApp.Models.Auth.LoginResponse": {
             token?: string | null;
@@ -14992,6 +15788,16 @@ export interface components {
             role?: string | null;
             departmentIds?: string[] | null;
             projectIds?: string[] | null;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Controllers.HavenzHub.EnrollmentSessionResponse, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Controllers.HavenzHub.EnrollmentSessionResponse"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
         };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.AccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.AccessLogDto"][] | null;
@@ -15423,6 +16229,27 @@ export interface components {
             /** Format: uuid */
             parentFolderId?: string | null;
         };
+        "WebApp.Models.HavenzHub.AreaAccessResponse": {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+            /** Format: uuid */
+            areaId?: string;
+            areaName?: string | null;
+            accessLevel?: string | null;
+            /** Format: date-time */
+            effectiveFrom?: string;
+            /** Format: date-time */
+            effectiveUntil?: string | null;
+            isActive?: boolean;
+            /** Format: uuid */
+            grantedBy?: string;
+            grantedByName?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+        };
         "WebApp.Models.HavenzHub.AreaDetailDto": {
             /** Format: uuid */
             id?: string;
@@ -15482,6 +16309,18 @@ export interface components {
             activeAlertsCount?: number;
             propertyName?: string | null;
         };
+        "WebApp.Models.HavenzHub.AssignAreaAccessRequest": {
+            /** Format: uuid */
+            userId: string;
+            /** Format: uuid */
+            areaId: string;
+            accessLevel?: string | null;
+            /** Format: date-time */
+            effectiveFrom?: string | null;
+            /** Format: date-time */
+            effectiveUntil?: string | null;
+            notes?: string | null;
+        };
         "WebApp.Models.HavenzHub.BmsDeviceDto": {
             /** Format: uuid */
             id?: string;
@@ -15521,6 +16360,11 @@ export interface components {
             updatedAt?: string;
             /** Format: date-time */
             deletedAt?: string | null;
+        };
+        "WebApp.Models.HavenzHub.BulkAssignAreaAccessRequest": {
+            userIds: string[];
+            areaIds: string[];
+            accessLevel?: string | null;
         };
         "WebApp.Models.HavenzHub.CancelWorkflowRequest": {
             reason: string;
@@ -16102,6 +16946,10 @@ export interface components {
             roleDisplayName?: string | null;
             assignedTimeAgo?: string | null;
         };
+        "WebApp.Models.HavenzHub.DeviceAreaAssignRequest": {
+            /** Format: uuid */
+            areaId: string;
+        };
         "WebApp.Models.HavenzHub.DocumentAccessLogDto": {
             /** Format: uuid */
             id?: string;
@@ -16478,6 +17326,14 @@ export interface components {
             isCurrent?: boolean;
             isArchived?: boolean;
         };
+        "WebApp.Models.HavenzHub.DoorControlConfigRequest": {
+            doorControlType: string;
+            doorControlUrl?: string | null;
+            altaEntryId?: string | null;
+            altaRelayId?: string | null;
+            /** Format: int32 */
+            doorUnlockDurationSeconds?: number | null;
+        };
         "WebApp.Models.HavenzHub.EffectivePermissionsDto": {
             /** Format: uuid */
             documentId?: string;
@@ -16494,6 +17350,9 @@ export interface components {
             canShare?: boolean;
             canManagePermissions?: boolean;
             sources?: components["schemas"]["WebApp.Models.HavenzHub.PermissionSourceDto"][] | null;
+        };
+        "WebApp.Models.HavenzHub.EmergencyRevokeRequest": {
+            reason?: string | null;
         };
         "WebApp.Models.HavenzHub.EquipmentAlertDto": {
             /** Format: uuid */
@@ -16735,6 +17594,21 @@ export interface components {
             enrolledAt?: string | null;
             /** Format: date-time */
             expiresAt?: string | null;
+        };
+        "WebApp.Models.HavenzHub.FaceVerifyRequest": {
+            /** Format: byte */
+            faceEncoding: string;
+            /** Format: date-time */
+            capturedAt?: string | null;
+        };
+        "WebApp.Models.HavenzHub.FaceVerifyResponse": {
+            granted?: boolean;
+            /** Format: uuid */
+            userId?: string | null;
+            userName?: string | null;
+            /** Format: float */
+            score?: number | null;
+            reason?: string | null;
         };
         "WebApp.Models.HavenzHub.FacialRecognitionDto": {
             /** Format: uuid */
