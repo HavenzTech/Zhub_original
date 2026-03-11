@@ -340,7 +340,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
                   {userName}
                 </div>
                 <div className="text-[11px] text-stone-500">
-                  {isAdmin ? "Admin" : "Member"}
+                  {currentCompany ? getRoleLabel(currentCompany.role) : "Member"}
                 </div>
               </div>
               <NotificationDropdown />

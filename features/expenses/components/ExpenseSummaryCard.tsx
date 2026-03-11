@@ -1,7 +1,7 @@
 "use client";
 
 // Card replaced with plain divs for consistent styling
-import { DollarSign, Clock, CheckCircle, XCircle } from "lucide-react";
+import { DollarSign, FileText } from "lucide-react";
 import type { ProjectExpenseSummary } from "@/types/bms";
 
 interface ExpenseSummaryCardProps {
@@ -46,11 +46,11 @@ export function ExpenseSummaryCard({ summary, loading }: ExpenseSummaryCardProps
           {/* Approved */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-950/30 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
               <div className="text-lg font-bold text-stone-900 dark:text-stone-50">
-                {summary.totalApprovedFormatted || "$0.00"}
+                {"$"}{(summary.totalApprovedAmount || 0).toLocaleString()}
               </div>
               <div className="text-xs text-stone-600 dark:text-stone-400">
                 {summary.approvedCount || 0} Approved
@@ -61,11 +61,11 @@ export function ExpenseSummaryCard({ summary, loading }: ExpenseSummaryCardProps
           {/* Pending */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-amber-100 dark:bg-amber-950/30 rounded-lg flex items-center justify-center">
-              <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <DollarSign className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <div className="text-lg font-bold text-stone-900 dark:text-stone-50">
-                {summary.totalPendingFormatted || "$0.00"}
+                {"$"}{(summary.totalPendingAmount || 0).toLocaleString()}
               </div>
               <div className="text-xs text-stone-600 dark:text-stone-400">
                 {summary.pendingCount || 0} Pending
@@ -76,11 +76,11 @@ export function ExpenseSummaryCard({ summary, loading }: ExpenseSummaryCardProps
           {/* Rejected */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-red-100 dark:bg-red-950/30 rounded-lg flex items-center justify-center">
-              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+              <DollarSign className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <div className="text-lg font-bold text-stone-900 dark:text-stone-50">
-                ${(summary.totalRejectedAmount || 0).toLocaleString()}
+                {"$"}{(summary.totalRejectedAmount || 0).toLocaleString()}
               </div>
               <div className="text-xs text-stone-600 dark:text-stone-400">
                 {summary.rejectedCount || 0} Rejected
@@ -91,7 +91,7 @@ export function ExpenseSummaryCard({ summary, loading }: ExpenseSummaryCardProps
           {/* Total Expenses */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-accent-cyan/10 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-accent-cyan" />
+              <FileText className="w-5 h-5 text-accent-cyan" />
             </div>
             <div>
               <div className="text-lg font-bold text-stone-900 dark:text-stone-50">

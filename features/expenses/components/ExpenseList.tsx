@@ -341,7 +341,7 @@ export function ExpenseList({ projectId, projectName, onBudgetUpdate }: ExpenseL
                     </div>
                     <div className="flex items-center gap-4 text-sm text-stone-600 dark:text-stone-400">
                       <span className="font-semibold text-stone-900 dark:text-stone-50">
-                        {expense.amountFormatted || `$${expense.amount?.toLocaleString()}`}
+                        {"$"}{(expense.amount || 0).toLocaleString()}
                       </span>
                       <span>{expense.submittedTimeAgo || "Just now"}</span>
                       <span>by {expense.submittedByName}</span>
