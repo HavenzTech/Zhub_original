@@ -250,6 +250,18 @@ export default function HavenzHubDashboard() {
                       {project.teamLead || "No team lead"}
                     </div>
                   </div>
+                  <div className="flex items-center gap-1 text-xs text-stone-400 dark:text-stone-500">
+                    <Clock className="w-3 h-3" />
+                    <span>
+                      {project.startDate
+                        ? new Date(project.startDate).toLocaleDateString()
+                        : "TBD"}
+                      {" – "}
+                      {project.endDate
+                        ? new Date(project.endDate).toLocaleDateString()
+                        : "TBD"}
+                    </span>
+                  </div>
                   <span
                     className={`text-xs px-2.5 py-1 rounded-md font-medium ${
                       project.status === "completed"

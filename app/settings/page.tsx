@@ -364,10 +364,6 @@ export default function SettingsPage() {
         <>
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">User Roles & Permissions</h3>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Role
-            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

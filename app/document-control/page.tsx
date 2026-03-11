@@ -31,10 +31,28 @@ import {
   FileText,
   SlidersHorizontal,
   X,
+  XCircle,
   Clock,
   Edit as EditIcon,
+  Lock,
+  Unlock,
+  Trash2,
 } from "lucide-react";
 import { useDocumentSearch } from "@/lib/hooks/useDocumentSearch";
+import { useDocumentCheckout } from "@/lib/hooks/useDocumentCheckout";
+import { CheckoutModal } from "@/features/documents/components/checkout/CheckoutModal";
+import { CheckinModal } from "@/features/documents/components/checkout/CheckinModal";
+import { CheckoutStatusBadge } from "@/features/documents/components/checkout/CheckoutStatusBadge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useDocumentWorkflow } from "@/lib/hooks/useDocumentWorkflow";
 import { DocumentVersionHistory } from "@/features/documents/components/versions/DocumentVersionHistory";
 import { DocumentSharePanel } from "@/features/documents/components/sharing/DocumentSharePanel";
@@ -139,6 +157,10 @@ export default function DocumentControlPage() {
   const [activeTab, setActiveTab] = useState("preview");
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const dragCounter = React.useRef(0);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showCheckinModal, setShowCheckinModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
 
   // Workflow hook for inline workflow tab
   const {
@@ -146,6 +168,16 @@ export default function DocumentControlPage() {
     loading: workflowLoading,
     loadWorkflowStatus,
   } = useDocumentWorkflow(selectedDocumentForModal?.id || "");
+
+  // Checkout hook
+  const {
+    status: checkoutStatus,
+    checkout,
+    checkin,
+    isCheckedOutByMe,
+    isCheckedOutByOther,
+    loadStatus: loadCheckoutStatus,
+  } = useDocumentCheckout(selectedDocumentForModal?.id || "", currentUserId);
 
   // Search state
   const {
@@ -156,12 +188,21 @@ export default function DocumentControlPage() {
   } = useDocumentSearch();
   const [searchQuery, setSearchQuery] = useState("");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [filterStatus, setFilterStatus] = useState("");
-  const [filterClassification, setFilterClassification] = useState("");
+  const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
+  const [filterClassifications, setFilterClassifications] = useState<string[]>([]);
 
-  const activeFilterCount = [filterStatus, filterClassification].filter(
-    Boolean
-  ).length;
+  const toggleFilterStatus = (value: string) => {
+    setFilterStatuses((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
+  const toggleFilterClassification = (value: string) => {
+    setFilterClassifications((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
+
+  const activeFilterCount = filterStatuses.length + filterClassifications.length;
 
   // ──────────────────────────────────────────────
   // Data loading
@@ -249,6 +290,8 @@ export default function DocumentControlPage() {
       return;
     }
 
+    setCurrentUserId(auth.userId ?? undefined);
+
     const token = authService.getToken();
     const companyId = authService.getCurrentCompanyId();
 
@@ -277,6 +320,13 @@ export default function DocumentControlPage() {
   useEffect(() => {
     setActiveTab("preview");
   }, [selectedDocumentForModal?.id]);
+
+  // Load checkout status when a document is selected
+  useEffect(() => {
+    if (selectedDocumentForModal?.id) {
+      loadCheckoutStatus();
+    }
+  }, [selectedDocumentForModal?.id, loadCheckoutStatus]);
 
   // Load workflow when workflow tab is opened
   useEffect(() => {
@@ -740,27 +790,28 @@ export default function DocumentControlPage() {
   // Search handlers
   // ──────────────────────────────────────────────
 
+  const executeSearch = useCallback(async (overrides?: { statuses?: string[]; classifications?: string[] }) => {
+    const statuses = overrides?.statuses ?? filterStatuses;
+    const classifications = overrides?.classifications ?? filterClassifications;
+
+    if (!searchQuery.trim() && statuses.length === 0 && classifications.length === 0) {
+      clearResults();
+      return;
+    }
+    await search({
+      query: searchQuery || undefined,
+      status: statuses.length > 0 ? statuses[0] : undefined,
+      classifications: classifications.length > 0 ? classifications : undefined,
+      sortBy: "updatedAt",
+      sortDirection: "desc",
+      page: 1,
+      pageSize: 25,
+    });
+  }, [searchQuery, filterStatuses, filterClassifications, search, clearResults]);
+
   const handleSearchKeyDown = async (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      if (
-        !searchQuery.trim() &&
-        !filterStatus &&
-        !filterClassification
-      ) {
-        clearResults();
-        return;
-      }
-      await search({
-        query: searchQuery || undefined,
-        status: filterStatus || undefined,
-        classifications: filterClassification
-          ? [filterClassification]
-          : undefined,
-        sortBy: "updatedAt",
-        sortDirection: "desc",
-        page: 1,
-        pageSize: 25,
-      });
+      await executeSearch();
     }
   };
 
@@ -775,8 +826,8 @@ export default function DocumentControlPage() {
 
   const handleClearAllSearch = () => {
     setSearchQuery("");
-    setFilterStatus("");
-    setFilterClassification("");
+    setFilterStatuses([]);
+    setFilterClassifications([]);
     clearResults();
   };
 
@@ -971,39 +1022,78 @@ export default function DocumentControlPage() {
 
           {/* Inline Filter Panel */}
           {showAdvancedFilters && (
-            <div className="space-y-2 border-b border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800/50">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-[12px] dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50"
-              >
-                <option value="">All Statuses</option>
-                <option value="draft">Draft</option>
-                <option value="pending_review">Pending Review</option>
-                <option value="approved">Approved</option>
-                <option value="published">Published</option>
-                <option value="archived">Archived</option>
-              </select>
-              <select
-                value={filterClassification}
-                onChange={(e) => setFilterClassification(e.target.value)}
-                className="w-full rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-[12px] dark:border-stone-600 dark:bg-stone-800 dark:text-stone-50"
-              >
-                <option value="">All Classifications</option>
-                <option value="public">Public</option>
-                <option value="internal">Internal</option>
-                <option value="confidential">Confidential</option>
-                <option value="restricted">Restricted</option>
-              </select>
-              <button
-                onClick={() => {
-                  setFilterStatus("");
-                  setFilterClassification("");
-                }}
-                className="w-full rounded-md bg-stone-200 px-2.5 py-1.5 text-[12px] text-stone-600 hover:bg-stone-300 dark:bg-stone-700 dark:text-stone-300 dark:hover:bg-stone-600"
-              >
-                Clear Filters
-              </button>
+            <div className="space-y-3 border-b border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800/50">
+              <div>
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-stone-400 dark:text-stone-500">
+                  Status
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { value: "draft", label: "Draft" },
+                    { value: "pending_review", label: "Pending Review" },
+                    { value: "approved", label: "Approved" },
+                    { value: "published", label: "Published" },
+                    { value: "archived", label: "Archived" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => toggleFilterStatus(opt.value)}
+                      className={`rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                        filterStatuses.includes(opt.value)
+                          ? "bg-accent-cyan text-white shadow-sm"
+                          : "bg-white text-stone-500 border border-stone-200 hover:border-stone-300 hover:text-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:border-stone-600 dark:hover:border-stone-500 dark:hover:text-stone-200"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-stone-400 dark:text-stone-500">
+                  Classification
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { value: "public", label: "Public" },
+                    { value: "internal", label: "Internal" },
+                    { value: "confidential", label: "Confidential" },
+                    { value: "restricted", label: "Restricted" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => toggleFilterClassification(opt.value)}
+                      className={`rounded-md px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
+                        filterClassifications.includes(opt.value)
+                          ? "bg-accent-cyan text-white shadow-sm"
+                          : "bg-white text-stone-500 border border-stone-200 hover:border-stone-300 hover:text-stone-700 dark:bg-stone-800 dark:text-stone-400 dark:border-stone-600 dark:hover:border-stone-500 dark:hover:text-stone-200"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => executeSearch()}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-accent-cyan px-2.5 py-2 text-[12px] font-medium text-white shadow-sm transition-colors hover:bg-accent-cyan/90"
+                >
+                  <Search className="h-3.5 w-3.5" />
+                  Apply Filters
+                </button>
+                <button
+                  onClick={() => {
+                    setFilterStatuses([]);
+                    setFilterClassifications([]);
+                    clearResults();
+                  }}
+                  className="flex items-center justify-center gap-1.5 rounded-lg border border-stone-200 bg-white px-2.5 py-2 text-[12px] font-medium text-stone-500 shadow-sm transition-colors hover:bg-stone-100 hover:text-stone-700 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-stone-200"
+                >
+                  <XCircle className="h-3.5 w-3.5" />
+                  Clear
+                </button>
+              </div>
             </div>
           )}
 
@@ -1142,19 +1232,58 @@ export default function DocumentControlPage() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     {selectedDocumentForModal.id && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-[12px] border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-800"
-                        onClick={() =>
-                          handleDocumentEdit(
-                            selectedDocumentForModal.id!
-                          )
-                        }
-                      >
-                        <EditIcon className="mr-1 h-3 w-3" />
-                        Edit
-                      </Button>
+                      <>
+                        <CheckoutStatusBadge
+                          isCheckedOut={checkoutStatus?.isCheckedOut}
+                          checkedOutByUserName={checkoutStatus?.checkedOutByUserName}
+                          checkedOutAt={checkoutStatus?.checkedOutAt}
+                          checkOutExpiresAt={checkoutStatus?.expiresAt}
+                          isCheckedOutByMe={isCheckedOutByMe}
+                        />
+                        {!checkoutStatus?.isCheckedOut && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-[12px] border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-800"
+                            onClick={() => setShowCheckoutModal(true)}
+                          >
+                            <Lock className="mr-1 h-3 w-3" />
+                            Check Out
+                          </Button>
+                        )}
+                        {isCheckedOutByMe && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-[12px] border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-300 dark:hover:bg-blue-950"
+                            onClick={() => setShowCheckinModal(true)}
+                          >
+                            <Unlock className="mr-1 h-3 w-3" />
+                            Check In
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[12px] border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-800"
+                          onClick={() =>
+                            handleDocumentEdit(
+                              selectedDocumentForModal.id!
+                            )
+                          }
+                        >
+                          <EditIcon className="mr-1 h-3 w-3" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                          onClick={() => setShowDeleteConfirm(true)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
                     )}
                     <Button
                       variant="ghost"
@@ -1437,6 +1566,56 @@ export default function DocumentControlPage() {
         departments={departments}
         properties={properties}
       />
+
+      {/* Checkout / Checkin Modals */}
+      {selectedDocumentForModal && (
+        <>
+          <CheckoutModal
+            open={showCheckoutModal}
+            onOpenChange={setShowCheckoutModal}
+            documentName={selectedDocumentForModal.name}
+            onCheckout={async (durationHours) => {
+              await checkout(durationHours);
+              setShowCheckoutModal(false);
+            }}
+          />
+          <CheckinModal
+            open={showCheckinModal}
+            onOpenChange={setShowCheckinModal}
+            documentName={selectedDocumentForModal.name}
+            onCheckin={async (request) => {
+              await checkin(request);
+              setShowCheckinModal(false);
+            }}
+          />
+        </>
+      )}
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{selectedDocumentForModal?.name}&quot;? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={async () => {
+                if (selectedDocumentForModal?.id) {
+                  await handleDocumentDelete(selectedDocumentForModal.id);
+                  setShowDeleteConfirm(false);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }
