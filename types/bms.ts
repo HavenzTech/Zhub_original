@@ -718,6 +718,18 @@ export interface CreateVersionOnCheckinRequest {
   changeType?: string | null;
 }
 
+export interface CreateVersionRequest {
+  fileId: string;
+  fileName: string;
+  fileType?: string | null;
+  fileSizeBytes: number;
+  storagePath: string;
+  contentHash?: string | null;
+  versionLabel?: string | null;
+  changeSummary?: string | null;
+  changeType?: string | null;
+}
+
 // ============================================
 // Document Check-out/Check-in
 // ============================================

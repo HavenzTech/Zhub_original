@@ -1,31 +1,9 @@
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
-import { sanitizeInput } from '@/lib/utils/sanitize'
-
-// Input types that should NOT be sanitized (non-text inputs)
-const SKIP_SANITIZE_TYPES = new Set([
-  'password', 'email', 'number', 'date', 'datetime-local',
-  'time', 'file', 'checkbox', 'radio', 'range', 'color', 'hidden',
-])
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
-  ({ className, type, onChange, ...props }, ref) => {
-    const shouldSanitize = !SKIP_SANITIZE_TYPES.has(type || 'text')
-
-    const handleChange = React.useCallback(
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (shouldSanitize) {
-          const sanitized = sanitizeInput(e.target.value)
-          if (sanitized !== e.target.value) {
-            e.target.value = sanitized
-          }
-        }
-        onChange?.(e)
-      },
-      [onChange, shouldSanitize],
-    )
-
+  ({ className, type, ...props }, ref) => {
     return (
       <input
         type={type}
@@ -34,7 +12,6 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
           className,
         )}
         ref={ref}
-        onChange={handleChange}
         {...props}
       />
     )
