@@ -37,6 +37,7 @@ import {
   Lock,
   Unlock,
   Trash2,
+  Play,
 } from "lucide-react";
 import { useDocumentSearch } from "@/lib/hooks/useDocumentSearch";
 import { useDocumentCheckout } from "@/lib/hooks/useDocumentCheckout";
@@ -58,6 +59,7 @@ import { DocumentVersionHistory } from "@/features/documents/components/versions
 import { DocumentSharePanel } from "@/features/documents/components/sharing/DocumentSharePanel";
 import { DocumentPermissionsPanel } from "@/features/documents/components/permissions/DocumentPermissionsPanel";
 import { WorkflowTimeline } from "@/features/documents/components/workflow/WorkflowTimeline";
+import { StartWorkflowModal } from "@/features/documents/components/workflow/StartWorkflowModal";
 import { WorkflowStatusBadge } from "@/features/documents/components/workflow/WorkflowStatusBadge";
 import { ClassificationBadge } from "@/components/ui/classification-badge";
 import type {
@@ -160,6 +162,7 @@ export default function DocumentControlPage() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showStartWorkflowModal, setShowStartWorkflowModal] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
 
   // Workflow hook for inline workflow tab
@@ -167,6 +170,7 @@ export default function DocumentControlPage() {
     currentWorkflow,
     loading: workflowLoading,
     loadWorkflowStatus,
+    startWorkflow,
   } = useDocumentWorkflow(selectedDocumentForModal?.id || "");
 
   // Checkout hook
@@ -1262,6 +1266,17 @@ export default function DocumentControlPage() {
                             Check In
                           </Button>
                         )}
+                        {!currentWorkflow && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-[12px] border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-300 dark:hover:bg-emerald-950"
+                            onClick={() => setShowStartWorkflowModal(true)}
+                          >
+                            <Play className="mr-1 h-3 w-3" />
+                            Start Workflow
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -1586,6 +1601,16 @@ export default function DocumentControlPage() {
             onCheckin={async (request) => {
               await checkin(request);
               setShowCheckinModal(false);
+            }}
+          />
+          <StartWorkflowModal
+            open={showStartWorkflowModal}
+            onOpenChange={setShowStartWorkflowModal}
+            documentName={selectedDocumentForModal.name}
+            onStartWorkflow={async (workflowId) => {
+              await startWorkflow(workflowId);
+              await loadWorkflowStatus();
+              setShowStartWorkflowModal(false);
             }}
           />
         </>

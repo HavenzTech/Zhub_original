@@ -63,6 +63,7 @@ import {
   UpdateDocumentShareRequest,
   ShareAccessLogDto,
   RestoreVersionRequest,
+  CreateVersionRequest,
   ForceCheckoutCancelRequest,
   UpdateFavoriteOrderRequest,
 } from '@/types/bms';
@@ -564,6 +565,8 @@ class BmsApiService {
       this.get<DocumentDownloadResponse>(`/documents/${documentId}/versions/${versionNumber}/download`),
     restore: (documentId: string, versionNumber: number, data?: RestoreVersionRequest) =>
       this.post<DocumentVersionDto>(`/documents/${documentId}/versions/${versionNumber}/restore`, data || {}),
+    create: (documentId: string, data: CreateVersionRequest) =>
+      this.post<DocumentVersionDto>(`/documents/${documentId}/versions`, data),
   };
 
   // Document Check-out/Check-in - /api/havenzhub/documents/{documentId}/checkout

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Unlock, Loader2, Upload } from "lucide-react";
+import { Unlock, Loader2 } from "lucide-react";
 import type { CheckinRequest } from "@/types/bms";
 
 interface CheckinModalProps {
@@ -40,11 +40,10 @@ export function CheckinModal({
     try {
       const request: CheckinRequest = {
         comment: changeSummary || undefined,
-        // Note: File upload would be handled separately in a real implementation
+        newVersion: changeSummary ? { changeSummary } : undefined,
       };
       await onCheckin(request);
       onOpenChange(false);
-      // Reset form
       setChangeSummary("");
       setSelectedFile(null);
     } finally {
@@ -80,12 +79,12 @@ export function CheckinModal({
                 className="cursor-pointer"
               />
               {selectedFile && (
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-stone-600 dark:text-stone-400">
                   Selected: {selectedFile.name}
                 </p>
               )}
-              <p className="text-xs text-gray-500">
-                Upload a modified version of the file, or leave empty to keep the current version.
+              <p className="text-xs text-stone-500 dark:text-stone-400">
+                File upload will be available once the backend supports it.
               </p>
             </div>
           )}
@@ -99,7 +98,7 @@ export function CheckinModal({
               placeholder="Describe what changes you made..."
               rows={3}
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-stone-500 dark:text-stone-400">
               This will be recorded in the version history.
             </p>
           </div>
