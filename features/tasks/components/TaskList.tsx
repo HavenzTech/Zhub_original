@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
 import { TaskCard } from "./TaskCard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -100,6 +101,17 @@ export function TaskList({
     acc[status.value] = sortedTasks.filter((t) => t.status === status.value)
     return acc
   }, {} as Record<string, TaskDto[]>)
+
+  const handleDragEnd = useCallback((result: DropResult) => {
+    const { destination, draggableId } = result
+    if (!destination) return
+
+    const newStatus = destination.droppableId
+    const task = sortedTasks.find((t) => t.id === draggableId)
+    if (!task || task.status === newStatus) return
+
+    onStatusChange?.(task, newStatus)
+  }, [sortedTasks, onStatusChange])
 
   const clearFilters = () => {
     setSearchTerm("")
@@ -261,45 +273,74 @@ export function TaskList({
           ))}
         </div>
       ) : (
-        // Kanban view
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto pb-4">
-          {TASK_STATUS_OPTIONS.filter(s => s.value !== "cancelled").map((status) => (
-            <div
-              key={status.value}
-              className="bg-stone-50 dark:bg-stone-800/50 rounded-lg p-3 min-w-[250px] border border-stone-200 dark:border-stone-700"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <Badge className={getTaskStatusColor(status.value)}>
-                  {status.label}
-                </Badge>
-                <span className="text-sm text-stone-500 dark:text-stone-400">
-                  {tasksByStatus[status.value]?.length || 0}
-                </span>
-              </div>
-              <div className="space-y-2">
-                {tasksByStatus[status.value]?.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onStatusChange={onStatusChange}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onClick={onClick}
-                    showProject={showProject}
-                    canEdit={canEdit}
-                    canDelete={canDelete}
-                    canChangeStatus={canChangeStatus}
-                  />
-                ))}
-                {!tasksByStatus[status.value]?.length && (
-                  <p className="text-sm text-stone-400 dark:text-stone-500 text-center py-4">
-                    No tasks
-                  </p>
+        // Kanban view with drag and drop
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-x-auto pb-4">
+            {TASK_STATUS_OPTIONS.filter(s => s.value !== "cancelled").map((status) => (
+              <Droppable key={status.value} droppableId={status.value}>
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className={`rounded-lg p-3 min-w-[250px] border transition-colors ${
+                      snapshot.isDraggingOver
+                        ? "bg-accent-cyan/5 border-accent-cyan/30 dark:bg-accent-cyan/10"
+                        : "bg-stone-50 dark:bg-stone-800/50 border-stone-200 dark:border-stone-700"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <Badge className={getTaskStatusColor(status.value)}>
+                        {status.label}
+                      </Badge>
+                      <span className="text-sm text-stone-500 dark:text-stone-400">
+                        {tasksByStatus[status.value]?.length || 0}
+                      </span>
+                    </div>
+                    <div className="space-y-2 min-h-[60px]">
+                      {tasksByStatus[status.value]?.map((task, index) => (
+                        <Draggable
+                          key={task.id}
+                          draggableId={task.id || `task-${index}`}
+                          index={index}
+                          isDragDisabled={!canChangeStatus}
+                        >
+                          {(dragProvided, dragSnapshot) => (
+                            <div
+                              ref={dragProvided.innerRef}
+                              {...dragProvided.draggableProps}
+                              {...dragProvided.dragHandleProps}
+                              className={`transition-shadow ${
+                                dragSnapshot.isDragging ? "shadow-lg ring-2 ring-accent-cyan/30 rounded-xl" : ""
+                              }`}
+                            >
+                              <TaskCard
+                                task={task}
+                                onStatusChange={onStatusChange}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                                onClick={onClick}
+                                showProject={showProject}
+                                canEdit={canEdit}
+                                canDelete={canDelete}
+                                canChangeStatus={canChangeStatus}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                      {!tasksByStatus[status.value]?.length && !snapshot.isDraggingOver && (
+                        <p className="text-sm text-stone-400 dark:text-stone-500 text-center py-4">
+                          No tasks
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 )}
-              </div>
-            </div>
-          ))}
-        </div>
+              </Droppable>
+            ))}
+          </div>
+        </DragDropContext>
       )}
     </div>
   )
