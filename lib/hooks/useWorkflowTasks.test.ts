@@ -6,7 +6,7 @@ vi.mock('@/lib/services/bmsApi', () => ({
   bmsApi: {
     workflowTasks: {
       getMyTasks: vi.fn(),
-      getPendingTasks: vi.fn(),
+      getAllTasks: vi.fn(),
       getTask: vi.fn(),
       complete: vi.fn(),
       delegate: vi.fn(),
@@ -29,8 +29,11 @@ const mockMyTasks = [
   { id: 't2', title: 'Review Contract', status: 'pending' },
 ]
 
-const mockPendingTasks = [
+const mockAllTasks = [
   { id: 't3', title: 'Budget Approval', status: 'pending' },
+  { id: 't4', title: 'Completed Review', status: 'completed' },
+  { id: 't5', title: 'Approved Doc', status: 'approved' },
+  { id: 't6', title: 'Rejected Request', status: 'rejected' },
 ]
 
 describe('useWorkflowTasks', () => {
@@ -42,7 +45,7 @@ describe('useWorkflowTasks', () => {
     it('should start with empty arrays and no loading', () => {
       const { result } = renderHook(() => useWorkflowTasks())
       expect(result.current.myTasks).toEqual([])
-      expect(result.current.pendingTasks).toEqual([])
+      expect(result.current.completedTasks).toEqual([])
       expect(result.current.loading).toBe(false)
       expect(result.current.error).toBeNull()
     })
@@ -91,30 +94,44 @@ describe('useWorkflowTasks', () => {
     })
   })
 
-  describe('loadPendingTasks', () => {
-    it('should load pending tasks from API', async () => {
-      vi.mocked(bmsApi.workflowTasks.getPendingTasks).mockResolvedValue(mockPendingTasks)
+  describe('loadCompletedTasks', () => {
+    it('should load and filter to completed/approved/rejected tasks', async () => {
+      vi.mocked(bmsApi.workflowTasks.getAllTasks).mockResolvedValue(mockAllTasks)
 
       const { result } = renderHook(() => useWorkflowTasks())
 
       await act(async () => {
-        await result.current.loadPendingTasks()
+        await result.current.loadCompletedTasks()
       })
 
-      expect(result.current.pendingTasks).toEqual(mockPendingTasks)
+      // Should only include completed, approved, rejected — not pending
+      expect(result.current.completedTasks).toHaveLength(3)
+      expect(result.current.completedTasks.map((t: any) => t.id)).toEqual(['t4', 't5', 't6'])
     })
 
-    it('should set error on failure (no toast for pending)', async () => {
-      vi.mocked(bmsApi.workflowTasks.getPendingTasks).mockRejectedValue(new Error('Denied'))
+    it('should handle wrapped response', async () => {
+      vi.mocked(bmsApi.workflowTasks.getAllTasks).mockResolvedValue({ data: mockAllTasks } as any)
 
       const { result } = renderHook(() => useWorkflowTasks())
 
       await act(async () => {
-        await result.current.loadPendingTasks()
+        await result.current.loadCompletedTasks()
+      })
+
+      expect(result.current.completedTasks).toHaveLength(3)
+    })
+
+    it('should set error on failure (no toast for completed)', async () => {
+      vi.mocked(bmsApi.workflowTasks.getAllTasks).mockRejectedValue(new Error('Denied'))
+
+      const { result } = renderHook(() => useWorkflowTasks())
+
+      await act(async () => {
+        await result.current.loadCompletedTasks()
       })
 
       expect(result.current.error).toBeInstanceOf(Error)
-      // loadPendingTasks does NOT toast on error
+      // loadCompletedTasks does NOT toast on error
       expect(toast.error).not.toHaveBeenCalled()
     })
   })
