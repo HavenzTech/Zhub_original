@@ -1,4 +1,5 @@
 export { TaskCard } from "./TaskCard"
+export { TaskDetailDialog } from "./TaskDetailDialog"
 export { TaskFormModal, initialTaskFormData, type TaskFormData } from "./TaskFormModal"
 export { TaskList } from "./TaskList"
 export { ProjectTasksSection } from "./ProjectTasksSection"
