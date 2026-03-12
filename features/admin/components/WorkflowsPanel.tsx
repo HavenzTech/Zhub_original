@@ -98,7 +98,11 @@ export function WorkflowsPanel() {
     const companyId = authService.getCurrentCompanyId();
 
     if (token) bmsApi.setToken(token);
-    if (companyId) bmsApi.setCompanyId(companyId);
+    if (companyId) {
+      bmsApi.setCompanyId(companyId);
+    } else {
+      console.warn("WorkflowsPanel: No company ID found - workflow listing may fail");
+    }
 
     loadWorkflows();
     loadUsers();

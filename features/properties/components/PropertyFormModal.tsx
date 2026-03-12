@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -339,16 +340,13 @@ export function PropertyFormModal({
                   <Label htmlFor={`${idPrefix}currentValue`}>
                     Current Value (CAD)
                   </Label>
-                  <Input
+                  <CurrencyInput
                     id={`${idPrefix}currentValue`}
-                    type="number"
                     value={formData.currentValue}
-                    onChange={(e) =>
-                      setFormData({ ...formData, currentValue: e.target.value })
+                    onChange={(value) =>
+                      setFormData({ ...formData, currentValue: value.toString() })
                     }
                     placeholder="0"
-                    min="0"
-                    step="0.01"
                   />
                 </div>
 
@@ -356,19 +354,16 @@ export function PropertyFormModal({
                   <Label htmlFor={`${idPrefix}monthlyOperatingCosts`}>
                     Monthly Operating Costs (CAD)
                   </Label>
-                  <Input
+                  <CurrencyInput
                     id={`${idPrefix}monthlyOperatingCosts`}
-                    type="number"
                     value={formData.monthlyOperatingCosts}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setFormData({
                         ...formData,
-                        monthlyOperatingCosts: e.target.value,
+                        monthlyOperatingCosts: value.toString(),
                       })
                     }
                     placeholder="0"
-                    min="0"
-                    step="0.01"
                   />
                 </div>
               </div>

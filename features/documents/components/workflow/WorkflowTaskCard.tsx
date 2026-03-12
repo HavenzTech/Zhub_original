@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +28,7 @@ import {
   User,
   Loader2,
   Send,
+  AlertCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { WorkflowTaskDto, CompleteTaskRequest, DelegateTaskRequest } from "@/types/bms";
@@ -108,95 +108,94 @@ export function WorkflowTaskCard({
 
   return (
     <>
-      <Card className={isOverdue ? "border-red-300 bg-red-50" : ""}>
-        <CardHeader className="pb-2">
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                {task.documentName || "Document Review"}
-              </CardTitle>
-              <div className="text-sm text-gray-600 mt-1">
-                {task.stepName || "Review Task"}
-              </div>
-            </div>
-            <div className="flex flex-col gap-1 items-end">
-              {task.status === "pending" && (
-                <Badge className="bg-yellow-100 text-yellow-800">
-                  <Clock className="w-3 h-3 mr-1" />
-                  Pending
-                </Badge>
-              )}
-              {isOverdue && (
-                <Badge className="bg-red-100 text-red-800 text-xs">
-                  Overdue
-                </Badge>
-              )}
-            </div>
+      <div className="space-y-3">
+        <div className="flex items-start justify-between">
+          <div>
+            <h4 className="text-sm font-medium text-stone-900 dark:text-stone-50 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-accent-cyan" />
+              {task.documentName || "Document Review"}
+            </h4>
+            <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
+              {task.stepName || "Review Task"}
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-1">
-                <User className="w-4 h-4" />
-                Assigned to: {task.assignedToUserName || "Unknown"}
-              </div>
-              {task.dueAt && (
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  Due: {formatDistanceToNow(new Date(task.dueAt), { addSuffix: true })}
-                </div>
-              )}
-            </div>
-
-            {task.comments && (
-              <div className="text-sm bg-gray-50 p-3 rounded">
-                {task.comments}
-              </div>
+          <div className="flex flex-col gap-1 items-end">
+            {task.status === "pending" && (
+              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400 text-[10px]">
+                <Clock className="w-3 h-3 mr-1" />
+                Pending
+              </Badge>
             )}
-
-            <div className="flex items-center gap-2 pt-2">
-              {task.documentId && onViewDocument && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onViewDocument(task.documentId!)}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  View Document
-                </Button>
-              )}
-              <Button
-                size="sm"
-                className="bg-green-600 hover:bg-green-700"
-                onClick={() => handleActionClick("approve")}
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Approve
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleActionClick("reject")}
-              >
-                <XCircle className="w-4 h-4 mr-2" />
-                Reject
-              </Button>
-              {onDelegate && availableUsers.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDelegateDialogOpen(true)}
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Delegate
-                </Button>
-              )}
-            </div>
+            {isOverdue && (
+              <Badge className="bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400 text-[10px]">
+                <AlertCircle className="w-3 h-3 mr-1" />
+                Overdue
+              </Badge>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        <div className="flex items-center gap-4 text-xs text-stone-500 dark:text-stone-400">
+          <div className="flex items-center gap-1.5">
+            <User className="w-3 h-3" />
+            {task.assignedToUserName || "Unknown"}
+          </div>
+          {task.dueAt && (
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3 h-3" />
+              Due {formatDistanceToNow(new Date(task.dueAt), { addSuffix: true })}
+            </div>
+          )}
+        </div>
+
+        {task.comments && (
+          <div className="text-xs text-stone-600 dark:text-stone-300 bg-stone-50 dark:bg-stone-800 p-3 rounded-lg">
+            {task.comments}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          {task.documentId && onViewDocument && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-[12px] border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-800"
+              onClick={() => onViewDocument(task.documentId!)}
+            >
+              <FileText className="mr-1 h-3 w-3" />
+              View Document
+            </Button>
+          )}
+          <Button
+            size="sm"
+            className="h-7 text-[12px] bg-emerald-600 hover:bg-emerald-700 text-white"
+            onClick={() => handleActionClick("approve")}
+          >
+            <CheckCircle className="mr-1 h-3 w-3" />
+            Approve
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-[12px] border-red-300 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-950"
+            onClick={() => handleActionClick("reject")}
+          >
+            <XCircle className="mr-1 h-3 w-3" />
+            Reject
+          </Button>
+          {onDelegate && availableUsers.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-[12px] border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-800"
+              onClick={() => setDelegateDialogOpen(true)}
+            >
+              <Send className="mr-1 h-3 w-3" />
+              Delegate
+            </Button>
+          )}
+        </div>
+      </div>
 
       {/* Action Dialog */}
       <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
@@ -244,9 +243,9 @@ export function WorkflowTaskCard({
               disabled={isSubmitting || (selectedAction === "reject" && !comments)}
               className={
                 selectedAction === "approve"
-                  ? "bg-green-600 hover:bg-green-700"
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                   : selectedAction === "reject"
-                  ? "bg-red-600 hover:bg-red-700"
+                  ? "bg-red-600 hover:bg-red-700 text-white"
                   : ""
               }
             >

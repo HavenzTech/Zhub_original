@@ -55,10 +55,22 @@ export function useDocumentWorkflow(documentId: string): UseDocumentWorkflowRetu
       setLoading(true)
       setError(null)
       const data = await bmsApi.documentWorkflows.getHistory(documentId)
-      setWorkflowHistory(Array.isArray(data) ? data : [])
+      const history = Array.isArray(data)
+        ? data
+        : Array.isArray((data as any)?.data)
+          ? (data as any).data
+          : Array.isArray((data as any)?.items)
+            ? (data as any).items
+            : []
+      setWorkflowHistory(history)
     } catch (err) {
-      const error = err instanceof Error ? err : new Error("Failed to load workflow history")
-      setError(error)
+      // 404 is expected if no history exists
+      const is404 = err instanceof BmsApiError && err.status === 404
+      if (!is404) {
+        const error = err instanceof Error ? err : new Error("Failed to load workflow history")
+        setError(error)
+      }
+      setWorkflowHistory([])
     } finally {
       setLoading(false)
     }

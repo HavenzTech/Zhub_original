@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Loader2, Edit } from "lucide-react"
@@ -212,19 +213,16 @@ export function ProjectFormModal({
                 >
                   Budget Allocated (CAD)
                 </Label>
-                <Input
+                <CurrencyInput
                   id={isEditMode ? "edit-budgetAllocated" : "budgetAllocated"}
-                  type="number"
                   value={formData.budgetAllocated}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setFormData({
                       ...formData,
-                      budgetAllocated: e.target.value,
+                      budgetAllocated: value.toString(),
                     })
                   }
                   placeholder="0"
-                  min="0"
-                  step="0.01"
                 />
               </div>
 
@@ -234,16 +232,13 @@ export function ProjectFormModal({
                 >
                   Budget Spent (CAD)
                 </Label>
-                <Input
+                <CurrencyInput
                   id={isEditMode ? "edit-budgetSpent" : "budgetSpent"}
-                  type="number"
                   value={formData.budgetSpent}
-                  onChange={(e) =>
-                    setFormData({ ...formData, budgetSpent: e.target.value })
+                  onChange={(value) =>
+                    setFormData({ ...formData, budgetSpent: value.toString() })
                   }
                   placeholder="0"
-                  min="0"
-                  step="0.01"
                 />
               </div>
             </div>
