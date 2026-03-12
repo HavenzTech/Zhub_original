@@ -161,6 +161,8 @@ describe('useRetentionPolicies', () => {
     it('should create a retention policy and add to list', async () => {
       const newPolicy = { id: '3', name: '1 Year Retention', code: '1YR', retentionDays: 365, isActive: true }
       vi.mocked(bmsApi.admin.retentionPolicies.create).mockResolvedValue(newPolicy)
+      // After create, the hook calls loadRetentionPolicies() which calls list()
+      vi.mocked(bmsApi.admin.retentionPolicies.list).mockResolvedValue([...mockPolicies, newPolicy])
 
       const { result } = renderHook(() => useRetentionPolicies())
 
@@ -193,9 +195,11 @@ describe('useRetentionPolicies', () => {
 
   describe('updateRetentionPolicy', () => {
     it('should update a retention policy in the list', async () => {
-      vi.mocked(bmsApi.admin.retentionPolicies.list).mockResolvedValue(mockPolicies)
       const updatedPolicy = { ...mockPolicies[0], name: 'Updated 7 Year' }
+      vi.mocked(bmsApi.admin.retentionPolicies.list).mockResolvedValueOnce(mockPolicies)
       vi.mocked(bmsApi.admin.retentionPolicies.update).mockResolvedValue(updatedPolicy)
+      // After update, the hook calls loadRetentionPolicies() which calls list() again
+      vi.mocked(bmsApi.admin.retentionPolicies.list).mockResolvedValueOnce([updatedPolicy, mockPolicies[1]])
 
       const { result } = renderHook(() => useRetentionPolicies())
 
