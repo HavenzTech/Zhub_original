@@ -39,7 +39,15 @@ export function useWorkflows(): UseWorkflowsReturn {
       setError(null)
       // Pass includeInactive=true so admin can see and reactivate inactive workflows
       const data = await bmsApi.admin.workflows.list(true)
-      setWorkflows(Array.isArray(data) ? data : [])
+      // Handle both plain arrays and wrapped responses (e.g. { data: [...] } or { items: [...] })
+      const workflows = Array.isArray(data)
+        ? data
+        : Array.isArray((data as any)?.data)
+          ? (data as any).data
+          : Array.isArray((data as any)?.items)
+            ? (data as any).items
+            : []
+      setWorkflows(workflows)
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load workflows")
       setError(error)
@@ -84,9 +92,12 @@ export function useWorkflows(): UseWorkflowsReturn {
     async (request: CreateWorkflowRequest): Promise<WorkflowDto | null> => {
       try {
         setLoading(true)
-        const newWorkflow = await bmsApi.admin.workflows.create(request)
-        setWorkflows((prev) => [...prev, newWorkflow])
+        const response = await bmsApi.admin.workflows.create(request)
+        // Handle both plain DTO and wrapped response
+        const newWorkflow: WorkflowDto = (response as any)?.data ?? response
         toast.success("Workflow created successfully")
+        // Refresh from server to ensure consistent state
+        await loadWorkflows()
         return newWorkflow
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Failed to create workflow")
@@ -98,18 +109,18 @@ export function useWorkflows(): UseWorkflowsReturn {
         setLoading(false)
       }
     },
-    []
+    [loadWorkflows]
   )
 
   const updateWorkflow = useCallback(
     async (id: string, request: UpdateWorkflowRequest): Promise<WorkflowDto | null> => {
       try {
         setLoading(true)
-        const updatedWorkflow = await bmsApi.admin.workflows.update(id, request)
-        setWorkflows((prev) =>
-          prev.map((workflow) => (workflow.id === id ? updatedWorkflow : workflow))
-        )
+        const response = await bmsApi.admin.workflows.update(id, request)
+        const updatedWorkflow: WorkflowDto = (response as any)?.data ?? response
         toast.success("Workflow updated successfully")
+        // Refresh from server to ensure consistent state
+        await loadWorkflows()
         return updatedWorkflow
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Failed to update workflow")
@@ -121,7 +132,7 @@ export function useWorkflows(): UseWorkflowsReturn {
         setLoading(false)
       }
     },
-    []
+    [loadWorkflows]
   )
 
   const deleteWorkflow = useCallback(async (id: string): Promise<boolean> => {

@@ -41,6 +41,8 @@ import {
   AlertCircle,
   Calendar,
   ClipboardCheck,
+  FileText,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { CompleteTaskRequest, DelegateTaskRequest, TaskDto } from "@/types/bms";
@@ -53,10 +55,10 @@ export default function MyTasksPage() {
 
   const {
     myTasks,
-    pendingTasks,
+    completedTasks: completedApprovals,
     loading: workflowLoading,
     loadMyTasks,
-    loadPendingTasks,
+    loadCompletedTasks,
     completeTask,
     delegateTask,
   } = useWorkflowTasks();
@@ -82,10 +84,10 @@ export default function MyTasksPage() {
     if (companyId) bmsApi.setCompanyId(companyId);
 
     loadMyTasks();
-    loadPendingTasks();
+    loadCompletedTasks();
     loadMyProjectTasks();
     loadUsers();
-  }, [router, loadMyTasks, loadPendingTasks, loadMyProjectTasks]);
+  }, [router, loadMyTasks, loadCompletedTasks, loadMyProjectTasks]);
 
   const loadUsers = async () => {
     try {
@@ -109,7 +111,7 @@ export default function MyTasksPage() {
       await completeTask(taskId, request);
       toast.success(`Task ${request.action === 'approve' ? 'approved' : 'completed'} successfully`);
       await loadMyTasks();
-      await loadPendingTasks();
+      await loadCompletedTasks();
     } catch (err) {
       toast.error("Failed to complete task");
     }
@@ -120,7 +122,6 @@ export default function MyTasksPage() {
       await delegateTask(taskId, request);
       toast.success("Task delegated successfully");
       await loadMyTasks();
-      await loadPendingTasks();
     } catch (err) {
       toast.error("Failed to delegate task");
     }
@@ -132,7 +133,7 @@ export default function MyTasksPage() {
 
   const handleRefresh = () => {
     loadMyTasks();
-    loadPendingTasks();
+    loadCompletedTasks();
     loadMyProjectTasks();
   };
 
@@ -181,82 +182,42 @@ export default function MyTasksPage() {
   // ─── Render sections ───
 
   const renderApprovalsSection = () => (
-    <>
-      {/* Pending Approvals */}
-      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
-        <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-stone-500 dark:text-stone-400" />
-          <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50 flex-1">
-            Pending Approvals
-          </h2>
-          {myTasks.length > 0 && (
-            <span className="text-xs px-2.5 py-1 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-400 rounded-full font-medium">
-              {myTasks.length}
-            </span>
-          )}
-        </div>
-        {workflowLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-stone-500" />
-          </div>
-        ) : myTasks.length === 0 ? (
-          <div className="p-10 text-center text-stone-400 dark:text-stone-500 text-sm">
-            No pending approvals
-          </div>
-        ) : (
-          <div className="divide-y divide-stone-100 dark:divide-stone-800">
-            {myTasks.map((task) => (
-              <div key={task.id} className="px-5 py-4">
-                <WorkflowTaskCard
-                  task={task}
-                  onComplete={(request) => handleCompleteTask(task.id!, request)}
-                  onDelegate={(request) => handleDelegateTask(task.id!, request)}
-                  onViewDocument={handleViewDocument}
-                  availableUsers={availableUsers}
-                />
-              </div>
-            ))}
-          </div>
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+      <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center gap-2">
+        <CheckCircle className="w-5 h-5 text-stone-500 dark:text-stone-400" />
+        <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50 flex-1">
+          Pending Approvals
+        </h2>
+        {myTasks.length > 0 && (
+          <span className="text-xs px-2.5 py-1 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-400 rounded-full font-medium">
+            {myTasks.length}
+          </span>
         )}
       </div>
-
-      {/* All Pending Workflow Tasks */}
-      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
-        <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-stone-500 dark:text-stone-400" />
-          <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50 flex-1">
-            All Pending Workflow Tasks
-          </h2>
-          {pendingTasks.length > 0 && (
-            <span className="text-xs px-2.5 py-1 bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400 rounded-full font-medium">
-              {pendingTasks.length}
-            </span>
-          )}
+      {workflowLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-stone-500" />
         </div>
-        {workflowLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-stone-500" />
-          </div>
-        ) : pendingTasks.length === 0 ? (
-          <div className="p-10 text-center text-stone-400 dark:text-stone-500 text-sm">
-            No pending workflow tasks
-          </div>
-        ) : (
-          <div className="divide-y divide-stone-100 dark:divide-stone-800">
-            {pendingTasks.map((task) => (
-              <div key={task.id} className="px-5 py-4">
-                <WorkflowTaskCard
-                  task={task}
-                  onComplete={(request) => handleCompleteTask(task.id!, request)}
-                  onViewDocument={handleViewDocument}
-                  availableUsers={[]}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
+      ) : myTasks.length === 0 ? (
+        <div className="p-10 text-center text-stone-400 dark:text-stone-500 text-sm">
+          No pending approvals
+        </div>
+      ) : (
+        <div className="divide-y divide-stone-100 dark:divide-stone-800">
+          {myTasks.map((task) => (
+            <div key={task.id} className="px-5 py-4">
+              <WorkflowTaskCard
+                task={task}
+                onComplete={(request) => handleCompleteTask(task.id!, request)}
+                onDelegate={(request) => handleDelegateTask(task.id!, request)}
+                onViewDocument={handleViewDocument}
+                availableUsers={availableUsers}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 
   const renderProjectTasksSection = () => (
@@ -460,6 +421,90 @@ export default function MyTasksPage() {
     </div>
   );
 
+  const renderCompletedApprovalsSection = () => (
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+      <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center gap-2">
+        <CheckCircle className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
+        <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50 flex-1">
+          Completed Approvals
+        </h2>
+        {completedApprovals.length > 0 && (
+          <span className="text-xs px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-full font-medium">
+            {completedApprovals.length}
+          </span>
+        )}
+      </div>
+      {workflowLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-stone-500" />
+        </div>
+      ) : completedApprovals.length === 0 ? (
+        <div className="p-10 text-center text-stone-400 dark:text-stone-500 text-sm">
+          No completed approvals yet
+        </div>
+      ) : (
+        <div className="divide-y divide-stone-100 dark:divide-stone-800">
+          {completedApprovals.map((task) => (
+            <div key={task.id} className="px-5 py-4 space-y-2">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-stone-900 dark:text-stone-50 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-accent-cyan" />
+                    {task.documentName || "Document Review"}
+                  </h4>
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
+                    {task.stepName || "Review Task"}
+                  </p>
+                </div>
+                <Badge
+                  className={`text-[10px] ${
+                    task.actionTaken === "approve"
+                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                      : task.actionTaken === "reject"
+                      ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400"
+                      : "bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300"
+                  }`}
+                >
+                  {task.actionTaken === "approve" ? "Approved" : task.actionTaken === "reject" ? "Rejected" : task.actionTaken || "Completed"}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-stone-500 dark:text-stone-400">
+                {task.completedByUserName && (
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3 h-3" />
+                    {task.completedByUserName}
+                  </div>
+                )}
+                {task.completedAt && (
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3" />
+                    {formatDate(task.completedAt)}
+                  </div>
+                )}
+              </div>
+              {task.comments && (
+                <div className="text-xs text-stone-600 dark:text-stone-300 bg-stone-50 dark:bg-stone-800 p-3 rounded-lg">
+                  {task.comments}
+                </div>
+              )}
+              {task.documentId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-[12px] border-stone-300 text-stone-700 hover:bg-stone-100 dark:border-stone-600 dark:text-stone-300 dark:hover:bg-stone-800"
+                  onClick={() => handleViewDocument(task.documentId!)}
+                >
+                  <FileText className="mr-1 h-3 w-3" />
+                  View Document
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -524,7 +569,12 @@ export default function MyTasksPage() {
 
           {activeTab === "tasks" && renderProjectTasksSection()}
 
-          {activeTab === "completed" && renderCompletedSection()}
+          {activeTab === "completed" && (
+            <>
+              {renderCompletedApprovalsSection()}
+              {renderCompletedSection()}
+            </>
+          )}
         </div>
       </div>
 

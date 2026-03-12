@@ -9,11 +9,11 @@ import { toast } from "sonner"
 
 interface UseWorkflowTasksReturn {
   myTasks: WorkflowTaskDto[]
-  pendingTasks: WorkflowTaskDto[]
+  completedTasks: WorkflowTaskDto[]
   loading: boolean
   error: Error | null
   loadMyTasks: () => Promise<void>
-  loadPendingTasks: () => Promise<void>
+  loadCompletedTasks: () => Promise<void>
   getTask: (taskId: string) => Promise<WorkflowTaskDto | null>
   completeTask: (taskId: string, request: CompleteTaskRequest) => Promise<WorkflowTaskDto | null>
   delegateTask: (taskId: string, request: DelegateTaskRequest) => Promise<WorkflowTaskDto | null>
@@ -25,7 +25,7 @@ interface UseWorkflowTasksReturn {
  */
 export function useWorkflowTasks(): UseWorkflowTasksReturn {
   const [myTasks, setMyTasks] = useState<WorkflowTaskDto[]>([])
-  const [pendingTasks, setPendingTasks] = useState<WorkflowTaskDto[]>([])
+  const [completedTasks, setCompletedTasks] = useState<WorkflowTaskDto[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
@@ -34,7 +34,15 @@ export function useWorkflowTasks(): UseWorkflowTasksReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.workflowTasks.getMyTasks()
-      setMyTasks(Array.isArray(data) ? data : [])
+      // Handle both plain arrays and wrapped responses
+      const tasks = Array.isArray(data)
+        ? data
+        : Array.isArray((data as any)?.data)
+          ? (data as any).data
+          : Array.isArray((data as any)?.items)
+            ? (data as any).items
+            : []
+      setMyTasks(tasks)
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load my tasks")
       setError(error)
@@ -46,14 +54,25 @@ export function useWorkflowTasks(): UseWorkflowTasksReturn {
     }
   }, [])
 
-  const loadPendingTasks = useCallback(async () => {
+  const loadCompletedTasks = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      const data = await bmsApi.workflowTasks.getPendingTasks()
-      setPendingTasks(Array.isArray(data) ? data : [])
+      const data = await bmsApi.workflowTasks.getAllTasks(false)
+      // Handle both plain arrays and wrapped responses
+      const allTasks = Array.isArray(data)
+        ? data
+        : Array.isArray((data as any)?.data)
+          ? (data as any).data
+          : Array.isArray((data as any)?.items)
+            ? (data as any).items
+            : []
+      // Filter to only completed/resolved tasks
+      setCompletedTasks(allTasks.filter((t: WorkflowTaskDto) =>
+        t.status === "completed" || t.status === "approved" || t.status === "rejected"
+      ))
     } catch (err) {
-      const error = err instanceof Error ? err : new Error("Failed to load pending tasks")
+      const error = err instanceof Error ? err : new Error("Failed to load completed tasks")
       setError(error)
     } finally {
       setLoading(false)
@@ -121,11 +140,11 @@ export function useWorkflowTasks(): UseWorkflowTasksReturn {
 
   return {
     myTasks,
-    pendingTasks,
+    completedTasks,
     loading,
     error,
     loadMyTasks,
-    loadPendingTasks,
+    loadCompletedTasks,
     getTask,
     completeTask,
     delegateTask,

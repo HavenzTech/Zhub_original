@@ -33,7 +33,14 @@ export function useRetentionPolicies(): UseRetentionPoliciesReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.admin.retentionPolicies.list(true)
-      setRetentionPolicies(Array.isArray(data) ? data : [])
+      const policies = Array.isArray(data)
+        ? data
+        : Array.isArray((data as any)?.data)
+          ? (data as any).data
+          : Array.isArray((data as any)?.items)
+            ? (data as any).items
+            : []
+      setRetentionPolicies(policies)
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load retention policies")
       setError(error)
@@ -69,9 +76,10 @@ export function useRetentionPolicies(): UseRetentionPoliciesReturn {
     async (request: CreateRetentionPolicyRequest): Promise<RetentionPolicyDto | null> => {
       try {
         setLoading(true)
-        const newPolicy = await bmsApi.admin.retentionPolicies.create(request)
-        setRetentionPolicies((prev) => [...prev, newPolicy])
+        const response = await bmsApi.admin.retentionPolicies.create(request)
+        const newPolicy: RetentionPolicyDto = (response as any)?.data ?? response
         toast.success("Retention policy created successfully")
+        await loadRetentionPolicies()
         return newPolicy
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Failed to create retention policy")
@@ -83,18 +91,17 @@ export function useRetentionPolicies(): UseRetentionPoliciesReturn {
         setLoading(false)
       }
     },
-    []
+    [loadRetentionPolicies]
   )
 
   const updateRetentionPolicy = useCallback(
     async (id: string, request: UpdateRetentionPolicyRequest): Promise<RetentionPolicyDto | null> => {
       try {
         setLoading(true)
-        const updatedPolicy = await bmsApi.admin.retentionPolicies.update(id, request)
-        setRetentionPolicies((prev) =>
-          prev.map((policy) => (policy.id === id ? updatedPolicy : policy))
-        )
+        const response = await bmsApi.admin.retentionPolicies.update(id, request)
+        const updatedPolicy: RetentionPolicyDto = (response as any)?.data ?? response
         toast.success("Retention policy updated successfully")
+        await loadRetentionPolicies()
         return updatedPolicy
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Failed to update retention policy")
@@ -106,7 +113,7 @@ export function useRetentionPolicies(): UseRetentionPoliciesReturn {
         setLoading(false)
       }
     },
-    []
+    [loadRetentionPolicies]
   )
 
   const deleteRetentionPolicy = useCallback(async (id: string): Promise<boolean> => {

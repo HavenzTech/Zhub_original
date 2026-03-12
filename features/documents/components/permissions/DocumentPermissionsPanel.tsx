@@ -140,17 +140,14 @@ export function DocumentPermissionsPanel({
     setIsSubmitting(true);
     try {
       const request: CreateDocumentPermissionRequest = {
-        documentId,
         permissionLevel,
         appliesToChildren,
-        notes: notes || undefined,
+        ...(notes && { notes }),
+        ...(grantType === "user" && userId ? { userId } : {}),
+        ...(grantType === "role" && roleName ? { roleName } : {}),
       };
 
-      if (grantType === "user" && userId) {
-        request.userId = userId;
-      } else if (grantType === "role" && roleName) {
-        request.roleName = roleName;
-      } else {
+      if (!request.userId && !request.roleName) {
         return;
       }
 
@@ -171,7 +168,7 @@ export function DocumentPermissionsPanel({
       const request: UpdateDocumentPermissionRequest = {
         permissionLevel: editPermissionLevel,
         appliesToChildren: editAppliesToChildren,
-        notes: editNotes || undefined,
+        ...(editNotes && { notes: editNotes }),
       };
 
       const result = await updatePermission(editingPermission.id, request);

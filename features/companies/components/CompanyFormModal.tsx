@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Label } from "@/components/ui/label"
 import { Plus, Loader2, Edit, Upload, X, ImageIcon } from "lucide-react"
 
@@ -332,19 +333,16 @@ export function CompanyFormModal({
               >
                 Annual Revenue (CAD)
               </Label>
-              <Input
+              <CurrencyInput
                 id={isEditMode ? "edit-annualRevenue" : "annualRevenue"}
-                type="number"
                 value={formData.annualRevenue}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    annualRevenue: e.target.value,
+                    annualRevenue: value.toString(),
                   })
                 }
                 placeholder="0"
-                min="0"
-                step="0.01"
               />
             </div>
 

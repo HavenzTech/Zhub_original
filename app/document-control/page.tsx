@@ -38,6 +38,8 @@ import {
   Unlock,
   Trash2,
   Play,
+  Shield,
+  Loader2,
 } from "lucide-react";
 import { useDocumentSearch } from "@/lib/hooks/useDocumentSearch";
 import { useDocumentCheckout } from "@/lib/hooks/useDocumentCheckout";
@@ -62,6 +64,7 @@ import { WorkflowTimeline } from "@/features/documents/components/workflow/Workf
 import { StartWorkflowModal } from "@/features/documents/components/workflow/StartWorkflowModal";
 import { WorkflowStatusBadge } from "@/features/documents/components/workflow/WorkflowStatusBadge";
 import { ClassificationBadge } from "@/components/ui/classification-badge";
+import { useRetentionPolicies } from "@/lib/hooks/useRetentionPolicies";
 import type {
   UploadFormData,
   UserAccess,
@@ -163,15 +166,26 @@ export default function DocumentControlPage() {
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showStartWorkflowModal, setShowStartWorkflowModal] = useState(false);
+  const [showCancelWorkflowConfirm, setShowCancelWorkflowConfirm] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
 
   // Workflow hook for inline workflow tab
   const {
     currentWorkflow,
+    workflowHistory,
     loading: workflowLoading,
     loadWorkflowStatus,
+    loadWorkflowHistory,
     startWorkflow,
+    cancelWorkflow,
   } = useDocumentWorkflow(selectedDocumentForModal?.id || "");
+
+  // Retention policies
+  const {
+    retentionPolicies,
+    loadRetentionPolicies,
+  } = useRetentionPolicies();
+  const [applyingRetention, setApplyingRetention] = useState(false);
 
   // Checkout hook
   const {
@@ -309,6 +323,7 @@ export default function DocumentControlPage() {
     loadUsers();
     loadProperties();
     loadDocumentTypes();
+    loadRetentionPolicies();
   }, [
     router,
     loadDocuments,
@@ -318,6 +333,7 @@ export default function DocumentControlPage() {
     loadUsers,
     loadProperties,
     loadDocumentTypes,
+    loadRetentionPolicies,
   ]);
 
   // Reset tab when a different document is selected
@@ -336,8 +352,9 @@ export default function DocumentControlPage() {
   useEffect(() => {
     if (selectedDocumentForModal?.id && activeTab === "workflow") {
       loadWorkflowStatus();
+      loadWorkflowHistory();
     }
-  }, [selectedDocumentForModal?.id, activeTab, loadWorkflowStatus]);
+  }, [selectedDocumentForModal?.id, activeTab, loadWorkflowStatus, loadWorkflowHistory]);
 
   // ──────────────────────────────────────────────
   // Handlers
@@ -1266,17 +1283,6 @@ export default function DocumentControlPage() {
                             Check In
                           </Button>
                         )}
-                        {!currentWorkflow && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-[12px] border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-300 dark:hover:bg-emerald-950"
-                            onClick={() => setShowStartWorkflowModal(true)}
-                          >
-                            <Play className="mr-1 h-3 w-3" />
-                            Start Workflow
-                          </Button>
-                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -1420,6 +1426,76 @@ export default function DocumentControlPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Retention Policy */}
+                    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-5">
+                      <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-50 mb-4 flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-accent-cyan" />
+                        Retention Policy
+                      </h3>
+                      {(selectedDocumentForModal as any).retentionPolicyId ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-stone-500 dark:text-stone-400">Policy</span>
+                            <span className="text-sm font-medium text-stone-900 dark:text-stone-50">
+                              {retentionPolicies.find(p => p.id === (selectedDocumentForModal as any).retentionPolicyId)?.name || "Applied"}
+                            </span>
+                          </div>
+                          {(selectedDocumentForModal as any).retentionExpiresAt && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-stone-500 dark:text-stone-400">Expires</span>
+                              <span className="text-sm font-medium text-stone-900 dark:text-stone-50">
+                                {formatDate((selectedDocumentForModal as any).retentionExpiresAt)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ) : retentionPolicies.length > 0 ? (
+                        <div className="space-y-3">
+                          <p className="text-sm text-stone-500 dark:text-stone-400">No retention policy applied.</p>
+                          <div className="flex items-center gap-2">
+                            <select
+                              id="retention-policy-select"
+                              className="flex-1 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-1.5 text-sm text-stone-900 dark:text-stone-50"
+                              defaultValue=""
+                            >
+                              <option value="" disabled>Select a policy...</option>
+                              {retentionPolicies.filter(p => p.isActive !== false).map(policy => (
+                                <option key={policy.id} value={policy.id}>
+                                  {policy.name} ({policy.retentionPeriodDays} days)
+                                </option>
+                              ))}
+                            </select>
+                            <Button
+                              size="sm"
+                              className="h-8 text-xs"
+                              disabled={applyingRetention}
+                              onClick={async () => {
+                                const select = document.getElementById("retention-policy-select") as HTMLSelectElement;
+                                const policyId = select?.value;
+                                if (!policyId || !selectedDocumentForModal.id) return;
+                                setApplyingRetention(true);
+                                try {
+                                  await bmsApi.documentRetention.applyPolicy(selectedDocumentForModal.id, policyId);
+                                  toast.success("Retention policy applied");
+                                  loadDocuments();
+                                } catch (err) {
+                                  toast.error("Failed to apply retention policy");
+                                } finally {
+                                  setApplyingRetention(false);
+                                }
+                              }}
+                            >
+                              {applyingRetention ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-stone-500 dark:text-stone-400">
+                          No retention policies configured. Create one in Settings → Admin → Retention Policies.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -1450,8 +1526,63 @@ export default function DocumentControlPage() {
                           <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
                         </div>
                       ) : !currentWorkflow ? (
-                        <div className="py-8 text-center text-sm text-stone-500 dark:text-stone-400">
-                          No active workflow for this document.
+                        <div className="space-y-4">
+                          {/* Show last completed workflow if there is one */}
+                          {workflowHistory.length > 0 && (() => {
+                            const lastWorkflow = workflowHistory[0];
+                            return (
+                              <div className={`p-4 rounded-lg border ${
+                                lastWorkflow.status === "completed"
+                                  ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800"
+                                  : lastWorkflow.status === "rejected"
+                                  ? "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800"
+                                  : "bg-stone-50 border-stone-200 dark:bg-stone-800/50 dark:border-stone-700"
+                              }`}>
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-medium text-stone-900 dark:text-stone-50">
+                                    {lastWorkflow.workflowName}
+                                  </span>
+                                  <WorkflowStatusBadge
+                                    status={lastWorkflow.status}
+                                    currentStep={lastWorkflow.currentStepName}
+                                  />
+                                </div>
+                                <p className={`text-sm ${
+                                  lastWorkflow.status === "completed"
+                                    ? "text-emerald-800 dark:text-emerald-300"
+                                    : lastWorkflow.status === "rejected"
+                                    ? "text-red-800 dark:text-red-300"
+                                    : "text-stone-700 dark:text-stone-300"
+                                }`}>
+                                  {lastWorkflow.status === "completed"
+                                    ? "This document has been approved."
+                                    : lastWorkflow.status === "rejected"
+                                    ? "This document was rejected."
+                                    : "This workflow was cancelled."}
+                                </p>
+                                <div className="text-xs text-stone-500 dark:text-stone-400 mt-1">
+                                  {lastWorkflow.completedAt
+                                    ? formatDate(lastWorkflow.completedAt)
+                                    : formatDate(lastWorkflow.startedAt)}
+                                  {lastWorkflow.completedByUserName && ` by ${lastWorkflow.completedByUserName}`}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                          <div className="text-center">
+                            <p className="text-sm text-stone-500 dark:text-stone-400">
+                              {workflowHistory.length > 0 ? "Start another workflow if needed." : "No active workflow for this document."}
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="mt-3 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-300 dark:hover:bg-emerald-950"
+                              onClick={() => setShowStartWorkflowModal(true)}
+                            >
+                              <Play className="mr-1 h-3 w-3" />
+                              Start Workflow
+                            </Button>
+                          </div>
                         </div>
                       ) : (
                         <div className="space-y-4">
@@ -1462,12 +1593,60 @@ export default function DocumentControlPage() {
                                 Started {formatDate(currentWorkflow.startedAt)}
                               </div>
                             </div>
-                            <WorkflowStatusBadge
-                              status={currentWorkflow.status}
-                              currentStep={currentWorkflow.currentStepName}
-                            />
+                            <div className="flex items-center gap-2">
+                              <WorkflowStatusBadge
+                                status={currentWorkflow.status}
+                                currentStep={currentWorkflow.currentStepName}
+                              />
+                              {currentWorkflow.status !== "completed" && currentWorkflow.status !== "cancelled" && currentWorkflow.status !== "rejected" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 text-[12px] border-red-300 text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-950"
+                                  onClick={() => setShowCancelWorkflowConfirm(true)}
+                                >
+                                  <XCircle className="mr-1 h-3 w-3" />
+                                  Cancel
+                                </Button>
+                              )}
+                            </div>
                           </div>
                           <WorkflowTimeline workflow={currentWorkflow} />
+                          {(currentWorkflow.status === "completed" || currentWorkflow.status === "cancelled" || currentWorkflow.status === "rejected") && (
+                            <div className={`mt-4 p-4 rounded-lg border ${
+                              currentWorkflow.status === "completed"
+                                ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800"
+                                : currentWorkflow.status === "rejected"
+                                ? "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800"
+                                : "bg-stone-50 border-stone-200 dark:bg-stone-800/50 dark:border-stone-700"
+                            }`}>
+                              <p className={`text-sm font-medium ${
+                                currentWorkflow.status === "completed"
+                                  ? "text-emerald-800 dark:text-emerald-300"
+                                  : currentWorkflow.status === "rejected"
+                                  ? "text-red-800 dark:text-red-300"
+                                  : "text-stone-700 dark:text-stone-300"
+                              }`}>
+                                {currentWorkflow.status === "completed"
+                                  ? "This document has been approved."
+                                  : currentWorkflow.status === "rejected"
+                                  ? "This document was rejected."
+                                  : "This workflow was cancelled."}
+                              </p>
+                              <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
+                                You can start a new workflow if needed.
+                              </p>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="mt-3 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-300 dark:hover:bg-emerald-950"
+                                onClick={() => setShowStartWorkflowModal(true)}
+                              >
+                                <Play className="mr-1 h-3 w-3" />
+                                Start New Workflow
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1610,6 +1789,7 @@ export default function DocumentControlPage() {
             onStartWorkflow={async (workflowId) => {
               await startWorkflow(workflowId);
               await loadWorkflowStatus();
+              await loadWorkflowHistory();
               setShowStartWorkflowModal(false);
             }}
           />
@@ -1637,6 +1817,30 @@ export default function DocumentControlPage() {
               }}
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={showCancelWorkflowConfirm} onOpenChange={setShowCancelWorkflowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Workflow</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel the workflow on &quot;{selectedDocumentForModal?.name}&quot;? This will stop all pending approval steps.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Running</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={async () => {
+                await cancelWorkflow("Cancelled by user");
+                await loadWorkflowStatus();
+                await loadWorkflowHistory();
+                setShowCancelWorkflowConfirm(false);
+              }}
+            >
+              Cancel Workflow
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

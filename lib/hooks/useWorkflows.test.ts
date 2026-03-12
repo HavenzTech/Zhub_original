@@ -191,6 +191,8 @@ describe('useWorkflows', () => {
     it('should create a workflow and add to list', async () => {
       const newWorkflow = { id: '3', name: 'New Workflow', code: 'NEW', isActive: true, steps: [] }
       vi.mocked(bmsApi.admin.workflows.create).mockResolvedValue(newWorkflow)
+      // After create, the hook calls loadWorkflows() which calls list()
+      vi.mocked(bmsApi.admin.workflows.list).mockResolvedValue([...mockWorkflows, newWorkflow])
 
       const { result } = renderHook(() => useWorkflows())
 
@@ -223,9 +225,11 @@ describe('useWorkflows', () => {
 
   describe('updateWorkflow', () => {
     it('should update a workflow in the list', async () => {
-      vi.mocked(bmsApi.admin.workflows.list).mockResolvedValue(mockWorkflows)
       const updatedWorkflow = { ...mockWorkflows[0], name: 'Updated Approval' }
+      vi.mocked(bmsApi.admin.workflows.list).mockResolvedValueOnce(mockWorkflows)
       vi.mocked(bmsApi.admin.workflows.update).mockResolvedValue(updatedWorkflow)
+      // After update, the hook calls loadWorkflows() which calls list() again
+      vi.mocked(bmsApi.admin.workflows.list).mockResolvedValueOnce([updatedWorkflow, mockWorkflows[1]])
 
       const { result } = renderHook(() => useWorkflows())
 
