@@ -29,6 +29,12 @@ import { bmsApi } from "@/lib/services/bmsApi";
 import { Company } from "@/types/bms";
 import { NotificationDropdown } from "@/components/common/NotificationDropdown";
 import { SidebarFlyout } from "@/components/layout/SidebarFlyout";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface SidebarItem {
   id: string;
@@ -56,7 +62,16 @@ interface SidebarProps {
 
 export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("sidebar-collapsed") === "true";
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sidebar-collapsed", String(collapsed));
+  }, [collapsed]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState("");
   const [userInitials, setUserInitials] = useState("");
@@ -162,33 +177,56 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
   }, [pathname]);
 
   const sidebarContent = (
+    <TooltipProvider delayDuration={400}>
     <div className="flex h-full flex-col">
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-4">
-        <Link href="/" className="flex items-center">
-          <Image
-            src="/logo.png"
-            alt="Havenz Hub"
-            width={120}
-            height={32}
-            className={collapsed ? "h-7 object-contain" : "h-8 object-contain"}
-          />
-        </Link>
-        {!collapsed && (
-          <button
-            onClick={() => setCollapsed(true)}
-            className="ml-auto rounded-md p-1 text-stone-400 dark:text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300"
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </button>
-        )}
-        {collapsed && (
-          <button
-            onClick={() => setCollapsed(false)}
-            className="ml-auto rounded-md p-1 text-stone-400 dark:text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300"
-          >
-            <PanelLeft className="h-4 w-4" />
-          </button>
+      <div className={cn(
+        "flex items-center py-4",
+        collapsed ? "justify-center px-2" : "gap-2.5 px-4"
+      )}>
+        {collapsed ? (
+          <>
+            <Link href="/" className="flex items-center group-hover/sidebar:hidden">
+              <Image
+                src="/logos/H-logo.png"
+                alt="Havenz Hub"
+                width={32}
+                height={32}
+                className="h-8 w-8 object-contain"
+              />
+            </Link>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setCollapsed(false)}
+                  className="hidden group-hover/sidebar:flex items-center justify-center rounded-md p-1 text-stone-400 dark:text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300"
+                >
+                  <PanelLeft className="h-5 w-5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Click to expand sidebar</p>
+              </TooltipContent>
+            </Tooltip>
+          </>
+        ) : (
+          <>
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/logo.png"
+                alt="Havenz Hub"
+                width={120}
+                height={32}
+                className="h-8 object-contain"
+              />
+            </Link>
+            <button
+              onClick={() => setCollapsed(true)}
+              className="ml-auto rounded-md p-1 text-stone-400 dark:text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
+          </>
         )}
       </div>
 
@@ -290,7 +328,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
           const Icon = item.icon;
           const active = isActive(item.path);
           const hasFlyout = FLYOUT_ITEMS.has(item.id);
-          return (
+          const navLink = (
             <Link
               key={item.id}
               href={item.path}
@@ -298,13 +336,13 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
               onMouseEnter={() => handleNavMouseEnter(item.id)}
               onMouseLeave={handleNavMouseLeave}
               className={cn(
-                "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13px] transition-colors",
+                "flex items-center rounded-lg py-2.5 text-[13px] transition-colors",
+                collapsed ? "justify-center px-2" : "gap-2.5 px-3",
                 active
                   ? "bg-accent-cyan/15 text-accent-cyan"
                   : "text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-200",
                 hasFlyout && flyoutItemId === item.id && !active && "bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-200"
               )}
-              title={collapsed ? item.label : undefined}
             >
               <Icon className="h-[18px] w-[18px] shrink-0" />
               {!collapsed && (
@@ -323,13 +361,31 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
               )}
             </Link>
           );
+
+          if (collapsed) {
+            return (
+              <Tooltip key={item.id}>
+                <TooltipTrigger asChild>
+                  {navLink}
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>{item.label}</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+
+          return navLink;
         })}
 
       </nav>
 
       {/* User profile */}
       <div className="border-t border-stone-200 dark:border-stone-800 p-3">
-        <div className="flex items-center gap-2.5 rounded-lg p-2">
+        <div className={cn(
+          "flex items-center rounded-lg p-2",
+          collapsed ? "justify-center" : "gap-2.5"
+        )}>
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-cyan text-xs font-medium text-white">
             {userInitials || "U"}
           </div>
@@ -378,6 +434,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
         )}
       </div>
     </div>
+    </TooltipProvider>
   );
 
   return (
@@ -385,7 +442,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "hidden h-screen flex-shrink-0 bg-white dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800 transition-all duration-300 md:flex md:flex-col",
+          "group/sidebar hidden h-screen flex-shrink-0 bg-white dark:bg-stone-900 border-r border-stone-200 dark:border-stone-800 transition-all duration-300 md:flex md:flex-col",
           collapsed ? "w-16" : "w-60"
         )}
       >

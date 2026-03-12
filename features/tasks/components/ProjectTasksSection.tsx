@@ -14,6 +14,7 @@ import { extractArray } from "@/lib/utils/api"
 import type { TaskDto, Department, UserResponse } from "@/types/bms"
 import { toast } from "sonner"
 import { Plus, RefreshCw, CheckSquare, Loader2 } from "lucide-react"
+import { TaskDetailDialog } from "./TaskDetailDialog"
 import { formatDateForInput } from "../utils/taskHelpers"
 import {
   AlertDialog,
@@ -62,6 +63,7 @@ export function ProjectTasksSection({
   })
   const [editingTask, setEditingTask] = useState<TaskDto | null>(null)
   const [deleteTaskItem, setDeleteTaskItem] = useState<TaskDto | null>(null)
+  const [viewingTask, setViewingTask] = useState<TaskDto | null>(null)
 
   // Data for dropdowns
   const [departments, setDepartments] = useState<Department[]>([])
@@ -192,6 +194,10 @@ export function ProjectTasksSection({
   const handleStatusChange = async (task: TaskDto, status: string) => {
     if (!task.id) return
     await updateTaskStatus(task.id, status)
+    // Update the viewing task so the detail dialog reflects the change immediately
+    if (viewingTask?.id === task.id) {
+      setViewingTask({ ...task, status })
+    }
   }
 
   const handleDeleteClick = (task: TaskDto) => {
@@ -245,6 +251,7 @@ export function ProjectTasksSection({
             onStatusChange={handleStatusChange}
             onEdit={canEdit ? handleEdit : undefined}
             onDelete={canDelete ? handleDeleteClick : undefined}
+            onClick={(task) => setViewingTask(task)}
             showProject={false}
             canEdit={canEdit}
             canDelete={canDelete}
@@ -285,6 +292,19 @@ export function ProjectTasksSection({
           projects={[{ id: projectId, name: projectName }]}
           departments={departments.map((d) => ({ id: d.id!, name: d.name }))}
           users={users.map((u) => ({ id: u.id!, name: u.name || u.email || "" }))}
+        />
+
+        {/* Task Detail Dialog */}
+        <TaskDetailDialog
+          task={viewingTask}
+          open={!!viewingTask}
+          onOpenChange={(open) => !open && setViewingTask(null)}
+          onStatusChange={handleStatusChange}
+          onEdit={canEdit ? handleEdit : undefined}
+          onDelete={canDelete ? handleDeleteClick : undefined}
+          canEdit={canEdit}
+          canDelete={canDelete}
+          canChangeStatus={canChangeStatus}
         />
 
         {/* Delete Confirmation Dialog */}
