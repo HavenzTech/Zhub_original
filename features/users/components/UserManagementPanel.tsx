@@ -33,6 +33,7 @@ const initialFormData: CreateUserRequest = {
 const initialEditFormData = {
   name: "",
   pictureUrl: "",
+  role: "employee" as string,
 };
 
 export function UserManagementPanel() {
@@ -123,6 +124,7 @@ export function UserManagementPanel() {
     setEditFormData({
       name: user.name || "",
       pictureUrl: user.pictureUrl || "",
+      role: user.role || "employee",
     });
     setShowEditForm(true);
   };
@@ -136,10 +138,15 @@ export function UserManagementPanel() {
 
     setIsSubmitting(true);
     try {
-      const payload = {
+      const payload: Partial<UserResponse> = {
         name: editFormData.name.trim(),
         pictureUrl: editFormData.pictureUrl?.trim() || undefined,
       };
+
+      // Include role if it changed
+      if (editFormData.role && editFormData.role !== editingUser?.role) {
+        payload.role = editFormData.role;
+      }
 
       const success = await updateUser(editingUser.id, payload);
 

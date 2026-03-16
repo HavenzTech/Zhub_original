@@ -19,6 +19,7 @@ import { Project, Company } from "@/types/bms";
 import { toast } from "sonner";
 import { formatDateForInput } from "@/features/tasks/utils/taskHelpers";
 import { ArrowLeft } from "lucide-react";
+import { useUsers } from "@/lib/hooks/useUsers";
 
 const ProjectFormModal = dynamic(
   () =>
@@ -55,6 +56,7 @@ export default function ProjectDetailPage() {
   const [isSettingActive, setIsSettingActive] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
   const [activeTab, setActiveTab] = useState("overview");
+  const { users, loadUsers } = useUsers();
 
   // Memoize breadcrumb items to prevent unnecessary re-renders
   const breadcrumbItems = useMemo(
@@ -103,7 +105,8 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     loadProject();
-  }, [loadProject]);
+    loadUsers();
+  }, [loadProject, loadUsers]);
 
   const handleBack = () => {
     router.push("/projects");
@@ -404,6 +407,7 @@ export default function ProjectDetailPage() {
           setFormData={setFormData}
           isSubmitting={isSubmitting}
           onSubmit={handleEditSubmit}
+          users={users.map((u) => ({ id: u.id || "", name: u.name || "" })).filter((u) => u.name)}
         />
       </div>
     </AppLayout>

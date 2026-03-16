@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
 import { useProjects } from "@/lib/hooks/useProjects";
+import { useUsers } from "@/lib/hooks/useUsers";
 import { ProjectCard } from "@/features/projects/components/ProjectCard";
 import { ProjectStats } from "@/features/projects/components/ProjectStats";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ const initialFormData = {
 export default function ProjectsPage() {
   const router = useRouter();
   const { projects, loading, error, loadProjects, setProjects } = useProjects();
+  const { users, loadUsers } = useUsers();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -73,7 +75,8 @@ export default function ProjectsPage() {
     if (companyId) bmsApi.setCompanyId(companyId);
 
     loadProjects();
-  }, [router, loadProjects]);
+    loadUsers();
+  }, [router, loadProjects, loadUsers]);
 
   const buildPayload = () => {
     const payload: Record<string, unknown> = {
@@ -309,7 +312,7 @@ export default function ProjectsPage() {
                             <td className="px-4 py-4 text-xs text-stone-500 dark:text-stone-400">{timeline}</td>
                             <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{project.teamLead || "-"}</td>
                             <td className="px-4 py-4 text-right">
-                              {authService.isSuperAdmin() && (
+                              {authService.isAdmin() && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -361,6 +364,7 @@ export default function ProjectsPage() {
           setFormData={setFormData}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
+          users={users.map((u) => ({ id: u.id || "", name: u.name || "" })).filter((u) => u.name)}
         />
 
         {/* Delete Confirmation Dialog */}

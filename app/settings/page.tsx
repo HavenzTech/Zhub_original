@@ -99,7 +99,7 @@ export default function SettingsPage() {
   const userRoles: UserRole[] = [
     {
       id: "super_admin",
-      name: "Super Administrator",
+      name: "CEO",
       permissions: [
         "Full Platform Access",
         "All Companies",

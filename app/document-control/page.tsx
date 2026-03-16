@@ -40,6 +40,12 @@ import {
   Play,
   Shield,
   Loader2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
+  MessageSquare,
+  FolderTree,
 } from "lucide-react";
 import { useDocumentSearch } from "@/lib/hooks/useDocumentSearch";
 import { useDocumentCheckout } from "@/lib/hooks/useDocumentCheckout";
@@ -168,6 +174,8 @@ export default function DocumentControlPage() {
   const [showStartWorkflowModal, setShowStartWorkflowModal] = useState(false);
   const [showCancelWorkflowConfirm, setShowCancelWorkflowConfirm] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+  const [showLeftSidebar, setShowLeftSidebar] = useState(true);
+  const [showRightSidebar, setShowRightSidebar] = useState(true);
 
   // Workflow hook for inline workflow tab
   const {
@@ -957,7 +965,7 @@ export default function DocumentControlPage() {
         style={{ height: 'calc(100vh - 3.5rem)' }}
       >
         {/* ─── Left Panel: Tree, Search, Filters ─── */}
-        <div className="flex w-[300px] shrink-0 flex-col border-r border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900">
+        <div className={`flex shrink-0 flex-col border-r border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900 transition-[width] duration-200 ease-in-out overflow-hidden ${showLeftSidebar ? "w-[300px]" : "w-0 border-r-0"}`}>
           {/* Header */}
           <div className="flex items-center justify-between border-b border-stone-200 px-3 py-3 dark:border-stone-700">
             <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">
@@ -1223,6 +1231,28 @@ export default function DocumentControlPage() {
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
+          {/* Sidebar Toggle Bar */}
+          <div className="shrink-0 flex items-center justify-between border-b border-stone-200 bg-white px-2 py-1.5 dark:border-stone-700 dark:bg-stone-900">
+            <button
+              onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+              className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-stone-500 hover:bg-stone-100 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-300 transition-colors"
+              title={showLeftSidebar ? "Hide documents panel" : "Show documents panel"}
+            >
+              {showLeftSidebar ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+              <FolderTree className="h-3 w-3" />
+              <span className="hidden sm:inline">Documents</span>
+            </button>
+            <button
+              onClick={() => setShowRightSidebar(!showRightSidebar)}
+              className="hidden lg:flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-stone-500 hover:bg-stone-100 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-300 transition-colors"
+              title={showRightSidebar ? "Hide AI assistant" : "Show AI assistant"}
+            >
+              <span className="hidden sm:inline">AI Assistant</span>
+              <MessageSquare className="h-3 w-3" />
+              {showRightSidebar ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+            </button>
+          </div>
+
           {selectedDocumentForModal ? (
             <>
               {/* Document Action Bar */}
@@ -1704,7 +1734,7 @@ export default function DocumentControlPage() {
         </div>
 
         {/* ─── Right Panel: AI Chat ─── */}
-        <div className="hidden w-[320px] shrink-0 border-l border-stone-200 bg-white lg:flex lg:flex-col dark:border-stone-700 dark:bg-stone-900">
+        <div className={`hidden shrink-0 border-l border-stone-200 bg-white lg:flex lg:flex-col dark:border-stone-700 dark:bg-stone-900 transition-[width] duration-200 ease-in-out overflow-hidden ${showRightSidebar ? "w-[320px]" : "w-0 border-l-0"}`}>
           <DocumentChatPanel document={selectedDocumentForModal} />
         </div>
       </div>

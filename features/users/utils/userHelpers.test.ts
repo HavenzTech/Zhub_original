@@ -42,8 +42,8 @@ describe('userHelpers', () => {
   })
 
   describe('getRoleLabel', () => {
-    it('should return "Super Admin" for super_admin', () => {
-      expect(getRoleLabel('super_admin')).toBe('Super Admin')
+    it('should return "CEO" for super_admin', () => {
+      expect(getRoleLabel('super_admin')).toBe('CEO')
     })
 
     it('should return "Admin" for admin', () => {

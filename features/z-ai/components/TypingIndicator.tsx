@@ -8,11 +8,7 @@ const PHASES = [
   { text: "Finalizing response", minDuration: 0 },
 ]
 
-interface TypingIndicatorProps {
-  aiMode: "internal" | "external"
-}
-
-export function TypingIndicator({ aiMode }: TypingIndicatorProps) {
+export function TypingIndicator() {
   const [phaseIndex, setPhaseIndex] = useState(0)
 
   useEffect(() => {
@@ -30,17 +26,13 @@ export function TypingIndicator({ aiMode }: TypingIndicatorProps) {
     return () => clearTimeout(timer)
   }, [phaseIndex])
 
-  const role = aiMode === "internal" ? "internal-z" : "external-z"
-  const roleLabel = aiMode === "internal" ? "Z AI (Internal)" : "Z AI (External)"
-  const roleColor = aiMode === "internal" ? "text-accent-cyan" : "text-violet-600 dark:text-violet-400"
-
   return (
     <div className="flex gap-4 animate-fade-in">
       {/* Avatar */}
       <div
         className={cn(
           "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-          getMessageAvatarBg(role)
+          getMessageAvatarBg("internal-z")
         )}
       >
         <Bot className="w-5 h-5 text-white" />
@@ -49,8 +41,8 @@ export function TypingIndicator({ aiMode }: TypingIndicatorProps) {
       {/* Content */}
       <div className="flex-1 max-w-[80%]">
         <div className="flex items-center gap-2 mb-2">
-          <span className={cn("text-sm font-medium", roleColor)}>
-            {roleLabel}
+          <span className="text-sm font-medium text-accent-cyan">
+            Z AI
           </span>
         </div>
 

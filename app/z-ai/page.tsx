@@ -17,7 +17,6 @@ import type { Document } from "@/types/bms";
 
 export default function ZAiPage() {
   const [input, setInput] = useState("");
-  const [aiMode, setAiMode] = useState<"internal" | "external">("internal");
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [documentInitialPage, setDocumentInitialPage] = useState(1);
@@ -67,7 +66,7 @@ export default function ZAiPage() {
     setIsLoading(true);
 
     try {
-      if (aiMode === "internal") {
+      {
         // Use RAG backend for Internal Z mode
         // Convert messages to backend chat_history format
         const formattedHistory = messages
@@ -149,22 +148,6 @@ export default function ZAiPage() {
         };
 
         setMessages((prev) => [...prev, aiResponse]);
-      } else {
-        // Use simulated response for External Z mode
-        setTimeout(() => {
-          const responseContent = generateExternalResponse(currentInput);
-
-          const aiResponse: Message = {
-            role: "external-z",
-            content: responseContent,
-            timestamp: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            type: "analysis",
-          };
-          setMessages((prev) => [...prev, aiResponse]);
-        }, 1500);
       }
     } catch (error) {
       // Error handled by UI state
@@ -194,24 +177,6 @@ export default function ZAiPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const generateInternalResponse = (query: string) => {
-    const lowerQuery = query.toLowerCase();
-
-    if (lowerQuery.includes("budget") || lowerQuery.includes("financial")) {
-      return "FINANCIAL ANALYSIS SUMMARY\n\nAcross all companies:\n• Total Revenue: $5.15M (+12% YoY)\n• AHI Red Deer: $2.4M (46.6% of total)\n• Havenz Tech: $1.8M (35% of total)\n• Denvr Dataworks: $950K (18.4% of total)\n\nBudget burn rates:\n• Q1 2025: 23% of annual budget utilized\n• On track for projected targets\n• Recommended: Increase marketing spend for Havenz Tech\n\nWould you like detailed breakdown by department or project?";
-    }
-
-    if (lowerQuery.includes("project") || lowerQuery.includes("deadline")) {
-      return "PROJECT STATUS OVERVIEW\n\n🟢 On Track: 18 projects\n🟡 At Risk: 5 projects\n🔴 Overdue: 2 projects\n\nCritical attention needed:\n• Havenz Tech - Mobile App (3 days overdue)\n• AHI Red Deer - Infrastructure Upgrade (deadline tomorrow)\n\nNext milestones:\n• Data Center Migration (Feb 15)\n• Security Audit Completion (Feb 20)\n• Q1 Financial Review (March 1)\n\nShall I dive deeper into any specific project?";
-    }
-
-    return "I've analyzed your query against the Havenz Hub database. Based on your organization's data, I found relevant information across multiple companies and projects. Would you like me to provide specific details or generate a detailed report?";
-  };
-
-  const generateExternalResponse = (query: string) => {
-    return "EXTERNAL RESEARCH RESULTS\n\nI've searched public databases and market intelligence without exposing your internal data. Here's what I found:\n\n• Market trends in your industry sector\n• Competitive analysis and benchmarking\n• Regulatory updates that may affect operations\n• Technology developments relevant to your business\n\nNote: This information is gathered from public sources. Your internal data remains secure and was not shared externally.\n\nWould you like me to cross-reference this with your internal capabilities?";
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -330,7 +295,7 @@ export default function ZAiPage() {
       <div className="h-full flex">
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col bg-white dark:bg-stone-900">
-          <ChatHeader aiMode={aiMode} onModeChange={setAiMode} />
+          <ChatHeader />
 
           {/* Chat Messages */}
           <div ref={scrollAreaRef} className="flex-1 min-h-0">
@@ -344,7 +309,7 @@ export default function ZAiPage() {
                   />
                 ))}
                 {(chatIsLoading || isLoading) && (
-                  <TypingIndicator aiMode={aiMode} />
+                  <TypingIndicator />
                 )}
               </div>
             </ScrollArea>
@@ -352,7 +317,6 @@ export default function ZAiPage() {
 
           <ChatInput
             input={input}
-            aiMode={aiMode}
             isLoading={chatIsLoading || isLoading}
             onInputChange={setInput}
             onSend={handleSendMessage}

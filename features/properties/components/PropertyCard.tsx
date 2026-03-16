@@ -14,7 +14,7 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard = memo(function PropertyCard({ property, onClick, onDelete }: PropertyCardProps) {
-  const isSuperAdmin = authService.getCurrentRole() === "super_admin"
+  const isAdmin = authService.isAdmin()
 
   return (
     <Card
@@ -74,7 +74,7 @@ export const PropertyCard = memo(function PropertyCard({ property, onClick, onDe
           </div>
         </div>
 
-        {isSuperAdmin && onDelete && (
+        {isAdmin && onDelete && (
           <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end">
             <Button
               variant="ghost"

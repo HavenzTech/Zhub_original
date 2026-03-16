@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -24,7 +23,6 @@ import {
 import type { UserResponse, CreateUserRequest, UserRole } from "@/types/bms";
 import { Switch } from "@/components/ui/switch";
 import { UserPlus, Check, Loader2, Upload, X, User } from "lucide-react";
-import { getRoleBadgeColor, getRoleLabel } from "../utils/userHelpers";
 
 interface UserFormModalProps {
   open: boolean;
@@ -33,8 +31,8 @@ interface UserFormModalProps {
   formData: CreateUserRequest;
   setFormData: (data: CreateUserRequest) => void;
   editingUser?: UserResponse | null;
-  editFormData?: { name: string; pictureUrl: string };
-  setEditFormData?: (data: { name: string; pictureUrl: string }) => void;
+  editFormData?: { name: string; pictureUrl: string; role: string };
+  setEditFormData?: (data: { name: string; pictureUrl: string; role: string }) => void;
   isSubmitting: boolean;
   onSubmit: (e: React.FormEvent) => void;
   avatarFile?: File | null;
@@ -94,8 +92,7 @@ export function UserFormModal({
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
-              Update user profile information. Email and role cannot be changed
-              here.
+              Update user profile information and role assignment.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={onSubmit} className="space-y-4">
@@ -122,15 +119,24 @@ export function UserFormModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-role">Role (read-only)</Label>
-              <div className="flex items-center gap-2">
-                <Badge className={getRoleBadgeColor(editingUser.role)}>
-                  {getRoleLabel(editingUser.role)}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  Role changes require separate approval
-                </span>
-              </div>
+              <Label htmlFor="edit-role">Role</Label>
+              <Select
+                value={editFormData.role || editingUser.role || "employee"}
+                onValueChange={(value) =>
+                  setEditFormData({ ...editFormData, role: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="employee">Employee - View & work on assigned tasks</SelectItem>
+                  <SelectItem value="project_lead">Project Lead - Manage assigned projects</SelectItem>
+                  <SelectItem value="dept_manager">Dept Manager - Manage assigned departments</SelectItem>
+                  <SelectItem value="admin">Admin - Full company control</SelectItem>
+                  <SelectItem value="super_admin">CEO - Platform-wide access</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             {/* Avatar Upload */}
             <div className="space-y-2">
@@ -271,7 +277,7 @@ export function UserFormModal({
                 <SelectItem value="project_lead">Project Lead - Manage assigned projects</SelectItem>
                 <SelectItem value="dept_manager">Dept Manager - Manage assigned departments</SelectItem>
                 <SelectItem value="admin">Admin - Full company control</SelectItem>
-                <SelectItem value="super_admin">Super Admin - Platform-wide access</SelectItem>
+                <SelectItem value="super_admin">CEO - Platform-wide access</SelectItem>
               </SelectContent>
             </Select>
           </div>

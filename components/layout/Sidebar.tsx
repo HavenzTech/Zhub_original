@@ -152,7 +152,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case "super_admin": return "Super Admin";
+      case "super_admin": return "CEO";
       case "admin": return "Admin";
       case "dept_manager": return "Dept Manager";
       case "project_lead": return "Project Lead";

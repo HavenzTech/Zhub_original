@@ -17,7 +17,7 @@ interface DepartmentCardProps {
 
 export function DepartmentCard({ department, onViewDetails, onDelete }: DepartmentCardProps) {
   const utilization = getBudgetUtilization(department.budgetAllocated ?? undefined, department.budgetSpent ?? undefined)
-  const isSuperAdmin = authService.getCurrentRole() === "super_admin"
+  const isAdmin = authService.isAdmin()
 
   return (
     <Card
@@ -74,7 +74,7 @@ export function DepartmentCard({ department, onViewDetails, onDelete }: Departme
           <div className="text-xs text-gray-500">
             Updated: {department.updatedAt ? getTimeAgo(department.updatedAt) : "N/A"}
           </div>
-          {isSuperAdmin && onDelete && (
+          {isAdmin && onDelete && (
             <Button
               variant="ghost"
               size="sm"

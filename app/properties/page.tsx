@@ -329,7 +329,7 @@ export default function PropertiesPage() {
                               </span>
                             </td>
                             <td className="px-4 py-4 text-right">
-                              {authService.isSuperAdmin() && (
+                              {authService.isAdmin() && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
