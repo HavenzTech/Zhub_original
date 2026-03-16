@@ -4,7 +4,6 @@ import { Send } from "lucide-react"
 
 interface ChatInputProps {
   input: string
-  aiMode: "internal" | "external"
   isLoading: boolean
   onInputChange: (value: string) => void
   onSend: () => void
@@ -13,7 +12,6 @@ interface ChatInputProps {
 
 export function ChatInput({
   input,
-  aiMode,
   isLoading,
   onInputChange,
   onSend,
@@ -24,11 +22,7 @@ export function ChatInput({
       <div className="max-w-4xl mx-auto">
         <div className="flex gap-3">
           <Textarea
-            placeholder={
-              aiMode === "internal"
-                ? "Ask Z about your companies, projects, documents, or analytics..."
-                : "Ask Z to research market data, trends, or external information..."
-            }
+            placeholder="Ask Z about your companies, projects, documents, or analytics..."
             value={input}
             onChange={(e) => onInputChange(e.target.value)}
             onKeyPress={onKeyPress}
@@ -61,8 +55,7 @@ export function ChatInput({
               }`}
             ></div>
             <span>
-              Z AI {aiMode === "internal" ? "Internal" : "External"}{" "}
-              {isLoading ? "Processing..." : "Ready"}
+              Z AI {isLoading ? "Processing..." : "Ready"}
             </span>
           </div>
         </div>

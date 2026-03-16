@@ -20,7 +20,7 @@ interface CompanyCardProps {
 }
 
 export const CompanyCard = memo(function CompanyCard({ company, onViewDetails, onDelete }: CompanyCardProps) {
-  const isSuperAdmin = authService.getCurrentRole() === "super_admin"
+  const isAdmin = authService.isAdmin()
   const [imageError, setImageError] = useState(false)
 
   return (
@@ -103,7 +103,7 @@ export const CompanyCard = memo(function CompanyCard({ company, onViewDetails, o
             >
               <Eye className="w-4 h-4" />
             </Button>
-            {isSuperAdmin && onDelete && (
+            {isAdmin && onDelete && (
               <Button
                 variant="ghost"
                 size="sm"

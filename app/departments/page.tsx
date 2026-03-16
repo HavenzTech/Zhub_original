@@ -57,6 +57,7 @@ export default function DepartmentsPage() {
   const [formData, setFormData] = useState(initialFormData);
   const [deleteDepartment, setDeleteDepartment] = useState<Department | null>(null);
   const [users, setUsers] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [selectedHeadUserId, setSelectedHeadUserId] = useState<string | null>(null);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -153,6 +154,18 @@ export default function DepartmentsPage() {
       const payload = buildPayload();
       const newDepartment = await bmsApi.departments.create(payload);
 
+      // Auto-add department head as a team member
+      if (selectedHeadUserId && (newDepartment as Department).id) {
+        try {
+          await bmsApi.departments.addMember((newDepartment as Department).id!, {
+            userId: selectedHeadUserId,
+            role: "manager",
+          });
+        } catch (memberErr) {
+          console.error("Failed to auto-add head as member:", memberErr);
+        }
+      }
+
       setDepartments((prev: Department[]) => [
         ...prev,
         newDepartment as Department,
@@ -160,6 +173,7 @@ export default function DepartmentsPage() {
       toast.success("Department created successfully!");
       setShowAddForm(false);
       setFormData(initialFormData);
+      setSelectedHeadUserId(null);
     } catch (err) {
       const errorMessage =
         err instanceof BmsApiError
@@ -301,7 +315,7 @@ export default function DepartmentsPage() {
                             <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{(dept as any).memberCount ?? "-"}</td>
                             <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{budget}</td>
                             <td className="px-4 py-4 text-right">
-                              {authService.isSuperAdmin() && (
+                              {authService.isAdmin() && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -354,6 +368,7 @@ export default function DepartmentsPage() {
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
           users={users}
+          onHeadUserSelect={setSelectedHeadUserId}
         />
 
         {/* Delete Confirmation Dialog */}

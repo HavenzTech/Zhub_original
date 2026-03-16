@@ -32,6 +32,11 @@ interface ProjectFormData {
   projectedDeadline: string
 }
 
+interface TeamMember {
+  id: string
+  name: string
+}
+
 interface ProjectFormModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -40,6 +45,7 @@ interface ProjectFormModalProps {
   setFormData: (data: ProjectFormData) => void
   isSubmitting: boolean
   onSubmit: (e: React.FormEvent) => void
+  users?: TeamMember[]
 }
 
 export function ProjectFormModal({
@@ -50,6 +56,7 @@ export function ProjectFormModal({
   setFormData,
   isSubmitting,
   onSubmit,
+  users = [],
 }: ProjectFormModalProps) {
   const isEditMode = mode === "edit"
 
@@ -248,14 +255,34 @@ export function ProjectFormModal({
               <Label htmlFor={isEditMode ? "edit-teamLead" : "teamLead"}>
                 Team Lead
               </Label>
-              <Input
-                id={isEditMode ? "edit-teamLead" : "teamLead"}
-                value={formData.teamLead}
-                onChange={(e) =>
-                  setFormData({ ...formData, teamLead: e.target.value })
-                }
-                placeholder="Team lead name"
-              />
+              {users.length > 0 ? (
+                <Select
+                  value={formData.teamLead}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, teamLead: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select team lead" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.name}>
+                        {user.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id={isEditMode ? "edit-teamLead" : "teamLead"}
+                  value={formData.teamLead}
+                  onChange={(e) =>
+                    setFormData({ ...formData, teamLead: e.target.value })
+                  }
+                  placeholder="Team lead name"
+                />
+              )}
             </div>
           </div>
 

@@ -48,6 +48,7 @@ export default function DepartmentDetailPage() {
   const [formData, setFormData] = useState(initialFormData);
   const [activeTab, setActiveTab] = useState("overview");
   const [users, setUsers] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [selectedHeadUserId, setSelectedHeadUserId] = useState<string | null>(null);
 
   // Memoize breadcrumb items to prevent unnecessary re-renders
   const breadcrumbItems = useMemo(
@@ -171,9 +172,23 @@ export default function DepartmentDetailPage() {
     try {
       const payload = buildPayload(department.id);
       await bmsApi.departments.update(department.id, payload);
+
+      // Auto-add new head as a team member
+      if (selectedHeadUserId) {
+        try {
+          await bmsApi.departments.addMember(department.id, {
+            userId: selectedHeadUserId,
+            role: "manager",
+          });
+        } catch {
+          // May fail if already a member — that's fine
+        }
+      }
+
       toast.success("Department updated successfully!");
       setDepartment({ ...department, ...payload } as Department);
       setShowEditForm(false);
+      setSelectedHeadUserId(null);
     } catch (err) {
       const errorMessage =
         err instanceof BmsApiError ? err.message : "Failed to update department";
@@ -310,6 +325,7 @@ export default function DepartmentDetailPage() {
           isSubmitting={isSubmitting}
           onSubmit={handleEditSubmit}
           users={users}
+          onHeadUserSelect={setSelectedHeadUserId}
         />
       </div>
     </AppLayout>

@@ -25,7 +25,7 @@ export const getRoleBadgeColor = (role?: string | null) => {
 export const getRoleLabel = (role?: string | null) => {
   switch (role) {
     case "super_admin":
-      return "Super Admin"
+      return "CEO"
     case "admin":
       return "Admin"
     case "dept_manager":

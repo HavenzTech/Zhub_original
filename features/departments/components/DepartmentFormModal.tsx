@@ -45,6 +45,7 @@ interface DepartmentFormModalProps {
   isSubmitting: boolean
   onSubmit: (e: React.FormEvent) => void
   users?: UserOption[]
+  onHeadUserSelect?: (userId: string | null) => void
 }
 
 export function DepartmentFormModal({
@@ -56,12 +57,14 @@ export function DepartmentFormModal({
   isSubmitting,
   onSubmit,
   users = [],
+  onHeadUserSelect,
 }: DepartmentFormModalProps) {
   const isEditMode = mode === "edit"
 
   const handleUserSelect = (userId: string) => {
     if (userId === "manual") {
       setFormData({ ...formData, headName: "", headEmail: "" })
+      onHeadUserSelect?.(null)
       return
     }
     const user = users.find((u) => u.id === userId)
@@ -71,6 +74,7 @@ export function DepartmentFormModal({
         headName: user.name,
         headEmail: user.email,
       })
+      onHeadUserSelect?.(user.id)
     }
   }
 

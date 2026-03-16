@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, CheckCheck, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import { authService } from "@/lib/services/auth";
 import type { NotificationDto } from "@/types/bms";
 
 const POLL_INTERVAL = 30000; // Poll every 30 seconds
+const READ_NOTIFICATION_MAX_AGE_DAYS = 7; // Hide read notifications older than 7 days
 
 export function NotificationDropdown() {
   const router = useRouter();
@@ -50,8 +51,17 @@ export function NotificationDropdown() {
       if (token) bmsApi.setToken(token);
       if (companyId) bmsApi.setCompanyId(companyId);
 
-      const result = await bmsApi.notifications.getAll({ pageSize: 10 });
-      setNotifications(result.data || []);
+      const result = await bmsApi.notifications.getAll({ pageSize: 50 });
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - READ_NOTIFICATION_MAX_AGE_DAYS);
+      const filtered = (result.data || []).filter((n) => {
+        // Always show unread notifications
+        if (!n.isRead) return true;
+        // Hide read notifications older than 7 days
+        if (!n.createdAt) return true;
+        return new Date(n.createdAt) >= cutoff;
+      });
+      setNotifications(filtered);
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
     } finally {
@@ -95,6 +105,19 @@ export function NotificationDropdown() {
       setUnreadCount(0);
     } catch (err) {
       console.error("Failed to mark all as read:", err);
+    }
+  };
+
+  const handleClearRead = async () => {
+    // Mark all as read first, then remove read notifications from the list
+    try {
+      if (unreadCount > 0) {
+        await bmsApi.notifications.markAllAsRead();
+        setUnreadCount(0);
+      }
+      setNotifications((prev) => prev.filter((n) => !n.isRead));
+    } catch (err) {
+      console.error("Failed to clear notifications:", err);
     }
   };
 
@@ -148,17 +171,30 @@ export function NotificationDropdown() {
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 border-b border-stone-200 dark:border-stone-700">
           <span className="font-semibold text-sm text-stone-900 dark:text-stone-50">Notifications</span>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs text-accent-cyan hover:text-accent-cyan/80 hover:bg-accent-cyan/10"
-              onClick={handleMarkAllAsRead}
-            >
-              <CheckCheck className="w-3 h-3 mr-1" />
-              Mark all read
-            </Button>
-          )}
+          <div className="flex gap-1">
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-accent-cyan hover:text-accent-cyan/80 hover:bg-accent-cyan/10"
+                onClick={handleMarkAllAsRead}
+              >
+                <CheckCheck className="w-3 h-3 mr-1" />
+                Mark all read
+              </Button>
+            )}
+            {notifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-stone-500 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-950/30"
+                onClick={handleClearRead}
+              >
+                <Trash2 className="w-3 h-3 mr-1" />
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Notifications List */}
