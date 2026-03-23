@@ -12130,6 +12130,282 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/havenzhub/tasks/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskDto"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/havenzhub/tasks/{taskId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.TaskCommentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.CreateTaskCommentRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskCommentDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/tasks/{taskId}/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                    commentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskCommentDto"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                    commentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.UpdateTaskCommentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskCommentDto"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    taskId: string;
+                    commentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/havenzhub/users": {
         parameters: {
             query?: never;
@@ -16099,6 +16375,16 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.TaskCommentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.TaskCommentDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.TaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.TaskDto"][] | null;
             /** Format: int32 */
@@ -16579,8 +16865,8 @@ export interface components {
             version?: number;
             accessLevel?: string | null;
             category?: string | null;
-            metadata?: string | null;
-            tags?: string | null;
+            metadata?: unknown;
+            tags?: unknown;
             /** Format: uuid */
             folderId?: string | null;
             /** Format: uuid */
@@ -16788,6 +17074,12 @@ export interface components {
             searchConfig: components["schemas"]["WebApp.Models.HavenzHub.SearchConfig"];
             isFavorite?: boolean;
             isShared?: boolean;
+        };
+        "WebApp.Models.HavenzHub.CreateTaskCommentRequest": {
+            content: string;
+            /** Format: uuid */
+            parentCommentId?: string | null;
+            mentionedUserIds?: string[] | null;
         };
         "WebApp.Models.HavenzHub.CreateTaskRequest": {
             title: string;
@@ -18164,6 +18456,27 @@ export interface components {
             workflowId?: string | null;
             notes?: string | null;
         };
+        "WebApp.Models.HavenzHub.TaskCommentDto": {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            taskId?: string;
+            /** Format: uuid */
+            companyId?: string;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+            /** Format: uuid */
+            parentCommentId?: string | null;
+            content?: string | null;
+            mentionedUserIds?: string[] | null;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            isEdited?: boolean;
+            replies?: components["schemas"]["WebApp.Models.HavenzHub.TaskCommentDto"][] | null;
+        };
         "WebApp.Models.HavenzHub.TaskDto": {
             /** Format: uuid */
             id?: string;
@@ -18333,8 +18646,8 @@ export interface components {
             propertyId?: string | null;
             accessLevel?: string | null;
             category?: string | null;
-            metadata?: string | null;
-            tags?: string | null;
+            metadata?: unknown;
+            tags?: unknown;
             classification?: string | null;
             description?: string | null;
             /** Format: uuid */
@@ -18537,6 +18850,10 @@ export interface components {
             /** Format: int32 */
             displayOrder?: number;
             isShared?: boolean;
+        };
+        "WebApp.Models.HavenzHub.UpdateTaskCommentRequest": {
+            content: string;
+            mentionedUserIds?: string[] | null;
         };
         "WebApp.Models.HavenzHub.UpdateTaskRequest": {
             /** Format: uuid */

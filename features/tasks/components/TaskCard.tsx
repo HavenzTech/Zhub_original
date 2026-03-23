@@ -39,6 +39,7 @@ interface TaskCardProps {
   onEdit?: (task: TaskDto) => void
   onDelete?: (task: TaskDto) => void
   onClick?: (task: TaskDto) => void
+  onToggleComplete?: (task: TaskDto) => void
   showProject?: boolean
   canEdit?: boolean
   canDelete?: boolean
@@ -51,6 +52,7 @@ export function TaskCard({
   onEdit,
   onDelete,
   onClick,
+  onToggleComplete,
   showProject = true,
   canEdit = true,
   canDelete = true,
@@ -84,7 +86,25 @@ export function TaskCard({
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className="mt-0.5">{getStatusIcon(task.status)}</div>
+            {onToggleComplete ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleComplete(task)
+                }}
+                className="mt-0.5 shrink-0 group/check"
+                title={task.status === "completed" ? "Reopen task" : "Mark complete"}
+              >
+                {task.status === "completed" ? (
+                  <CheckCircle className="w-5 h-5 text-green-600 group-hover/check:text-stone-400 transition-colors" />
+                ) : (
+                  <Circle className="w-5 h-5 text-stone-300 dark:text-stone-600 group-hover/check:text-green-600 transition-colors" />
+                )}
+              </button>
+            ) : (
+              <div className="mt-0.5">{getStatusIcon(task.status)}</div>
+            )}
             <div className="flex-1 min-w-0">
               <h3 className="font-medium text-stone-900 dark:text-stone-50 truncate">{task.title}</h3>
               {task.description && (

@@ -51,6 +51,7 @@ export function ProjectTasksSection({
     createTask,
     updateTask,
     updateTaskStatus,
+    toggleComplete,
     deleteTask,
   } = useTasks()
 
@@ -200,6 +201,14 @@ export function ProjectTasksSection({
     }
   }
 
+  const handleToggleComplete = async (task: TaskDto) => {
+    if (!task.id) return
+    const updated = await toggleComplete(task.id)
+    if (updated && viewingTask?.id === task.id) {
+      setViewingTask({ ...task, ...updated })
+    }
+  }
+
   const handleDeleteClick = (task: TaskDto) => {
     setDeleteTaskItem(task)
   }
@@ -252,6 +261,7 @@ export function ProjectTasksSection({
             onEdit={canEdit ? handleEdit : undefined}
             onDelete={canDelete ? handleDeleteClick : undefined}
             onClick={(task) => setViewingTask(task)}
+            onToggleComplete={handleToggleComplete}
             showProject={false}
             canEdit={canEdit}
             canDelete={canDelete}
