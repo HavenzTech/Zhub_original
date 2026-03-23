@@ -68,6 +68,7 @@ export default function MyTasksPage() {
     loading: tasksLoading,
     loadMyTasks: loadMyProjectTasks,
     updateTaskStatus,
+    toggleComplete,
   } = useTasks();
 
   useEffect(() => {
@@ -251,9 +252,19 @@ export default function MyTasksPage() {
             return (
               <div key={task.id} className="px-5 py-4">
                 <div className="flex items-start justify-between mb-2">
-                  <h4 className="text-sm font-medium text-stone-900 dark:text-stone-50 line-clamp-2">
-                    {task.title}
-                  </h4>
+                  <div className="flex items-start gap-2">
+                    <button
+                      type="button"
+                      onClick={() => task.id && toggleComplete(task.id).then(() => loadMyProjectTasks())}
+                      className="mt-0.5 shrink-0 group/check"
+                      title="Mark complete"
+                    >
+                      <Circle className="w-4 h-4 text-stone-300 dark:text-stone-600 group-hover/check:text-green-600 transition-colors" />
+                    </button>
+                    <h4 className="text-sm font-medium text-stone-900 dark:text-stone-50 line-clamp-2">
+                      {task.title}
+                    </h4>
+                  </div>
                   {task.priority && (
                     <Badge
                       className={`${getTaskPriorityColor(task.priority)} text-[10px] ml-2 flex-shrink-0`}
@@ -371,9 +382,19 @@ export default function MyTasksPage() {
             return (
               <div key={task.id} className="px-5 py-4">
                 <div className="flex items-start justify-between mb-2">
-                  <h4 className="text-sm font-medium text-stone-900 dark:text-stone-50 line-clamp-2">
-                    {task.title}
-                  </h4>
+                  <div className="flex items-start gap-2">
+                    <button
+                      type="button"
+                      onClick={() => task.id && toggleComplete(task.id).then(() => loadMyProjectTasks())}
+                      className="mt-0.5 shrink-0 group/check"
+                      title="Reopen task"
+                    >
+                      <CheckCircle className="w-4 h-4 text-green-600 group-hover/check:text-stone-400 transition-colors" />
+                    </button>
+                    <h4 className="text-sm font-medium text-stone-900 dark:text-stone-50 line-clamp-2">
+                      {task.title}
+                    </h4>
+                  </div>
                   {task.priority && (
                     <Badge
                       className={`${getTaskPriorityColor(task.priority)} text-[10px] ml-2 flex-shrink-0`}

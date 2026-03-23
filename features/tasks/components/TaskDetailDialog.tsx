@@ -37,6 +37,8 @@ import {
   isOverdue,
   getRelativeTime,
 } from "../utils/taskHelpers"
+import { TaskCommentSection } from "./TaskCommentSection"
+import { TaskAttachmentSection } from "./TaskAttachmentSection"
 
 interface TaskDetailDialogProps {
   task: TaskDto | null
@@ -322,6 +324,20 @@ export function TaskDetailDialog({
             <span>Completed {formatDate(task.completedAt)}</span>
           )}
         </div>
+
+        {/* Attachments */}
+        {task.id && (
+          <div className="border-t border-stone-200 dark:border-stone-700 pt-4">
+            <TaskAttachmentSection taskId={task.id} />
+          </div>
+        )}
+
+        {/* Comments */}
+        {task.id && (
+          <div className="border-t border-stone-200 dark:border-stone-700 pt-4">
+            <TaskCommentSection taskId={task.id} />
+          </div>
+        )}
 
         {/* Action buttons */}
         {(canEdit || canDelete) && (

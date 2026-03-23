@@ -33,6 +33,7 @@ interface UseTasksReturn {
   updateTask: (id: string, taskData: UpdateTaskRequest) => Promise<boolean>
   updateTaskStatus: (id: string, status: string) => Promise<boolean>
   assignTask: (id: string, userId?: string) => Promise<boolean>
+  toggleComplete: (id: string) => Promise<TaskDto | null>
   deleteTask: (id: string) => Promise<boolean>
   setTasks: Dispatch<SetStateAction<TaskDto[]>>
 }
@@ -204,6 +205,29 @@ export function useTasks(): UseTasksReturn {
     []
   )
 
+  const toggleComplete = useCallback(
+    async (id: string): Promise<TaskDto | null> => {
+      try {
+        const updatedTask = (await bmsApi.tasks.toggleComplete(id)) as TaskDto
+        setTasks((prev) =>
+          prev.map((task) =>
+            task.id === id ? { ...task, ...updatedTask } : task
+          )
+        )
+        const isNowComplete = updatedTask.status === "completed"
+        toast.success(isNowComplete ? "Task completed" : "Task reopened")
+        return updatedTask
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("Failed to toggle task completion")
+        toast.error("Failed to toggle task completion", {
+          description: error.message,
+        })
+        return null
+      }
+    },
+    []
+  )
+
   const deleteTask = useCallback(async (id: string): Promise<boolean> => {
     try {
       await bmsApi.tasks.delete(id)
@@ -235,6 +259,7 @@ export function useTasks(): UseTasksReturn {
     updateTask,
     updateTaskStatus,
     assignTask,
+    toggleComplete,
     deleteTask,
     setTasks,
   }

@@ -930,6 +930,50 @@ class BmsApiService {
     },
     // DELETE /tasks/{id} - soft delete
     delete: (id: string) => this.delete(`/tasks/${id}`),
+    // PATCH /tasks/{id}/complete - toggle complete/uncomplete
+    toggleComplete: (id: string) => this.request(`/tasks/${id}/complete`, { method: 'PATCH' }),
+  };
+
+  // Task Comment endpoints - Swagger: /api/havenzhub/tasks/{taskId}/comments
+  taskComments = {
+    // GET /tasks/{taskId}/comments - paginated list with nested replies
+    getAll: (taskId: string, params?: { page?: number; pageSize?: number }) => {
+      const query = new URLSearchParams();
+      if (params?.page) query.append('page', params.page.toString());
+      if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
+      const queryString = query.toString();
+      return this.get(`/tasks/${taskId}/comments${queryString ? `?${queryString}` : ''}`);
+    },
+    // GET /tasks/{taskId}/comments/{commentId} - single comment with replies
+    getById: (taskId: string, commentId: string) =>
+      this.get(`/tasks/${taskId}/comments/${commentId}`),
+    // POST /tasks/{taskId}/comments - create comment or reply (201 Created)
+    create: (taskId: string, data: { content: string; parentCommentId?: string | null; mentionedUserIds?: string[] | null }) =>
+      this.post(`/tasks/${taskId}/comments`, data),
+    // PUT /tasks/{taskId}/comments/{commentId} - edit comment (403 if not owner/admin)
+    update: (taskId: string, commentId: string, data: { content: string; mentionedUserIds?: string[] | null }) =>
+      this.put(`/tasks/${taskId}/comments/${commentId}`, data),
+    // DELETE /tasks/{taskId}/comments/{commentId} - soft delete (204, 403 if not owner/admin)
+    delete: (taskId: string, commentId: string) =>
+      this.delete(`/tasks/${taskId}/comments/${commentId}`),
+  };
+
+  // Task Attachment endpoints - Swagger: /api/havenzhub/tasks/{taskId}/attachments
+  taskAttachments = {
+    // POST /tasks/{taskId}/attachments - upload files (multipart/form-data, max 10MB each)
+    upload: (taskId: string, files: File[]) => {
+      const formData = new FormData();
+      files.forEach((file) => formData.append('files', file));
+      return this.postFormData(`/tasks/${taskId}/attachments`, formData);
+    },
+    // GET /tasks/{taskId}/attachments - list all attachments
+    getAll: (taskId: string) => this.get(`/tasks/${taskId}/attachments`),
+    // GET /tasks/{taskId}/attachments/{attachmentId}/download - get signed download URL
+    getDownloadUrl: (taskId: string, attachmentId: string) =>
+      this.get(`/tasks/${taskId}/attachments/${attachmentId}/download`),
+    // DELETE /tasks/{taskId}/attachments/{attachmentId} - delete (own only, admins can delete any)
+    delete: (taskId: string, attachmentId: string) =>
+      this.delete(`/tasks/${taskId}/attachments/${attachmentId}`),
   };
 
   // Expense endpoints - Swagger: /api/havenzhub/expenses

@@ -1979,6 +1979,61 @@ export interface UpdateTaskRequest {
 }
 
 // ============================================
+// Task Attachment Types
+// ============================================
+
+export interface TaskAttachmentDto {
+  id?: string;
+  taskId?: string;
+  uploadedByUserId?: string;
+  uploadedByUserName?: string | null;
+  fileName?: string | null;
+  fileType?: string | null;
+  mimeType?: string | null;
+  fileSizeBytes?: number;
+  createdAt?: string;
+}
+
+export interface DownloadAttachmentResponse {
+  downloadUrl?: string | null;
+  fileName?: string | null;
+  fileType?: string | null;
+  expiresInMinutes?: number;
+}
+
+// ============================================
+// Task Comment Types
+// ============================================
+
+export interface TaskCommentDto {
+  id?: string;
+  taskId?: string;
+  companyId?: string;
+  userId?: string;
+  userName?: string | null;
+  parentCommentId?: string | null;
+  content?: string | null;
+  mentionedUserIds?: string[] | null;
+  createdAt?: string;
+  updatedAt?: string;
+  isEdited?: boolean;
+  replies?: TaskCommentDto[] | null;
+}
+
+export interface CreateTaskCommentRequest {
+  content: string;
+  parentCommentId?: string | null;
+  mentionedUserIds?: string[] | null;
+}
+
+export interface UpdateTaskCommentRequest {
+  content: string;
+  mentionedUserIds?: string[] | null;
+}
+
+export type TaskCommentDtoPagedResult = PagedResult<TaskCommentDto>;
+
+// ============================================
 // Expense Types
 // ============================================
 

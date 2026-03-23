@@ -40,6 +40,7 @@ interface TaskListProps {
   onEdit?: (task: TaskDto) => void
   onDelete?: (task: TaskDto) => void
   onClick?: (task: TaskDto) => void
+  onToggleComplete?: (task: TaskDto) => void
   showProject?: boolean
   canEdit?: boolean
   canDelete?: boolean
@@ -54,6 +55,7 @@ export function TaskList({
   onEdit,
   onDelete,
   onClick,
+  onToggleComplete,
   showProject = true,
   canEdit = true,
   canDelete = true,
@@ -265,6 +267,7 @@ export function TaskList({
               onEdit={onEdit}
               onDelete={onDelete}
               onClick={onClick}
+              onToggleComplete={onToggleComplete}
               showProject={showProject}
               canEdit={canEdit}
               canDelete={canDelete}
@@ -319,6 +322,7 @@ export function TaskList({
                                 onEdit={onEdit}
                                 onDelete={onDelete}
                                 onClick={onClick}
+                                onToggleComplete={onToggleComplete}
                                 showProject={showProject}
                                 canEdit={canEdit}
                                 canDelete={canDelete}
