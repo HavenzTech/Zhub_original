@@ -69,6 +69,8 @@ interface UploadDocumentModalProps {
   users: any[];
   onSubmit: (e: React.FormEvent) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  /** When set, locks the project selector to this project (used from Project Documents tab) */
+  lockedProjectId?: string | null;
 }
 
 export function UploadDocumentModal({
@@ -86,6 +88,7 @@ export function UploadDocumentModal({
   users,
   onSubmit,
   onFileChange,
+  lockedProjectId,
 }: UploadDocumentModalProps) {
   const [selectedDeptToAdd, setSelectedDeptToAdd] = useState<string>("");
   const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>("");
@@ -368,28 +371,34 @@ export function UploadDocumentModal({
 
               <div className="grid gap-2">
                 <Label htmlFor="project">Project</Label>
-                <Select
-                  value={formData.projectId || "none"}
-                  onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      projectId: value === "none" ? null : value,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {Array.isArray(projects) &&
-                      projects.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                {lockedProjectId ? (
+                  <div className="flex h-10 w-full items-center rounded-md border border-stone-200 bg-stone-100 px-3 text-sm text-stone-700 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
+                    {Array.isArray(projects) && projects.find((p: any) => p.id === lockedProjectId)?.name || "Selected Project"}
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.projectId || "none"}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        projectId: value === "none" ? null : value,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {Array.isArray(projects) &&
+                        projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
 

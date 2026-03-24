@@ -72,6 +72,13 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
   useEffect(() => {
     localStorage.setItem("sidebar-collapsed", String(collapsed));
   }, [collapsed]);
+
+  // Listen for external collapse requests (e.g. from project documents tab)
+  useEffect(() => {
+    const handler = () => setCollapsed(true);
+    window.addEventListener("sidebar-collapse", handler);
+    return () => window.removeEventListener("sidebar-collapse", handler);
+  }, []);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState("");
   const [userInitials, setUserInitials] = useState("");

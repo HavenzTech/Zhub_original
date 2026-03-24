@@ -11,14 +11,15 @@ import { MembersAssignment } from "@/components/common/MembersAssignment";
 import { DepartmentsAssignment } from "@/components/common/DepartmentsAssignment";
 import { ProjectTasksSection } from "@/features/tasks/components";
 import { ExpenseList } from "@/features/expenses/components";
+import { ProjectDocumentsTab } from "@/features/projects/components/ProjectDocumentsTab";
 import { Button } from "@/components/ui/button";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
-import { Project, Company } from "@/types/bms";
+import { Project, Company, ProjectSummaryDto } from "@/types/bms";
 import { toast } from "sonner";
 import { formatDateForInput } from "@/features/tasks/utils/taskHelpers";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Bot, X } from "lucide-react";
 import { useUsers } from "@/lib/hooks/useUsers";
 
 const ProjectFormModal = dynamic(
@@ -56,7 +57,46 @@ export default function ProjectDetailPage() {
   const [isSettingActive, setIsSettingActive] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
   const [activeTab, setActiveTab] = useState("overview");
+  const [aiSummary, setAiSummary] = useState<ProjectSummaryDto | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryPhase, setSummaryPhase] = useState(0);
   const { users, loadUsers } = useUsers();
+
+  const summaryMessages = [
+    "Generating AI summary...",
+    "Analyzing project metrics...",
+    "Thinking critically...",
+    "Compiling insights...",
+    "Generating AI summary...",
+  ];
+
+  useEffect(() => {
+    if (!summaryLoading) {
+      setSummaryPhase(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setSummaryPhase((prev) => (prev + 1) % summaryMessages.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [summaryLoading]);
+
+  const handleGenerateSummary = async () => {
+    if (!projectId) return;
+    setSummaryLoading(true);
+    setShowSummary(true);
+    try {
+      const data = await bmsApi.projects.getSummary(projectId);
+      setAiSummary(data);
+    } catch (err) {
+      const msg = err instanceof BmsApiError ? err.message : "Failed to generate summary";
+      toast.error(msg);
+      setShowSummary(false);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
   // Memoize breadcrumb items to prevent unnecessary re-renders
   const breadcrumbItems = useMemo(
@@ -276,24 +316,29 @@ export default function ProjectDetailPage() {
 
           {/* Tabs */}
           <div className="flex gap-1">
-            {["overview", "tasks", "team", "budget"].map((tab) => (
+            {["overview", "tasks", "documents", "team", "budget"].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab === "documents") {
+                    window.dispatchEvent(new Event("sidebar-collapse"));
+                  }
+                }}
                 className={`px-4 py-2 text-sm rounded-lg transition-colors ${
                   activeTab === tab
                     ? "bg-accent-cyan/10 text-accent-cyan font-medium"
                     : "text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300"
                 }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === "documents" ? "Project Documents" : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
           </div>
         </div>
 
         {/* Tab Content */}
-        <div className="pt-6 space-y-6">
+        <div className={activeTab === "documents" ? "" : "pt-6 space-y-6"}>
           {activeTab === "overview" && (
             <>
               {/* Stat Cards */}
@@ -317,6 +362,101 @@ export default function ProjectDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* AI Summary */}
+              {!showSummary ? (
+                <button
+                  onClick={handleGenerateSummary}
+                  disabled={summaryLoading}
+                  className="flex items-center gap-2 rounded-xl border border-dashed border-accent-cyan/40 bg-accent-cyan/5 px-4 py-3 text-sm font-medium text-accent-cyan transition-colors hover:bg-accent-cyan/10 hover:border-accent-cyan/60 dark:bg-accent-cyan/5 dark:hover:bg-accent-cyan/10 w-full"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Generate AI Summary
+                </button>
+              ) : (
+                <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+                    <div className="flex items-center gap-2">
+                      <Bot className="h-4 w-4 text-accent-cyan" />
+                      <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">AI Summary</span>
+                      {aiSummary && (
+                        <span className="text-[11px] text-stone-400 dark:text-stone-500">
+                          {aiSummary.isAiGenerated
+                            ? `Generated ${aiSummary.generatedAt ? new Date(aiSummary.generatedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : ""}`
+                            : "Fallback (AI unavailable)"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {!summaryLoading && (
+                        <button
+                          onClick={handleGenerateSummary}
+                          className="rounded-md px-2 py-1 text-[11px] font-medium text-accent-cyan hover:bg-accent-cyan/10 transition-colors"
+                        >
+                          Regenerate
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { setShowSummary(false); setAiSummary(null); }}
+                        className="rounded-md p-1 text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:hover:text-stone-300 dark:hover:bg-stone-800 transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    {summaryLoading ? (
+                      <div className="flex flex-col items-center gap-3 py-8">
+                        <Loader2 className="h-5 w-5 animate-spin text-accent-cyan" />
+                        <span className="text-sm text-stone-500 dark:text-stone-400 transition-opacity duration-500">
+                          {summaryMessages[summaryPhase]}
+                        </span>
+                      </div>
+                    ) : aiSummary?.summary ? (
+                      <div
+                        className="prose prose-sm prose-stone dark:prose-invert max-w-none
+                          prose-headings:text-stone-900 dark:prose-headings:text-stone-50 prose-headings:font-semibold prose-headings:text-sm prose-headings:mt-4 prose-headings:mb-2 first:prose-headings:mt-0
+                          prose-p:text-stone-600 dark:prose-p:text-stone-400 prose-p:leading-relaxed prose-p:text-sm
+                          prose-li:text-stone-600 dark:prose-li:text-stone-400 prose-li:text-sm
+                          prose-strong:text-stone-900 dark:prose-strong:text-stone-50
+                          prose-ul:my-1 prose-ol:my-1"
+                        dangerouslySetInnerHTML={{
+                          __html: aiSummary.summary
+                            .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+                            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/^- (.+)$/gm, '<li>$1</li>')
+                            .replace(/(<li>[^]*?<\/li>(?:\n<li>[^]*?<\/li>)*)/gm, (match) => `<ul>${match}</ul>`)
+                            .replace(/\n\n/g, '</p><p>')
+                            .replace(/\n/g, '<br/>')
+                        }}
+                      />
+                    ) : (
+                      <p className="text-sm text-stone-500 dark:text-stone-400 text-center py-4">
+                        No summary available.
+                      </p>
+                    )}
+                  </div>
+                  {aiSummary && !summaryLoading && (
+                    <div className="px-5 py-3 border-t border-stone-200 dark:border-stone-700">
+                      <div className="flex items-center justify-center gap-2">
+                        <Sparkles className="h-3.5 w-3.5 text-accent-cyan" />
+                        <span
+                          className="text-xs font-semibold bg-clip-text text-transparent animate-[shimmer_3s_linear_infinite] bg-[length:200%_100%]"
+                          style={{
+                            backgroundImage: "linear-gradient(90deg, #0891b2, #a78bfa, #ec4899, #f59e0b, #10b981, #0891b2)",
+                          }}
+                        >
+                          Generated by Z AI
+                        </span>
+                      </div>
+                      <div className="text-center mt-1">
+                        <span className="text-[11px] text-stone-400 dark:text-stone-500">Z can make mistakes. Check important info.</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Description & Details */}
               <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-5">
@@ -368,6 +508,13 @@ export default function ProjectDetailPage() {
 
           {activeTab === "tasks" && (
             <ProjectTasksSection
+              projectId={project.id!}
+              projectName={project.name || "this project"}
+            />
+          )}
+
+          {activeTab === "documents" && (
+            <ProjectDocumentsTab
               projectId={project.id!}
               projectName={project.name || "this project"}
             />

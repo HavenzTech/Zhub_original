@@ -59,6 +59,9 @@ export function ChatInput({
             </span>
           </div>
         </div>
+        <div className="text-center mt-1.5">
+          <span className="text-[11px] text-stone-400 dark:text-stone-500">Z can make mistakes. Check important info.</span>
+        </div>
       </div>
     </div>
   )
