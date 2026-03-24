@@ -66,6 +66,7 @@ import {
   CreateVersionRequest,
   ForceCheckoutCancelRequest,
   UpdateFavoriteOrderRequest,
+  ProjectSummaryDto,
 } from '@/types/bms';
 import { authService } from './auth';
 import { sanitizeInput } from '@/lib/utils/sanitize';
@@ -497,6 +498,8 @@ class BmsApiService {
     assignDepartment: (projectId: string, departmentId: string) => this.post(`/projects/${projectId}/departments/${departmentId}`, {}),
     removeDepartment: (projectId: string, departmentId: string) => this.delete(`/projects/${projectId}/departments/${departmentId}`),
     getDepartments: (projectId: string) => this.get(`/projects/${projectId}/departments`),
+    // AI Summary - GET /api/havenzhub/projects/{id}/summary (can take 15-30s for AI generation)
+    getSummary: (projectId: string) => this.get<ProjectSummaryDto>(`/projects/${projectId}/summary`, { timeout: 120000 }),
   };
 
   // Property endpoints (Note: Not found in Swagger - may need backend update)

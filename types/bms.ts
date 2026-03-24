@@ -243,6 +243,15 @@ export interface Project {
   scheduleStatusFormatted?: string | null;
 }
 
+export interface ProjectSummaryDto {
+  projectId?: string;
+  projectName?: string | null;
+  summary?: string | null;
+  isAiGenerated?: boolean;
+  generatedAt?: string | null;
+  model?: string | null;
+}
+
 export interface ProjectDto {
   id?: string;
   companyId?: string;
@@ -474,6 +483,9 @@ export interface DocumentDto {
   uploadedByUserName?: string | null;
   companyId?: string;
   folderId?: string | null;
+  projectId?: string | null;
+  departmentId?: string | null;
+  propertyId?: string | null;
   name?: string | null;
   fileType?: string | null;
   mimeType?: string | null;
