@@ -500,6 +500,11 @@ class BmsApiService {
     getDepartments: (projectId: string) => this.get(`/projects/${projectId}/departments`),
     // AI Summary - GET /api/havenzhub/projects/{id}/summary (can take 15-30s for AI generation)
     getSummary: (projectId: string) => this.get<ProjectSummaryDto>(`/projects/${projectId}/summary`, { timeout: 120000 }),
+    // Description history - GET /api/havenzhub/projects/{id}/description-history
+    getDescriptionHistory: (projectId: string, page = 1, pageSize = 20) =>
+      this.get<{ data: import("@/types/bms").ProjectDescriptionHistoryEntry[]; total: number; page: number; pageSize: number }>(
+        `/projects/${projectId}/description-history?page=${page}&pageSize=${pageSize}`
+      ),
   };
 
   // Property endpoints (Note: Not found in Swagger - may need backend update)

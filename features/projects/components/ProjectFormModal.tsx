@@ -17,8 +17,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Plus, Loader2, Edit } from "lucide-react"
+import dynamic from "next/dynamic"
+
+const MarkdownEditor = dynamic(
+  () =>
+    import("@/components/ui/markdown-editor").then((m) => m.MarkdownEditor),
+  { ssr: false }
+)
+
 interface ProjectFormData {
   name: string
   description: string
@@ -91,19 +98,15 @@ export function ProjectFormModal({
               />
             </div>
 
-            {/* Description */}
+            {/* Description - Rich Text Editor */}
             <div className="grid gap-2">
-              <Label htmlFor={isEditMode ? "edit-description" : "description"}>
-                Description
-              </Label>
-              <Textarea
-                id={isEditMode ? "edit-description" : "description"}
+              <Label>Description</Label>
+              <MarkdownEditor
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
+                onChange={(md) =>
+                  setFormData({ ...formData, description: md })
                 }
-                placeholder="Project description"
-                rows={3}
+                placeholder="Write your project description..."
               />
             </div>
 
@@ -128,6 +131,7 @@ export function ProjectFormModal({
                   <SelectContent>
                     <SelectItem value="planning">Planning</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="under-construction">Under Construction</SelectItem>
                     <SelectItem value="on-hold">On Hold</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>

@@ -12684,6 +12684,84 @@
         }
       }
     },
+    "/api/havenzhub/projects/{projectId}/description-history": {
+      "get": {
+        "tags": [
+          "Project"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectDescriptionHistoryDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Microsoft.AspNetCore.Mvc.ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/havenzhub/properties": {
       "post": {
         "tags": [
@@ -19821,6 +19899,11 @@
             "type": "string",
             "nullable": true
           },
+          "descriptionFormat": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
           "status": {
             "maxLength": 50,
             "minLength": 1,
@@ -19901,6 +19984,13 @@
               "$ref": "#/components/schemas/DomainModel.HavenzHub.PropertyProject"
             },
             "nullable": true
+          },
+          "descriptionHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DomainModel.HavenzHub.ProjectDescriptionHistory"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -19929,6 +20019,50 @@
           },
           "department": {
             "$ref": "#/components/schemas/DomainModel.HavenzHub.Department"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DomainModel.HavenzHub.ProjectDescriptionHistory": {
+        "required": [
+          "changedByUserId",
+          "changedByUserName",
+          "projectId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "descriptionFormat": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
+          "changedByUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "changedByUserName": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "project": {
+            "$ref": "#/components/schemas/DomainModel.HavenzHub.Project"
           }
         },
         "additionalProperties": false
@@ -22247,6 +22381,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/WebApp.Models.HavenzHub.ProjectDepartmentDto"
+            },
+            "nullable": true
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectDescriptionHistoryDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebApp.Models.HavenzHub.ProjectDescriptionHistoryDto"
             },
             "nullable": true
           },
@@ -24602,14 +24765,19 @@
             "type": "string"
           },
           "description": {
-            "maxLength": 1000,
+            "type": "string",
+            "nullable": true
+          },
+          "descriptionFormat": {
+            "maxLength": 20,
+            "pattern": "^(markdown|plaintext)$",
             "type": "string",
             "nullable": true
           },
           "status": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(planning|active|on-hold|completed|cancelled)$",
+            "pattern": "^(planning|active|on-hold|completed|cancelled|under-construction)$",
             "type": "string"
           },
           "priority": {
@@ -28083,6 +28251,40 @@
         },
         "additionalProperties": false
       },
+      "WebApp.Models.HavenzHub.ProjectDescriptionHistoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "descriptionFormat": {
+            "type": "string",
+            "nullable": true
+          },
+          "changedByUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "changedByUserName": {
+            "type": "string",
+            "nullable": true
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
       "WebApp.Models.HavenzHub.ProjectDto": {
         "type": "object",
         "properties": {
@@ -28099,6 +28301,10 @@
             "nullable": true
           },
           "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "descriptionFormat": {
             "type": "string",
             "nullable": true
           },
@@ -30199,14 +30405,19 @@
             "type": "string"
           },
           "description": {
-            "maxLength": 1000,
+            "type": "string",
+            "nullable": true
+          },
+          "descriptionFormat": {
+            "maxLength": 20,
+            "pattern": "^(markdown|plaintext)$",
             "type": "string",
             "nullable": true
           },
           "status": {
             "maxLength": 50,
             "minLength": 1,
-            "pattern": "^(planning|active|on-hold|completed|cancelled)$",
+            "pattern": "^(planning|active|on-hold|completed|cancelled|under-construction)$",
             "type": "string"
           },
           "priority": {

@@ -10751,6 +10751,73 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/havenzhub/projects/{projectId}/description-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectDescriptionHistoryDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/havenzhub/properties": {
         parameters: {
             query?: never;
@@ -15770,6 +15837,7 @@ export interface components {
             companyId: string;
             name: string;
             description?: string | null;
+            descriptionFormat?: string | null;
             status: string;
             priority?: string | null;
             /** Format: int32 */
@@ -15795,6 +15863,7 @@ export interface components {
             userProjects?: components["schemas"]["DomainModel.HavenzHub.UserProject"][] | null;
             projectDepartments?: components["schemas"]["DomainModel.HavenzHub.ProjectDepartment"][] | null;
             propertyProjects?: components["schemas"]["DomainModel.HavenzHub.PropertyProject"][] | null;
+            descriptionHistory?: components["schemas"]["DomainModel.HavenzHub.ProjectDescriptionHistory"][] | null;
         };
         "DomainModel.HavenzHub.ProjectDepartment": {
             /** Format: uuid */
@@ -15805,6 +15874,20 @@ export interface components {
             createdAt?: string;
             project?: components["schemas"]["DomainModel.HavenzHub.Project"];
             department?: components["schemas"]["DomainModel.HavenzHub.Department"];
+        };
+        "DomainModel.HavenzHub.ProjectDescriptionHistory": {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            projectId: string;
+            description?: string | null;
+            descriptionFormat?: string | null;
+            /** Format: uuid */
+            changedByUserId: string;
+            changedByUserName: string;
+            /** Format: date-time */
+            changedAt?: string;
+            project?: components["schemas"]["DomainModel.HavenzHub.Project"];
         };
         "DomainModel.HavenzHub.Property": {
             /** Format: uuid */
@@ -16551,6 +16634,16 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectDescriptionHistoryDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.ProjectDescriptionHistoryDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.ProjectDto"][] | null;
             /** Format: int32 */
@@ -17267,6 +17360,7 @@ export interface components {
         "WebApp.Models.HavenzHub.CreateProjectRequest": {
             name: string;
             description?: string | null;
+            descriptionFormat?: string | null;
             status: string;
             priority?: string | null;
             /** Format: date-time */
@@ -18410,6 +18504,19 @@ export interface components {
             /** Format: int32 */
             memberCount?: number;
         };
+        "WebApp.Models.HavenzHub.ProjectDescriptionHistoryDto": {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            projectId?: string;
+            description?: string | null;
+            descriptionFormat?: string | null;
+            /** Format: uuid */
+            changedByUserId?: string;
+            changedByUserName?: string | null;
+            /** Format: date-time */
+            changedAt?: string;
+        };
         "WebApp.Models.HavenzHub.ProjectDto": {
             /** Format: uuid */
             id?: string;
@@ -18417,6 +18524,7 @@ export interface components {
             companyId?: string;
             name?: string | null;
             description?: string | null;
+            descriptionFormat?: string | null;
             status?: string | null;
             priority?: string | null;
             /** Format: int32 */
@@ -19071,6 +19179,7 @@ export interface components {
             id: string;
             name: string;
             description?: string | null;
+            descriptionFormat?: string | null;
             status: string;
             priority?: string | null;
             /** Format: date-time */

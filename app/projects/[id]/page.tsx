@@ -19,8 +19,11 @@ import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { Project, Company, ProjectSummaryDto } from "@/types/bms";
 import { toast } from "sonner";
 import { formatDateForInput } from "@/features/tasks/utils/taskHelpers";
-import { ArrowLeft, Sparkles, Loader2, Bot, X } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Bot, X, History } from "lucide-react";
 import { useUsers } from "@/lib/hooks/useUsers";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import type { ProjectDescriptionHistoryEntry } from "@/types/bms";
 
 const ProjectFormModal = dynamic(
   () =>
@@ -62,6 +65,9 @@ export default function ProjectDetailPage() {
   const [showSummary, setShowSummary] = useState(false);
   const [summaryPhase, setSummaryPhase] = useState(0);
   const { users, loadUsers } = useUsers();
+  const [showDescHistory, setShowDescHistory] = useState(false);
+  const [descHistory, setDescHistory] = useState<ProjectDescriptionHistoryEntry[]>([]);
+  const [descHistoryLoading, setDescHistoryLoading] = useState(false);
 
   const summaryMessages = [
     "Generating AI summary...",
@@ -148,6 +154,19 @@ export default function ProjectDetailPage() {
     loadUsers();
   }, [loadProject, loadUsers]);
 
+  useEffect(() => {
+    if (!showDescHistory || !projectId) return;
+    setDescHistoryLoading(true);
+    bmsApi.projects
+      .getDescriptionHistory(projectId)
+      .then((res) => {
+        console.log("Description history response:", res);
+        setDescHistory((res as any).data || []);
+      })
+      .catch(() => setDescHistory([]))
+      .finally(() => setDescHistoryLoading(false));
+  }, [showDescHistory, projectId]);
+
   const handleBack = () => {
     router.push("/projects");
   };
@@ -208,8 +227,10 @@ export default function ProjectDetailPage() {
       }
     }
 
-    if (formData.description?.trim())
+    if (formData.description?.trim()) {
       payload.description = formData.description.trim();
+      payload.descriptionFormat = "markdown";
+    }
     if (formData.startDate?.trim())
       payload.startDate = formData.startDate.trim();
     if (formData.endDate?.trim()) payload.endDate = formData.endDate.trim();
@@ -307,6 +328,8 @@ export default function ProjectDetailPage() {
                   ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
                   : project.status === "in_progress"
                   ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400"
+                  : project.status === "under-construction"
+                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
                   : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
               }`}
             >
@@ -460,10 +483,35 @@ export default function ProjectDetailPage() {
 
               {/* Description & Details */}
               <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-5">
-                <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-50 mb-3">Description</h3>
-                <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed mb-5">
-                  {project.description || "No description provided."}
-                </p>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-50">Description</h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowDescHistory(true)}
+                    className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                    title="View description history"
+                  >
+                    <History className="w-3.5 h-3.5" />
+                    History
+                  </button>
+                </div>
+                {project.description ? (
+                  project.descriptionFormat === "plaintext" ? (
+                    <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed mb-5 whitespace-pre-wrap">
+                      {project.description}
+                    </p>
+                  ) : (
+                    <div className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed mb-5 prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {project.description}
+                      </ReactMarkdown>
+                    </div>
+                  )
+                ) : (
+                  <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed mb-5">
+                    No description provided.
+                  </p>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                   <div>
                     <span className="text-xs text-stone-400 dark:text-stone-500">Team Lead</span>
@@ -556,6 +604,72 @@ export default function ProjectDetailPage() {
           onSubmit={handleEditSubmit}
           users={users.map((u) => ({ id: u.id || "", name: u.name || "" })).filter((u) => u.name)}
         />
+
+        {/* Description History Modal */}
+        {showDescHistory && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowDescHistory(false)}>
+            <div
+              className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 w-full max-w-2xl max-h-[80vh] overflow-hidden mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200 dark:border-stone-700">
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4 text-stone-500" />
+                  <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-50">Description History</h3>
+                </div>
+                <button
+                  onClick={() => setShowDescHistory(false)}
+                  className="p-1 rounded-md text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:hover:text-stone-300 dark:hover:bg-stone-800 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="overflow-y-auto max-h-[calc(80vh-60px)] p-5 space-y-4">
+                {descHistoryLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-5 h-5 animate-spin text-accent-cyan" />
+                  </div>
+                ) : descHistory.length === 0 ? (
+                  <p className="text-sm text-stone-500 dark:text-stone-400 text-center py-8">
+                    No description changes recorded yet.
+                  </p>
+                ) : (
+                  descHistory.map((entry, index) => {
+                    const versionNum = descHistory.length - index;
+                    return (
+                    <div key={entry.id} className="border border-stone-200 dark:border-stone-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-stone-900 dark:text-stone-50">
+                          Version {versionNum}
+                        </span>
+                        <span className="text-xs text-stone-400 dark:text-stone-500">
+                          {new Date(entry.changedAt).toLocaleString()}
+                        </span>
+                      </div>
+                      {entry.changedByUserName && (
+                        <div className="flex items-center gap-2 mb-3 text-xs text-stone-500 dark:text-stone-400">
+                          <span>by {entry.changedByUserName}</span>
+                        </div>
+                      )}
+                      {entry.descriptionFormat === "markdown" ? (
+                        <div className="text-sm text-stone-600 dark:text-stone-400 prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {entry.description}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-stone-600 dark:text-stone-400 whitespace-pre-wrap">
+                          {entry.description}
+                        </p>
+                      )}
+                    </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AppLayout>
   );
