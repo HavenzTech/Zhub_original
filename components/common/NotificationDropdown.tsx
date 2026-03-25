@@ -125,7 +125,7 @@ export function NotificationDropdown() {
     // Mark as read
     await handleMarkAsRead(notification);
 
-    // Handle task_comment_mention — route to workflow-tasks (task detail)
+    // Handle task_comment_mention — route to workflow-tasks with specific task
     if (notification.type === "task_comment_mention") {
       // data field may contain taskId as JSON or plain string
       let taskId = notification.referenceId;
@@ -138,7 +138,7 @@ export function NotificationDropdown() {
           taskId = notification.data;
         }
       }
-      router.push("/workflow-tasks");
+      router.push(taskId ? `/workflow-tasks?taskId=${taskId}` : "/workflow-tasks");
       setOpen(false);
       return;
     }
@@ -150,7 +150,7 @@ export function NotificationDropdown() {
         department: `/departments/${notification.referenceId}`,
         property: `/properties/${notification.referenceId}`,
         document: `/document-control`,
-        task: `/workflow-tasks`,
+        task: `/workflow-tasks?taskId=${notification.referenceId}`,
         expense: `/projects/${notification.referenceId}`,
         user: `/users`,
       };
