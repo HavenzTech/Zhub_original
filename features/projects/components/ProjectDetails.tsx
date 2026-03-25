@@ -16,6 +16,8 @@ import {
   Clock,
   Info,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   formatCurrency,
   formatDate,
@@ -99,7 +101,15 @@ export function ProjectDetails({
                 {project.name}
               </h1>
               {project.description && (
-                <p className="text-gray-600 mb-4">{project.description}</p>
+                project.descriptionFormat === "plaintext" ? (
+                  <p className="text-gray-600 mb-4 whitespace-pre-wrap">{project.description}</p>
+                ) : (
+                  <div className="text-gray-600 mb-4 prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {project.description}
+                    </ReactMarkdown>
+                  </div>
+                )
               )}
 
               <div className="flex gap-3 mb-4 flex-wrap">

@@ -223,6 +223,7 @@ export interface Project {
   companyId: string;
   name: string;
   description?: string | null;
+  descriptionFormat?: 'markdown' | 'plaintext' | string | null;
   status: string;
   priority?: string | null;
   progress?: number; // Now auto-calculated from tasks
@@ -241,6 +242,16 @@ export interface Project {
   daysAheadOrBehind?: number | null;
   scheduleStatus?: 'ahead' | 'on_track' | 'behind' | 'unknown' | string | null;
   scheduleStatusFormatted?: string | null;
+}
+
+export interface ProjectDescriptionHistoryEntry {
+  id: string;
+  projectId: string;
+  description: string;
+  descriptionFormat: 'markdown' | 'plaintext' | string;
+  changedByUserId: string;
+  changedByUserName: string;
+  changedAt: string;
 }
 
 export interface ProjectSummaryDto {

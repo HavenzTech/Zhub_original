@@ -85,8 +85,10 @@ export default function ProjectsPage() {
       priority: formData.priority,
     };
 
-    if (formData.description?.trim())
+    if (formData.description?.trim()) {
       payload.description = formData.description;
+      payload.descriptionFormat = "markdown";
+    }
     if (formData.startDate?.trim()) payload.startDate = formData.startDate;
     if (formData.endDate?.trim()) payload.endDate = formData.endDate;
     if (formData.teamLead?.trim()) payload.teamLead = formData.teamLead;
@@ -278,12 +280,7 @@ export default function ProjectsPage() {
                                 <div className="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
                                   <FolderOpen className="w-5 h-5" />
                                 </div>
-                                <div>
-                                  <div className="font-medium text-stone-900 dark:text-stone-50">{project.name}</div>
-                                  {project.description && (
-                                    <div className="text-xs text-stone-500 dark:text-stone-400 truncate max-w-[200px]">{project.description}</div>
-                                  )}
-                                </div>
+                                <div className="font-medium text-stone-900 dark:text-stone-50">{project.name}</div>
                               </div>
                             </td>
                             <td className="px-4 py-4">
@@ -292,6 +289,8 @@ export default function ProjectsPage() {
                                   ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
                                   : project.status === "in_progress"
                                   ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400"
+                                  : project.status === "under-construction"
+                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
                                   : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
                               }`}>
                                 {project.status?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Unknown"}
