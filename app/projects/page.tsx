@@ -280,12 +280,7 @@ export default function ProjectsPage() {
                                 <div className="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
                                   <FolderOpen className="w-5 h-5" />
                                 </div>
-                                <div>
-                                  <div className="font-medium text-stone-900 dark:text-stone-50">{project.name}</div>
-                                  {project.description && (
-                                    <div className="text-xs text-stone-500 dark:text-stone-400 truncate max-w-[200px]">{project.description}</div>
-                                  )}
-                                </div>
+                                <div className="font-medium text-stone-900 dark:text-stone-50">{project.name}</div>
                               </div>
                             </td>
                             <td className="px-4 py-4">
