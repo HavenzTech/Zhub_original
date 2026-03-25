@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { TaskDetailDialog } from "@/features/tasks/components/TaskDetailDialog";
 import {
   CheckCircle,
   Circle,
@@ -49,9 +50,11 @@ import type { CompleteTaskRequest, DelegateTaskRequest, TaskDto } from "@/types/
 
 export default function MyTasksPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("all");
   const [availableUsers, setAvailableUsers] = useState<Array<{ id: string; name: string }>>([]);
   const [confirmStatus, setConfirmStatus] = useState<{ taskId: string; taskTitle: string; status: string } | null>(null);
+  const [viewingTask, setViewingTask] = useState<TaskDto | null>(null);
 
   const {
     myTasks,
@@ -69,6 +72,7 @@ export default function MyTasksPage() {
     loadMyTasks: loadMyProjectTasks,
     updateTaskStatus,
     toggleComplete,
+    getTaskById,
   } = useTasks();
 
   useEffect(() => {
@@ -89,6 +93,26 @@ export default function MyTasksPage() {
     loadMyProjectTasks();
     loadUsers();
   }, [router, loadMyTasks, loadCompletedTasks, loadMyProjectTasks]);
+
+  // Open task detail dialog when taskId is in the URL
+  useEffect(() => {
+    const taskId = searchParams.get("taskId");
+    if (!taskId) return;
+
+    // First check if it's already in the loaded project tasks
+    const found = myProjectTasks.find((t) => t.id === taskId);
+    if (found) {
+      setViewingTask(found);
+      return;
+    }
+
+    // Otherwise fetch it from the API
+    if (!tasksLoading) {
+      getTaskById(taskId).then((task) => {
+        if (task) setViewingTask(task);
+      });
+    }
+  }, [searchParams, myProjectTasks, tasksLoading, getTaskById]);
 
   const loadUsers = async () => {
     try {
@@ -598,6 +622,28 @@ export default function MyTasksPage() {
           )}
         </div>
       </div>
+
+      <TaskDetailDialog
+        task={viewingTask}
+        open={!!viewingTask}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewingTask(null);
+            // Clean up the taskId from the URL without a full navigation
+            const url = new URL(window.location.href);
+            if (url.searchParams.has("taskId")) {
+              url.searchParams.delete("taskId");
+              window.history.replaceState({}, "", url.pathname);
+            }
+          }
+        }}
+        onStatusChange={async (task, status) => {
+          if (task.id) {
+            const success = await updateTaskStatus(task.id, status);
+            if (success) loadMyProjectTasks();
+          }
+        }}
+      />
 
       <ConfirmDialog
         open={!!confirmStatus}
