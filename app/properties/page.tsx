@@ -19,7 +19,7 @@ import {
   PropertyFormModal,
   PropertyFormData,
 } from "@/features/properties/components/PropertyFormModal";
-import { Home, Building, Plus, Search, RefreshCw } from "lucide-react";
+import { Home, Building, Plus, Search, RefreshCw, LayoutGrid, List, MapPin, Layers, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +66,12 @@ export default function PropertiesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
   const [deleteProperty, setDeleteProperty] = useState<Property | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "table">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("properties-view") as "grid" | "table") || "grid";
+    }
+    return "grid";
+  });
 
   useEffect(() => {
     const auth = authService.getAuth();
@@ -179,6 +185,11 @@ export default function PropertiesPage() {
     }
   };
 
+  const formatStatus = (status?: string) => {
+    if (!status) return "Unknown";
+    return status.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
   const filteredProperties = properties.filter(
     (property) =>
       property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -244,7 +255,7 @@ export default function PropertiesPage() {
             {/* Stats Overview */}
             <PropertyStats properties={properties} />
 
-            {/* Search */}
+            {/* Search + View Toggle */}
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-md">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 dark:text-stone-500" />
@@ -255,101 +266,199 @@ export default function PropertiesPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Badge variant="secondary">
+              <span className="text-sm text-stone-500 dark:text-stone-400">
                 {filteredProperties.length}{" "}
                 {filteredProperties.length === 1 ? "property" : "properties"}
-              </Badge>
+              </span>
+              <div className="flex-1" />
+              <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => { setViewMode("grid"); localStorage.setItem("properties-view", "grid"); }}
+                  className={`p-2 transition-colors ${viewMode === "grid" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => { setViewMode("table"); localStorage.setItem("properties-view", "table"); }}
+                  className={`p-2 transition-colors ${viewMode === "table" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Properties Table */}
+            {/* Properties */}
             {filteredProperties.length > 0 ? (
-              <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Property</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Address</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Type</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Total Area</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Floors</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Status</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-stone-500 dark:text-stone-400"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredProperties.map((property) => {
-                        const address = [property.locationAddress, property.locationCity, property.locationProvince]
-                          .filter(Boolean)
-                          .join(", ") || "-";
-                        const area = property.sizeTotalArea
-                          ? `${property.sizeTotalArea.toLocaleString()} sq ft`
-                          : "-";
+              viewMode === "grid" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {filteredProperties.map((property) => {
+                    const location = [property.locationCity, property.locationProvince]
+                      .filter(Boolean)
+                      .join(", ");
+                    const area = property.sizeTotalArea
+                      ? `${property.sizeTotalArea.toLocaleString()} sq ft`
+                      : null;
 
-                        return (
-                          <tr
-                            key={property.id}
-                            onClick={() => handleViewDetails(property)}
-                            className="border-b border-stone-100 dark:border-stone-800 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
-                          >
-                            <td className="px-4 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
-                                  <Building className="w-5 h-5" />
-                                </div>
-                                <div>
-                                  <div className="font-medium text-stone-900 dark:text-stone-50">{property.name}</div>
-                                  {property.sizeFloors && (
-                                    <div className="text-xs text-stone-500 dark:text-stone-400">{property.sizeFloors} floors</div>
-                                  )}
-                                </div>
+                    return (
+                      <div
+                        key={property.id}
+                        onClick={() => handleViewDetails(property)}
+                        className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-6 cursor-pointer hover:border-accent-cyan/50 hover:shadow-md transition-all group flex flex-col min-h-[180px]"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            <div className="w-12 h-12 rounded-xl bg-accent-cyan/10 flex items-center justify-center text-accent-cyan flex-shrink-0">
+                              <Building className="w-6 h-6" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-base text-stone-900 dark:text-stone-50 truncate group-hover:text-accent-cyan transition-colors">
+                                {property.name}
                               </div>
-                            </td>
-                            <td className="px-4 py-4 text-sm text-stone-600 dark:text-stone-400 max-w-[200px] truncate">{address}</td>
-                            <td className="px-4 py-4">
-                              {property.type ? (
-                                <span className="text-xs px-2.5 py-1 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400">
-                                  {property.type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                                </span>
-                              ) : (
-                                <span className="text-sm text-stone-400">-</span>
+                              {location && (
+                                <div className="flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400 mt-1">
+                                  <MapPin className="w-3.5 h-3.5" />
+                                  <span>{location}</span>
+                                </div>
                               )}
-                            </td>
-                            <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{area}</td>
-                            <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{property.sizeFloors || "-"}</td>
-                            <td className="px-4 py-4">
-                              <span className={`inline-flex items-center text-xs px-2.5 py-1 rounded-md font-medium ${
-                                property.status === "active"
-                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                                  : property.status === "maintenance"
-                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
-                                  : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
-                              }`}>
-                                {property.status?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Unknown"}
-                              </span>
-                            </td>
-                            <td className="px-4 py-4 text-right">
-                              {authService.isAdmin() && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick(property);
-                                  }}
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-                                >
-                                  Delete
-                                </Button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            </div>
+                          </div>
+                          {authService.isAdmin() && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(property);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 mt-3">
+                          <span className={`inline-flex items-center text-xs px-2.5 py-1 rounded-md font-medium ${
+                            property.status === "active"
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                              : property.status === "maintenance"
+                              ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
+                              : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                          }`}>
+                            {formatStatus(property.status)}
+                          </span>
+                          {property.type && (
+                            <span className="text-xs px-2.5 py-1 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400">
+                              {formatStatus(property.type)}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-auto pt-5 flex items-center gap-4 border-t border-stone-100 dark:border-stone-800">
+                          {area && (
+                            <div className="flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400">
+                              <Layers className="w-3.5 h-3.5" />
+                              <span>{area}</span>
+                            </div>
+                          )}
+                          {property.sizeFloors && (
+                            <div className="flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400">
+                              <Building className="w-3.5 h-3.5" />
+                              <span>{property.sizeFloors} floors</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              ) : (
+                <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Property</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Address</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Type</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Total Area</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Floors</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Status</th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-stone-500 dark:text-stone-400"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredProperties.map((property) => {
+                          const address = [property.locationAddress, property.locationCity, property.locationProvince]
+                            .filter(Boolean)
+                            .join(", ") || "-";
+                          const area = property.sizeTotalArea
+                            ? `${property.sizeTotalArea.toLocaleString()} sq ft`
+                            : "-";
+
+                          return (
+                            <tr
+                              key={property.id}
+                              onClick={() => handleViewDetails(property)}
+                              className="border-b border-stone-100 dark:border-stone-800 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+                            >
+                              <td className="px-4 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
+                                    <Building className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-stone-900 dark:text-stone-50">{property.name}</div>
+                                    {property.sizeFloors && (
+                                      <div className="text-xs text-stone-500 dark:text-stone-400">{property.sizeFloors} floors</div>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 text-sm text-stone-600 dark:text-stone-400 max-w-[200px] truncate">{address}</td>
+                              <td className="px-4 py-4">
+                                {property.type ? (
+                                  <span className="text-xs px-2.5 py-1 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400">
+                                    {formatStatus(property.type)}
+                                  </span>
+                                ) : (
+                                  <span className="text-sm text-stone-400">-</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{area}</td>
+                              <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{property.sizeFloors || "-"}</td>
+                              <td className="px-4 py-4">
+                                <span className={`inline-flex items-center text-xs px-2.5 py-1 rounded-md font-medium ${
+                                  property.status === "active"
+                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                                    : property.status === "maintenance"
+                                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
+                                    : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                                }`}>
+                                  {formatStatus(property.status)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 text-right">
+                                {authService.isAdmin() && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteClick(property);
+                                    }}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                                  >
+                                    Delete
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )
             ) : (
               <div className="text-center py-12">
                 <Home className="w-12 h-12 text-stone-300 dark:text-stone-600 mx-auto mb-4" />

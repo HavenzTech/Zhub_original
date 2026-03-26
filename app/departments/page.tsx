@@ -16,7 +16,7 @@ import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
 import { useDepartments } from "@/lib/hooks/useDepartments";
 import { DepartmentCard } from "@/features/departments/components/DepartmentCard";
 import { DepartmentStats } from "@/features/departments/components/DepartmentStats";
-import { Users, Plus, Search, RefreshCw } from "lucide-react";
+import { Users, Plus, Search, RefreshCw, LayoutGrid, List, User, DollarSign, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +58,12 @@ export default function DepartmentsPage() {
   const [deleteDepartment, setDeleteDepartment] = useState<Department | null>(null);
   const [users, setUsers] = useState<{ id: string; name: string; email: string }[]>([]);
   const [selectedHeadUserId, setSelectedHeadUserId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "table">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("departments-view") as "grid" | "table") || "grid";
+    }
+    return "grid";
+  });
 
   const loadUsers = useCallback(async () => {
     try {
@@ -253,7 +259,7 @@ export default function DepartmentsPage() {
             {/* Stats Overview */}
             <DepartmentStats departments={departments} />
 
-            {/* Search */}
+            {/* Search + View Toggle */}
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-md">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 dark:text-stone-500" />
@@ -264,78 +270,163 @@ export default function DepartmentsPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Badge variant="secondary">
+              <span className="text-sm text-stone-500 dark:text-stone-400">
                 {filteredDepartments.length}{" "}
                 {filteredDepartments.length === 1
                   ? "department"
                   : "departments"}
-              </Badge>
+              </span>
+              <div className="flex-1" />
+              <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => { setViewMode("grid"); localStorage.setItem("departments-view", "grid"); }}
+                  className={`p-2 transition-colors ${viewMode === "grid" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => { setViewMode("table"); localStorage.setItem("departments-view", "table"); }}
+                  className={`p-2 transition-colors ${viewMode === "table" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Departments Table */}
+            {/* Departments */}
             {filteredDepartments.length > 0 ? (
-              <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Department</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Head</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Members</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Budget</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-stone-500 dark:text-stone-400"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredDepartments.map((dept) => {
-                        const budget = dept.budgetAllocated
-                          ? `$${(dept.budgetAllocated / 1000).toFixed(0)}K`
-                          : "-";
+              viewMode === "grid" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {filteredDepartments.map((dept) => {
+                    const budget = dept.budgetAllocated
+                      ? `$${(dept.budgetAllocated / 1000).toFixed(0)}K`
+                      : null;
+                    const memberCount = (dept as any).memberCount;
 
-                        return (
-                          <tr
-                            key={dept.id}
-                            onClick={() => handleViewDetails(dept)}
-                            className="border-b border-stone-100 dark:border-stone-800 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
-                          >
-                            <td className="px-4 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-500 dark:text-stone-400">
-                                  <Users className="w-5 h-5" />
-                                </div>
-                                <div>
-                                  <div className="font-medium text-stone-900 dark:text-stone-50">{dept.name}</div>
-                                  {dept.description && (
-                                    <div className="text-xs text-stone-500 dark:text-stone-400 truncate max-w-[200px]">{dept.description}</div>
-                                  )}
-                                </div>
+                    return (
+                      <div
+                        key={dept.id}
+                        onClick={() => handleViewDetails(dept)}
+                        className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-6 cursor-pointer hover:border-accent-cyan/50 hover:shadow-md transition-all group flex flex-col min-h-[180px]"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            <div className="w-12 h-12 rounded-xl bg-accent-cyan/10 flex items-center justify-center text-accent-cyan flex-shrink-0">
+                              <Users className="w-6 h-6" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-base text-stone-900 dark:text-stone-50 truncate group-hover:text-accent-cyan transition-colors">
+                                {dept.name}
                               </div>
-                            </td>
-                            <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{dept.headName || "-"}</td>
-                            <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{(dept as any).memberCount ?? "-"}</td>
-                            <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{budget}</td>
-                            <td className="px-4 py-4 text-right">
-                              {authService.isAdmin() && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick(dept);
-                                  }}
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-                                >
-                                  Delete
-                                </Button>
+                              {dept.headName && (
+                                <div className="flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400 mt-1">
+                                  <User className="w-3.5 h-3.5" />
+                                  <span>{dept.headName}</span>
+                                </div>
                               )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            </div>
+                          </div>
+                          {authService.isAdmin() && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(dept);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        {dept.description && (
+                          <div className="text-xs text-accent-cyan mt-3">
+                            Tap to view full description
+                          </div>
+                        )}
+
+                        <div className="mt-auto pt-5 flex items-center gap-4 border-t border-stone-100 dark:border-stone-800">
+                          {memberCount != null && (
+                            <div className="flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400">
+                              <Users className="w-3.5 h-3.5" />
+                              <span>{memberCount} {memberCount === 1 ? "member" : "members"}</span>
+                            </div>
+                          )}
+                          {budget && (
+                            <div className="flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400">
+                              <DollarSign className="w-3.5 h-3.5" />
+                              <span>{budget}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              ) : (
+                <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Department</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Head</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Members</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Budget</th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-stone-500 dark:text-stone-400"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredDepartments.map((dept) => {
+                          const budget = dept.budgetAllocated
+                            ? `$${(dept.budgetAllocated / 1000).toFixed(0)}K`
+                            : "-";
+
+                          return (
+                            <tr
+                              key={dept.id}
+                              onClick={() => handleViewDetails(dept)}
+                              className="border-b border-stone-100 dark:border-stone-800 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+                            >
+                              <td className="px-4 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
+                                    <Users className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-stone-900 dark:text-stone-50">{dept.name}</div>
+                                    {dept.description && (
+                                      <div className="text-xs text-stone-500 dark:text-stone-400 truncate max-w-[200px]">{dept.description}</div>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{dept.headName || "-"}</td>
+                              <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{(dept as any).memberCount ?? "-"}</td>
+                              <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{budget}</td>
+                              <td className="px-4 py-4 text-right">
+                                {authService.isAdmin() && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteClick(dept);
+                                    }}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                                  >
+                                    Delete
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )
             ) : (
               <div className="text-center py-12">
                 <Users className="w-12 h-12 text-stone-300 dark:text-stone-600 mx-auto mb-4" />

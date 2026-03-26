@@ -138,6 +138,11 @@ export default function DocumentControlPage() {
   const { documents, loading, error, loadDocuments, setDocuments } =
     useDocuments();
 
+  // Auto-collapse sidebar on mount to reduce clutter
+  useEffect(() => {
+    window.dispatchEvent(new Event("sidebar-collapse"));
+  }, []);
+
   const [folders, setFolders] = useState<Folder[]>([]);
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
   const [departments, setDepartments] = useState<

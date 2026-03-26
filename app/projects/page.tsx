@@ -17,7 +17,7 @@ import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import { Project } from "@/types/bms";
 import { toast } from "sonner";
-import { FolderOpen, Plus, Search, RefreshCw, Target } from "lucide-react";
+import { FolderOpen, Plus, Search, RefreshCw, Target, LayoutGrid, List, Clock, User, Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,6 +60,12 @@ export default function ProjectsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
   const [deleteProject, setDeleteProject] = useState<Project | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "table">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("projects-view") as "grid" | "table") || "grid";
+    }
+    return "grid";
+  });
 
   useEffect(() => {
     const auth = authService.getAuth();
@@ -157,6 +163,11 @@ export default function ProjectsPage() {
     }
   };
 
+  const formatStatus = (status?: string) => {
+    if (!status) return "Unknown";
+    return status.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
   const filteredProjects = projects.filter(
     (project) =>
       project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -222,7 +233,7 @@ export default function ProjectsPage() {
             {/* Stats Overview */}
             <ProjectStats projects={projects} />
 
-            {/* Search */}
+            {/* Search + View Toggle */}
             <div className="flex items-center gap-4">
               <div className="relative flex-1 max-w-md">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 dark:text-stone-500" />
@@ -233,105 +244,218 @@ export default function ProjectsPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Badge variant="secondary">
+              <span className="text-sm text-stone-500 dark:text-stone-400">
                 {filteredProjects.length}{" "}
                 {filteredProjects.length === 1 ? "project" : "projects"}
-              </Badge>
+              </span>
+              <div className="flex-1" />
+              <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => { setViewMode("grid"); localStorage.setItem("projects-view", "grid"); }}
+                  className={`p-2 transition-colors ${viewMode === "grid" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => { setViewMode("table"); localStorage.setItem("projects-view", "table"); }}
+                  className={`p-2 transition-colors ${viewMode === "table" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Projects Table */}
+            {/* Projects */}
             {filteredProjects.length > 0 ? (
-              <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Project</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Budget</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Progress</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Timeline</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Team Lead</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-stone-500 dark:text-stone-400"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredProjects.map((project) => {
-                        const progress = project.progress ?? 0;
-                        const budget = project.budgetAllocated
-                          ? `$${(project.budgetAllocated / 1000).toFixed(0)}K`
-                          : "-";
-                        const startDate = project.startDate
-                          ? new Date(project.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                          : "";
-                        const endDate = project.endDate
-                          ? new Date(project.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                          : "";
-                        const timeline = startDate && endDate ? `${startDate} - ${endDate}` : startDate || endDate || "-";
+              viewMode === "grid" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {filteredProjects.map((project) => {
+                    const progress = project.progress ?? 0;
+                    const budget = project.budgetAllocated
+                      ? `$${(project.budgetAllocated / 1000).toFixed(0)}K`
+                      : null;
+                    const startDate = project.startDate
+                      ? new Date(project.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      : "";
+                    const endDate = project.endDate
+                      ? new Date(project.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      : "";
+                    const timeline = startDate && endDate ? `${startDate} - ${endDate}` : startDate || endDate || null;
 
-                        return (
-                          <tr
-                            key={project.id}
-                            onClick={() => handleViewDetails(project)}
-                            className="border-b border-stone-100 dark:border-stone-800 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
-                          >
-                            <td className="px-4 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
-                                  <FolderOpen className="w-5 h-5" />
-                                </div>
-                                <div className="font-medium text-stone-900 dark:text-stone-50">{project.name}</div>
+                    return (
+                      <div
+                        key={project.id}
+                        onClick={() => handleViewDetails(project)}
+                        className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-6 cursor-pointer hover:border-accent-cyan/50 hover:shadow-md transition-all group flex flex-col min-h-[200px]"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            <div className="w-12 h-12 rounded-xl bg-accent-cyan/10 flex items-center justify-center text-accent-cyan flex-shrink-0">
+                              <FolderOpen className="w-6 h-6" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-base text-stone-900 dark:text-stone-50 truncate group-hover:text-accent-cyan transition-colors">
+                                {project.name}
                               </div>
-                            </td>
-                            <td className="px-4 py-4">
-                              <span className={`inline-flex items-center text-xs px-2.5 py-1 rounded-md font-medium ${
-                                project.status === "active" || project.status === "completed"
-                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                                  : project.status === "in_progress"
-                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400"
-                                  : project.status === "under-construction"
-                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
-                                  : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
-                              }`}>
-                                {project.status?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Unknown"}
-                              </span>
-                            </td>
-                            <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{budget}</td>
-                            <td className="px-4 py-4">
-                              <div className="flex items-center gap-2">
-                                <div className="w-20 h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full bg-accent-cyan rounded-full"
-                                    style={{ width: `${progress}%` }}
-                                  />
+                              {project.teamLead && (
+                                <div className="flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400 mt-1">
+                                  <User className="w-3.5 h-3.5" />
+                                  <span>{project.teamLead}</span>
                                 </div>
-                                <span className="text-xs text-stone-500 dark:text-stone-400 w-8">{progress}%</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-xs text-stone-500 dark:text-stone-400">{timeline}</td>
-                            <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{project.teamLead || "-"}</td>
-                            <td className="px-4 py-4 text-right">
-                              {authService.isAdmin() && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick(project);
-                                  }}
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-                                >
-                                  Delete
-                                </Button>
                               )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            </div>
+                          </div>
+                          {authService.isAdmin() && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(project);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        {project.description && (
+                          <div className="text-xs text-accent-cyan mt-3">
+                            Tap to view full description
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2 mt-3">
+                          <span className={`inline-flex items-center text-xs px-2.5 py-1 rounded-md font-medium ${
+                            project.status === "active" || project.status === "completed"
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                              : project.status === "in_progress"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400"
+                              : project.status === "under-construction"
+                              ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
+                              : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                          }`}>
+                            {formatStatus(project.status)}
+                          </span>
+                          {budget && (
+                            <span className="text-sm text-stone-500 dark:text-stone-400">{budget}</span>
+                          )}
+                        </div>
+
+                        <div className="mt-auto pt-5 space-y-2 border-t border-stone-100 dark:border-stone-800">
+                          <div className="flex items-center justify-between text-sm pt-1">
+                            <span className="text-stone-500 dark:text-stone-400">Progress</span>
+                            <span className="font-medium text-stone-700 dark:text-stone-300">{progress}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-accent-cyan rounded-full transition-all"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          {timeline && (
+                            <div className="flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400 pt-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>{timeline}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              ) : (
+                <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Project</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Status</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Budget</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Progress</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Timeline</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-stone-400">Team Lead</th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-stone-500 dark:text-stone-400"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredProjects.map((project) => {
+                          const progress = project.progress ?? 0;
+                          const budget = project.budgetAllocated
+                            ? `$${(project.budgetAllocated / 1000).toFixed(0)}K`
+                            : "-";
+                          const startDate = project.startDate
+                            ? new Date(project.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                            : "";
+                          const endDate = project.endDate
+                            ? new Date(project.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                            : "";
+                          const timeline = startDate && endDate ? `${startDate} - ${endDate}` : startDate || endDate || "-";
+
+                          return (
+                            <tr
+                              key={project.id}
+                              onClick={() => handleViewDetails(project)}
+                              className="border-b border-stone-100 dark:border-stone-800 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+                            >
+                              <td className="px-4 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center text-accent-cyan">
+                                    <FolderOpen className="w-5 h-5" />
+                                  </div>
+                                  <div className="font-medium text-stone-900 dark:text-stone-50">{project.name}</div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4">
+                                <span className={`inline-flex items-center text-xs px-2.5 py-1 rounded-md font-medium ${
+                                  project.status === "active" || project.status === "completed"
+                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                                    : project.status === "in_progress"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400"
+                                    : project.status === "under-construction"
+                                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
+                                    : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                                }`}>
+                                  {formatStatus(project.status)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{budget}</td>
+                              <td className="px-4 py-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-20 h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-accent-cyan rounded-full"
+                                      style={{ width: `${progress}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-stone-500 dark:text-stone-400 w-8">{progress}%</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 text-xs text-stone-500 dark:text-stone-400">{timeline}</td>
+                              <td className="px-4 py-4 text-sm text-stone-700 dark:text-stone-300">{project.teamLead || "-"}</td>
+                              <td className="px-4 py-4 text-right">
+                                {authService.isAdmin() && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteClick(project);
+                                    }}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                                  >
+                                    Delete
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )
             ) : (
               <div className="text-center py-12">
                 <FolderOpen className="w-12 h-12 text-stone-300 dark:text-stone-600 mx-auto mb-4" />
