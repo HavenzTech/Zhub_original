@@ -87,6 +87,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
   const [companies, setCompanies] = useState<Array<{ companyId: string; companyName: string; role: string }>>([]);
   const [currentCompanyId, setCurrentCompanyId] = useState("");
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState(false);
   const [flyoutItemId, setFlyoutItemId] = useState<string | null>(null);
   const flyoutEnterRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flyoutLeaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -124,6 +125,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
       const company = (await bmsApi.companies.getById(companyId)) as Company;
       if (company?.logoUrl) {
         setCompanyLogoUrl(company.logoUrl);
+        setLogoError(false);
       }
     } catch {
       // Silently fail — fallback to initial letter
@@ -239,12 +241,15 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
 
       {/* Company / Role Switcher */}
       {!collapsed && currentCompany && (
-        <div className="px-2.5 pb-3 relative">
+        <div className="px-2.5 mb-3 relative">
           <button
             onClick={() => setCompanySwitcherOpen(!companySwitcherOpen)}
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-stone-100 dark:hover:bg-stone-800"
+            className={cn(
+              "flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-stone-100 dark:hover:bg-stone-800",
+              companySwitcherOpen ? "rounded-t-lg bg-stone-50 dark:bg-stone-800 border border-b-0 border-stone-200 dark:border-stone-700" : "rounded-lg"
+            )}
           >
-            {companyLogoUrl ? (
+            {companyLogoUrl && !logoError ? (
               <Image
                 src={companyLogoUrl}
                 alt={currentCompany.companyName || "Company"}
@@ -252,6 +257,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
                 height={32}
                 className="shrink-0 rounded-lg object-contain"
                 unoptimized
+                onError={() => setLogoError(true)}
               />
             ) : (
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-stone-200 dark:bg-stone-800 text-xs font-medium text-stone-600 dark:text-stone-300">
@@ -281,19 +287,30 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
                 className="fixed inset-0 z-10"
                 onClick={() => setCompanySwitcherOpen(false)}
               />
-              <div className="absolute left-2.5 right-2.5 top-full z-20 mt-1 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
+              <div className="absolute left-2.5 right-2.5 top-full z-20 rounded-b-lg border border-t-0 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 overflow-hidden shadow-lg">
                 {companies.map((company) => (
                   <button
                     key={company.companyId}
                     onClick={() => handleSwitchCompany(company.companyId)}
                     className={cn(
                       "flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-stone-100 dark:hover:bg-stone-800",
-                      company.companyId === currentCompanyId && "bg-stone-100 dark:bg-stone-800"
+                      company.companyId === currentCompanyId && "bg-stone-50 dark:bg-stone-800"
                     )}
                   >
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-stone-200 dark:bg-stone-800 text-[10px] font-medium text-stone-600 dark:text-stone-300">
-                      {company.companyName?.charAt(0)?.toUpperCase() || "C"}
-                    </div>
+                    {company.companyId === currentCompanyId && companyLogoUrl ? (
+                      <Image
+                        src={companyLogoUrl}
+                        alt={company.companyName || "Company"}
+                        width={24}
+                        height={24}
+                        className="shrink-0 rounded-md object-contain"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-stone-200 dark:bg-stone-800 text-[10px] font-medium text-stone-600 dark:text-stone-300">
+                        {company.companyName?.charAt(0)?.toUpperCase() || "C"}
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="truncate text-[12px] text-stone-900 dark:text-white">
                         {company.companyName}
@@ -402,8 +419,11 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
                 <div className="truncate text-[13px] text-stone-900 dark:text-white">
                   {userName}
                 </div>
-                <div className="text-[11px] text-stone-500">
-                  {currentCompany ? getRoleLabel(currentCompany.role) : "Member"}
+                <div className="flex items-center gap-1.5 text-[11px] text-stone-500">
+                  <span>{currentCompany ? getRoleLabel(currentCompany.role) : "Member"}</span>
+                  <span className="mx-0.5">·</span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span>Secure</span>
                 </div>
               </div>
               <NotificationDropdown />
@@ -413,32 +433,19 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
               >
                 <Settings className="h-4 w-4" />
               </Link>
+              <button
+                onClick={async () => {
+                  await authService.logout();
+                  router.push("/login");
+                }}
+                className="rounded-md p-1 text-stone-400 dark:text-stone-500 hover:text-red-500 transition-colors"
+                title="Log out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </>
           )}
         </div>
-
-        {/* Log out + Security status */}
-        {!collapsed && (
-          <div className="mt-1 px-2 space-y-2">
-            <button
-              onClick={async () => {
-                await authService.logout();
-                router.push("/login");
-              }}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12px] text-stone-500 transition-colors hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-red-400"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span>Log out</span>
-            </button>
-            <div className="flex items-center gap-1.5 text-[11px] text-stone-500">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              <span>Secure</span>
-              <span className="mx-1">·</span>
-              <Globe className="h-3 w-3" />
-              <span>Calgary, AB</span>
-            </div>
-          </div>
-        )}
       </div>
     </div>
     </TooltipProvider>

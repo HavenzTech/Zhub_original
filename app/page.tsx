@@ -1,21 +1,17 @@
 // app/page.tsx - Dashboard
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/services/auth";
 import {
-  Home,
-  FolderOpen,
   FileText,
   Clock,
   Plus,
   Loader2,
   Building2,
-  DollarSign,
-  Mail,
-  Phone,
-  MapPin,
+  Circle,
+  AlertCircle,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -24,7 +20,13 @@ import { bmsApi } from "@/lib/services/bmsApi";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { useDashboard } from "@/lib/hooks/useDashboard";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { formatCurrency } from "@/features/companies/utils/companyHelpers";
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function HavenzHubDashboard() {
   const router = useRouter();
@@ -32,6 +34,8 @@ export default function HavenzHubDashboard() {
   const [authLoading, setAuthLoading] = useState(true);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const {
     companies,
@@ -42,6 +46,7 @@ export default function HavenzHubDashboard() {
     accessLogs,
     users,
     documents,
+    myTasks,
     loading,
     error,
     loadDashboardData,
@@ -60,6 +65,7 @@ export default function HavenzHubDashboard() {
     if (currentCompanyId) bmsApi.setCompanyId(currentCompanyId);
 
     setCompanyId(currentCompanyId);
+    setUserName(auth.name);
     setIsAuthenticated(true);
     setAuthLoading(false);
   }, [router]);
@@ -70,6 +76,11 @@ export default function HavenzHubDashboard() {
     }
   }, [isAuthenticated, loadDashboardData]);
 
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const recentDocuments = [...documents]
     .sort((a, b) => {
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -78,7 +89,7 @@ export default function HavenzHubDashboard() {
     })
     .slice(0, 5);
 
-  const formatRelativeTime = (dateString?: string) => {
+  const formatRelativeTime = (dateString?: string | null) => {
     if (!dateString) return "Unknown";
     const date = new Date(dateString);
     const now = new Date();
@@ -101,81 +112,80 @@ export default function HavenzHubDashboard() {
 
   const currentCompany = companies.find((c) => c.id === companyId);
 
+  // Sort tasks: overdue first, then by due date, then by priority
+  const sortedTasks = useMemo(() => {
+    const activeTasks = myTasks.filter(
+      (t) => t.status !== "completed" && t.status !== "cancelled"
+    );
+    return activeTasks.sort((a, b) => {
+      const now = new Date();
+      const aDue = a.dueDate ? new Date(a.dueDate) : null;
+      const bDue = b.dueDate ? new Date(b.dueDate) : null;
+      const aOverdue = aDue && aDue < now;
+      const bOverdue = bDue && bDue < now;
+      if (aOverdue && !bOverdue) return -1;
+      if (!aOverdue && bOverdue) return 1;
+      if (aDue && bDue) return aDue.getTime() - bDue.getTime();
+      if (aDue) return -1;
+      if (bDue) return 1;
+      return 0;
+    });
+  }, [myTasks]);
+
   const renderDashboard = () => {
     if (loading) {
       return <LoadingSpinnerCentered text="Loading dashboard..." />;
     }
 
-    const locationParts = currentCompany
-      ? [
-          currentCompany.locationCity,
-          currentCompany.locationProvince,
-          currentCompany.locationCountry,
-        ]
-          .filter(Boolean)
-          .join(", ")
-      : "";
+    const firstName = userName?.split(" ")[0];
 
     return (
       <div className="space-y-6">
-        {/* Company Overview */}
+        {/* Welcome Greeting + Company Overview */}
         {currentCompany ? (
-          <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 p-5">
-            <div className="flex items-center gap-4 mb-4">
-              {currentCompany.logoUrl && !imageError ? (
-                <Image
-                  src={currentCompany.logoUrl}
-                  alt={currentCompany.name}
-                  className="rounded-xl object-cover"
-                  width={48}
-                  height={48}
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <div className="w-12 h-12 bg-accent-cyan/10 rounded-xl flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-accent-cyan" />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-semibold text-stone-900 dark:text-stone-50">
-                  {currentCompany.name}
-                </h1>
-                <p className="text-sm text-stone-500 dark:text-stone-400">
-                  {currentCompany.industry || "No industry specified"}
-                </p>
+          <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 px-5 py-4 flex items-center gap-4">
+            {currentCompany.logoUrl && !imageError ? (
+              <Image
+                src={currentCompany.logoUrl}
+                alt={currentCompany.name}
+                className="rounded-xl object-cover"
+                width={44}
+                height={44}
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="w-11 h-11 bg-accent-cyan/10 rounded-xl flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-accent-cyan" />
               </div>
-              <StatusBadge status={currentCompany.status || "active"} />
+            )}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-semibold text-stone-900 dark:text-stone-50">
+                {firstName
+                  ? `${getGreeting()}, ${firstName}`
+                  : getGreeting()}
+              </h1>
+              <p className="text-sm text-stone-500 dark:text-stone-400">
+                <span className="font-semibold bg-clip-text text-transparent animate-[shimmer_3s_linear_infinite] bg-[length:200%_100%]" style={{ backgroundImage: "linear-gradient(90deg, #0891b2, #a78bfa, #ec4899, #f59e0b, #10b981, #0891b2)" }}>Z AI</span> is here to help you work efficiently
+              </p>
+              <p className="text-xs text-stone-400 dark:text-stone-500">
+                {currentCompany.name}
+                {currentCompany.industry
+                  ? ` · ${currentCompany.industry}`
+                  : ""}
+              </p>
             </div>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-stone-500 dark:text-stone-400">
-              {currentCompany.annualRevenue != null && (
-                <div className="flex items-center gap-1.5">
-                  <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>{formatCurrency(currentCompany.annualRevenue)}</span>
-                </div>
-              )}
-              {currentCompany.contactEmail && (
-                <div className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-accent-cyan" />
-                  <span>{currentCompany.contactEmail}</span>
-                </div>
-              )}
-              {currentCompany.contactPhone && (
-                <div className="flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-accent-cyan" />
-                  <span>{currentCompany.contactPhone}</span>
-                </div>
-              )}
-              {locationParts && (
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-accent-cyan" />
-                  <span>{locationParts}</span>
-                </div>
-              )}
+            <div className="text-right flex-shrink-0">
+              <div className="text-2xl font-semibold text-stone-900 dark:text-stone-50 tabular-nums">
+                {currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </div>
+              <div className="text-xs text-stone-500 dark:text-stone-400">
+                {currentTime.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}
+              </div>
             </div>
           </div>
         ) : (
-          <h1 className="text-2xl font-semibold text-stone-900 dark:text-stone-50">
-            Dashboard
+          <h1 className="text-lg font-semibold text-stone-900 dark:text-stone-50">
+            {firstName ? `${getGreeting()}, ${firstName}` : getGreeting()}
           </h1>
         )}
 
@@ -213,85 +223,177 @@ export default function HavenzHubDashboard() {
           ))}
         </div>
 
-        {/* Projects List */}
-        <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
-          <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50">
-              Projects
-            </h2>
-            <Button
-              size="sm"
-              onClick={() => router.push("/projects")}
-              className="bg-accent-cyan hover:bg-accent-cyan/90 text-white text-xs"
-            >
-              <Plus className="w-3 h-3 mr-1" />
-              New Project
-            </Button>
-          </div>
-          {projects.length === 0 ? (
-            <div className="p-8 text-center text-stone-400 dark:text-stone-500 text-sm">
-              No projects yet
+        {/* Two-column: Projects + My Tasks */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Projects List */}
+          <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+            <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50">
+                Projects
+              </h2>
+              <Button
+                size="sm"
+                onClick={() => router.push("/projects")}
+                className="bg-accent-cyan hover:bg-accent-cyan/90 text-white text-xs"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                New Project
+              </Button>
             </div>
-          ) : (
-            projects.map((project) => {
-              const progress = project.progress ?? 0;
-              return (
-                <div
-                  key={project.id}
-                  onClick={() => router.push(`/projects/${project.id}`)}
-                  className="px-5 py-4 border-b border-stone-100 dark:border-stone-800 last:border-b-0 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors flex items-center gap-3"
-                >
-                  <div className="w-2.5 h-2.5 rounded-full bg-accent-cyan flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-stone-900 dark:text-stone-50">
-                      {project.name}
-                    </div>
-                    <div className="text-xs text-stone-500 dark:text-stone-400">
-                      {project.teamLead || "No team lead"}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-stone-400 dark:text-stone-500">
-                    <Clock className="w-3 h-3" />
-                    <span>
-                      {project.startDate
-                        ? new Date(project.startDate).toLocaleDateString()
-                        : "TBD"}
-                      {" – "}
-                      {project.endDate
-                        ? new Date(project.endDate).toLocaleDateString()
-                        : "TBD"}
-                    </span>
-                  </div>
-                  <span
-                    className={`text-xs px-2.5 py-1 rounded-md font-medium ${
-                      project.status === "completed"
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                        : project.status === "active" ||
-                          project.status === "in_progress"
-                        ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400"
-                        : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
-                    }`}
-                  >
-                    {project.status
-                      ?.replace(/_/g, " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase()) || "Unknown"}
-                  </span>
-                  <div className="w-24 h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+            {projects.length === 0 ? (
+              <div className="p-8 text-center text-stone-400 dark:text-stone-500 text-sm">
+                No projects yet
+              </div>
+            ) : (
+              <div className="max-h-[400px] overflow-y-auto scrollbar-modern">
+                {projects.map((project) => {
+                  const progress = project.progress ?? 0;
+                  return (
                     <div
-                      className="h-full bg-accent-cyan rounded-full"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-stone-500 dark:text-stone-400 w-8 text-right">
-                    {progress}%
-                  </span>
-                </div>
-              );
-            })
-          )}
+                      key={project.id}
+                      onClick={() => router.push(`/projects/${project.id}`)}
+                      className="px-5 py-4 border-b border-stone-100 dark:border-stone-800 last:border-b-0 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-2.5 h-2.5 rounded-full bg-accent-cyan flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm text-stone-900 dark:text-stone-50">
+                            {project.name}
+                          </div>
+                          <div className="text-xs text-stone-500 dark:text-stone-400">
+                            {project.teamLead || "No team lead"}
+                          </div>
+                        </div>
+                        <span
+                          className={`text-xs px-2.5 py-1 rounded-md font-medium flex-shrink-0 ${
+                            project.status === "completed"
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                              : project.status === "active" ||
+                                project.status === "in_progress"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400"
+                              : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                          }`}
+                        >
+                          {project.status
+                            ?.replace(/[-_]/g, " ")
+                            .replace(/\b\w/g, (c) => c.toUpperCase()) ||
+                            "Unknown"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 ml-[22px]">
+                        <div className="flex-1 h-1.5 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-accent-cyan rounded-full"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-stone-500 dark:text-stone-400 w-8 text-right">
+                          {progress}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* My Tasks */}
+          <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+            <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50">
+                My Tasks
+              </h2>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => router.push("/my-tasks")}
+                className="text-xs"
+              >
+                View All
+              </Button>
+            </div>
+            {sortedTasks.length === 0 ? (
+              <div className="p-8 text-center text-stone-400 dark:text-stone-500 text-sm">
+                No tasks assigned to you
+              </div>
+            ) : (
+              <div className="max-h-[400px] overflow-y-auto scrollbar-modern">
+                {sortedTasks.slice(0, 8).map((task) => {
+                  const isOverdue =
+                    task.dueDate && new Date(task.dueDate) < new Date();
+                  const priorityColors: Record<string, string> = {
+                    critical:
+                      "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400",
+                    high: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-400",
+                    medium:
+                      "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-400",
+                    low: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
+                  };
+
+                  return (
+                    <div
+                      key={task.id}
+                      onClick={() => router.push("/my-tasks")}
+                      className="px-5 py-3.5 border-b border-stone-100 dark:border-stone-800 last:border-b-0 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors flex items-start gap-3"
+                    >
+                      {task.status === "in_progress" ? (
+                        <Clock className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      ) : isOverdue ? (
+                        <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <Circle className="w-4 h-4 text-stone-400 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-stone-900 dark:text-stone-50 truncate">
+                          {task.title}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          {task.priority && (
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                                priorityColors[task.priority] ||
+                                priorityColors.low
+                              }`}
+                            >
+                              {task.priority.charAt(0).toUpperCase() +
+                                task.priority.slice(1)}
+                            </span>
+                          )}
+                          {task.dueDate && (
+                            <span
+                              className={`text-xs ${
+                                isOverdue
+                                  ? "text-red-500 font-medium"
+                                  : "text-stone-500 dark:text-stone-400"
+                              }`}
+                            >
+                              {isOverdue ? "Overdue · " : "Due "}
+                              {new Date(task.dueDate).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-md font-medium flex-shrink-0 ${
+                          task.status === "in_progress"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400"
+                            : "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                        }`}
+                      >
+                        {(task.status as string)
+                          ?.replace(/[-_]/g, " ")
+                          .replace(/\b\w/g, (c) => c.toUpperCase()) || "Open"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Recent Documents */}
+        {/* Recent Documents - full width below */}
         <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
           <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700">
             <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50">

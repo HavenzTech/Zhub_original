@@ -44,7 +44,10 @@ import {
   ClipboardCheck,
   FileText,
   User,
+  Search,
+  Inbox,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { CompleteTaskRequest, DelegateTaskRequest, TaskDto } from "@/types/bms";
 
@@ -52,6 +55,7 @@ export default function MyTasksPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [availableUsers, setAvailableUsers] = useState<Array<{ id: string; name: string }>>([]);
   const [confirmStatus, setConfirmStatus] = useState<{ taskId: string; taskTitle: string; status: string } | null>(null);
   const [viewingTask, setViewingTask] = useState<TaskDto | null>(null);
@@ -224,8 +228,9 @@ export default function MyTasksPage() {
           <Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-stone-500" />
         </div>
       ) : myTasks.length === 0 ? (
-        <div className="p-10 text-center text-stone-400 dark:text-stone-500 text-sm">
-          No pending approvals
+        <div className="p-10 text-center">
+          <CheckCircle className="w-10 h-10 text-stone-200 dark:text-stone-700 mx-auto mb-3" />
+          <p className="text-sm text-stone-400 dark:text-stone-500">No pending approvals</p>
         </div>
       ) : (
         <div className="divide-y divide-stone-100 dark:divide-stone-800">
@@ -263,8 +268,9 @@ export default function MyTasksPage() {
           <Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-stone-500" />
         </div>
       ) : activeProjectTasks.length === 0 ? (
-        <div className="p-10 text-center text-stone-400 dark:text-stone-500 text-sm">
-          No tasks assigned to you
+        <div className="p-10 text-center">
+          <Inbox className="w-10 h-10 text-stone-200 dark:text-stone-700 mx-auto mb-3" />
+          <p className="text-sm text-stone-400 dark:text-stone-500">No tasks assigned to you</p>
         </div>
       ) : (
         <div className="divide-y divide-stone-100 dark:divide-stone-800">
@@ -395,8 +401,9 @@ export default function MyTasksPage() {
           <Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-stone-500" />
         </div>
       ) : completedProjectTasks.length === 0 ? (
-        <div className="p-10 text-center text-stone-400 dark:text-stone-500 text-sm">
-          No completed tasks yet
+        <div className="p-10 text-center">
+          <CheckCircle className="w-10 h-10 text-stone-200 dark:text-stone-700 mx-auto mb-3" />
+          <p className="text-sm text-stone-400 dark:text-stone-500">No completed tasks yet</p>
         </div>
       ) : (
         <div className="divide-y divide-stone-100 dark:divide-stone-800">
@@ -484,8 +491,9 @@ export default function MyTasksPage() {
           <Loader2 className="w-8 h-8 animate-spin text-stone-400 dark:text-stone-500" />
         </div>
       ) : completedApprovals.length === 0 ? (
-        <div className="p-10 text-center text-stone-400 dark:text-stone-500 text-sm">
-          No completed approvals yet
+        <div className="p-10 text-center">
+          <CheckCircle className="w-10 h-10 text-stone-200 dark:text-stone-700 mx-auto mb-3" />
+          <p className="text-sm text-stone-400 dark:text-stone-500">No completed approvals yet</p>
         </div>
       ) : (
         <div className="divide-y divide-stone-100 dark:divide-stone-800">
@@ -584,43 +592,51 @@ export default function MyTasksPage() {
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1">
-          {["all", "approvals", "tasks", "completed"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-                activeTab === tab
-                  ? "bg-accent-cyan/10 text-accent-cyan font-medium"
-                  : "text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300"
-              }`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
+        {/* Search + Tabs */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 dark:text-stone-500" />
+            <Input
+              placeholder="Search tasks..."
+              className="pl-10 bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700 rounded-xl"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex-1" />
+          <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
+            {["all", "tasks", "completed"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 text-sm transition-colors ${
+                  activeTab === tab
+                    ? "bg-accent-cyan text-white font-medium"
+                    : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tab Content */}
-        <div className="space-y-6">
-          {activeTab === "all" && (
-            <>
-              {renderApprovalsSection()}
-              {renderProjectTasksSection()}
-            </>
-          )}
+        {activeTab === "all" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {renderApprovalsSection()}
+            {renderProjectTasksSection()}
+          </div>
+        )}
 
-          {activeTab === "approvals" && renderApprovalsSection()}
+        {activeTab === "tasks" && renderProjectTasksSection()}
 
-          {activeTab === "tasks" && renderProjectTasksSection()}
-
-          {activeTab === "completed" && (
-            <>
-              {renderCompletedApprovalsSection()}
-              {renderCompletedSection()}
-            </>
-          )}
-        </div>
+        {activeTab === "completed" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {renderCompletedApprovalsSection()}
+            {renderCompletedSection()}
+          </div>
+        )}
       </div>
 
       <TaskDetailDialog
