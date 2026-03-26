@@ -73,7 +73,7 @@ export function useDashboard(): UseDashboardReturn {
         bmsApi.accessLogs.getAll(),
         bmsApi.users.getAll(),
         bmsApi.documents.getAll(),
-        bmsApi.tasks.getMyTasks().catch(() => []),
+        Promise.resolve().then(() => bmsApi.tasks.getMyTasks()).catch(() => []),
       ])
 
       setCompanies(extractArray<Company>(companiesData))
