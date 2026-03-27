@@ -11,7 +11,7 @@ import { bmsApi } from "@/lib/services/bmsApi"
 import { authService } from "@/lib/services/auth"
 import { useTasks } from "@/lib/hooks/useTasks"
 import { extractArray } from "@/lib/utils/api"
-import type { TaskDto, Department, UserResponse } from "@/types/bms"
+import type { TaskDto, Department, UserResponse, ProjectMemberDto } from "@/types/bms"
 import { toast } from "sonner"
 import { Plus, RefreshCw, CheckSquare, Loader2 } from "lucide-react"
 import { TaskDetailDialog } from "./TaskDetailDialog"
@@ -53,6 +53,9 @@ export function ProjectTasksSection({
     updateTaskStatus,
     toggleComplete,
     deleteTask,
+    submitForReview,
+    approveTask,
+    rejectTask,
   } = useTasks()
 
   const [showAddForm, setShowAddForm] = useState(false)
@@ -71,6 +74,11 @@ export function ProjectTasksSection({
   const [users, setUsers] = useState<UserResponse[]>([])
   const [loadingData, setLoadingData] = useState(true)
 
+  // Current user info for review permissions
+  const auth = authService.getAuth()
+  const currentUserId = auth?.userId || ""
+  const [isProjectLeadOrAdmin, setIsProjectLeadOrAdmin] = useState(false)
+
   // Check user permissions based on new role hierarchy
   // Employees can only view tasks and update status on assigned tasks
   // dept_manager, project_lead, admin, super_admin can create/edit/delete
@@ -85,12 +93,21 @@ export function ProjectTasksSection({
     setLoadingData(true)
     try {
       await loadProjectTasks(projectId)
-      const [departmentsData, usersData] = await Promise.all([
+      const [departmentsData, usersData, membersData] = await Promise.all([
         bmsApi.departments.getAll(),
         bmsApi.users.getAll(),
+        bmsApi.projects.getMembers(projectId),
       ])
       setDepartments(extractArray<Department>(departmentsData))
       setUsers(extractArray<UserResponse>(usersData))
+      // Check if current user is project lead or admin
+      if (authService.isAdmin()) {
+        setIsProjectLeadOrAdmin(true)
+      } else {
+        const members = extractArray<ProjectMemberDto>(membersData)
+        const currentMember = members.find((m) => m.userId === currentUserId)
+        setIsProjectLeadOrAdmin(currentMember?.role === "lead")
+      }
     } catch (err) {
       console.error("Error loading data:", err)
     } finally {
@@ -113,7 +130,7 @@ export function ProjectTasksSection({
 
     if (formData.description?.trim()) payload.description = formData.description.trim()
     if (formData.departmentId?.trim()) payload.departmentId = formData.departmentId
-    if (formData.assignedToUserId?.trim()) payload.assignedToUserId = formData.assignedToUserId
+    if (formData.assigneeUserIds?.length > 0) payload.assigneeUserIds = formData.assigneeUserIds
     if (formData.dueDate?.trim()) payload.dueDate = formData.dueDate
     if (formData.startDate?.trim()) payload.startDate = formData.startDate
     if (formData.estimatedHours && !isNaN(parseFloat(formData.estimatedHours))) {
@@ -122,6 +139,7 @@ export function ProjectTasksSection({
     if (formData.taskType?.trim()) payload.taskType = formData.taskType.trim()
     if (formData.tags?.trim()) payload.tags = formData.tags.trim()
     if (formData.notes?.trim()) payload.notes = formData.notes.trim()
+    if (formData.requiresReview === "true") payload.requiresReview = true
 
     return payload
   }
@@ -157,13 +175,14 @@ export function ProjectTasksSection({
       projectId: task.projectId || projectId,
       departmentId: task.departmentId || "",
       propertyId: task.propertyId || "",
-      assignedToUserId: task.assignedToUserId || "",
+      assigneeUserIds: (task.assignees || []).map((a) => a.userId),
       dueDate: formatDateForInput(task.dueDate),
       startDate: formatDateForInput(task.startDate),
       estimatedHours: task.estimatedHours?.toString() || "",
       taskType: task.taskType || "",
       tags: task.tags || "",
       notes: task.notes || "",
+      requiresReview: task.requiresReview ? "true" : "false",
     })
     setShowEditForm(true)
   }
@@ -204,6 +223,30 @@ export function ProjectTasksSection({
   const handleToggleComplete = async (task: TaskDto) => {
     if (!task.id) return
     const updated = await toggleComplete(task.id)
+    if (updated && viewingTask?.id === task.id) {
+      setViewingTask({ ...task, ...updated })
+    }
+  }
+
+  const handleSubmitForReview = async (task: TaskDto) => {
+    if (!task.id) return
+    const updated = await submitForReview(task.id)
+    if (updated && viewingTask?.id === task.id) {
+      setViewingTask({ ...task, ...updated })
+    }
+  }
+
+  const handleApprove = async (task: TaskDto) => {
+    if (!task.id) return
+    const updated = await approveTask(task.id)
+    if (updated && viewingTask?.id === task.id) {
+      setViewingTask({ ...task, ...updated })
+    }
+  }
+
+  const handleReject = async (task: TaskDto, reason: string) => {
+    if (!task.id) return
+    const updated = await rejectTask(task.id, reason)
     if (updated && viewingTask?.id === task.id) {
       setViewingTask({ ...task, ...updated })
     }
@@ -315,6 +358,11 @@ export function ProjectTasksSection({
           canEdit={canEdit}
           canDelete={canDelete}
           canChangeStatus={canChangeStatus}
+          onSubmitForReview={handleSubmitForReview}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          currentUserId={currentUserId}
+          isProjectLeadOrAdmin={isProjectLeadOrAdmin}
         />
 
         {/* Delete Confirmation Dialog */}

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Plus, Loader2, Edit } from "lucide-react"
 import { TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS } from "../utils/taskHelpers"
 
@@ -28,13 +29,14 @@ export interface TaskFormData {
   projectId: string
   departmentId: string
   propertyId: string
-  assignedToUserId: string
+  assigneeUserIds: string[]
   dueDate: string
   startDate: string
   estimatedHours: string
   taskType: string
   tags: string
   notes: string
+  requiresReview: string
 }
 
 interface TaskFormModalProps {
@@ -155,7 +157,7 @@ export function TaskFormModal({
             {/* Project and Department */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="projectId">Project</Label>
+                <Label htmlFor="projectId">Project *</Label>
                 <Select
                   value={formData.projectId || "none"}
                   onValueChange={(value) =>
@@ -166,7 +168,7 @@ export function TaskFormModal({
                     <SelectValue placeholder="Select project" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No project</SelectItem>
+                    <SelectItem value="none">Select a project</SelectItem>
                     {projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name}
@@ -174,6 +176,9 @@ export function TaskFormModal({
                     ))}
                   </SelectContent>
                 </Select>
+                {!formData.projectId && (
+                  <p className="text-xs text-red-500">Project is required</p>
+                )}
               </div>
 
               <div className="grid gap-2">
@@ -199,27 +204,54 @@ export function TaskFormModal({
               </div>
             </div>
 
-            {/* Assignee */}
+            {/* Requires Review (create mode only) */}
+            {!isEditMode && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="requiresReview"
+                  checked={formData.requiresReview === "true"}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, requiresReview: checked ? "true" : "false" })
+                  }
+                />
+                <Label htmlFor="requiresReview" className="text-sm font-normal cursor-pointer">
+                  Requires review before completion
+                </Label>
+              </div>
+            )}
+
+            {/* Assignees (multi-select) */}
             <div className="grid gap-2">
-              <Label htmlFor="assignedToUserId">Assign To</Label>
-              <Select
-                value={formData.assignedToUserId || "none"}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, assignedToUserId: value === "none" ? "" : value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select assignee" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Unassigned</SelectItem>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Assign To</Label>
+              <div className="border border-stone-200 dark:border-stone-700 rounded-md p-2 max-h-40 overflow-y-auto space-y-1">
+                {users.length === 0 ? (
+                  <p className="text-xs text-stone-400 px-1">No users available</p>
+                ) : (
+                  users.map((user) => {
+                    const isSelected = formData.assigneeUserIds.includes(user.id)
+                    return (
+                      <label
+                        key={user.id}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-stone-50 dark:hover:bg-stone-800 cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => {
+                            const newIds = checked
+                              ? [...formData.assigneeUserIds, user.id]
+                              : formData.assigneeUserIds.filter((id) => id !== user.id)
+                            setFormData({ ...formData, assigneeUserIds: newIds })
+                          }}
+                        />
+                        <span className="text-sm text-stone-700 dark:text-stone-300">{user.name}</span>
+                      </label>
+                    )
+                  })
+                )}
+              </div>
+              {formData.assigneeUserIds.length > 0 && (
+                <p className="text-xs text-stone-500">{formData.assigneeUserIds.length} selected</p>
+              )}
             </div>
 
             {/* Dates */}
@@ -348,11 +380,12 @@ export const initialTaskFormData: TaskFormData = {
   projectId: "",
   departmentId: "",
   propertyId: "",
-  assignedToUserId: "",
+  assigneeUserIds: [],
   dueDate: "",
   startDate: "",
   estimatedHours: "",
   taskType: "",
   tags: "",
   notes: "",
+  requiresReview: "false",
 }

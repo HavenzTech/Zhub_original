@@ -4,6 +4,7 @@ import { Inter, Geist_Mono as GeistMono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AppHealthGate } from "@/components/common/AppHealthGate"
+import { Toaster } from "@/components/ui/sonner"
 
 // Use Inter for better readability and modern look
 const inter = Inter({ 
@@ -62,8 +63,7 @@ export default function RootLayout({
             </div>
           </AppHealthGate>
 
-          {/* Optional: Add a global loading indicator or other global components */}
-          <div id="toast-container" className="fixed top-4 right-4 z-50 space-y-2" />
+          <Toaster richColors position="top-right" />
 
           {/* Optional: Add a backdrop for modals */}
           <div id="modal-backdrop" className="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />

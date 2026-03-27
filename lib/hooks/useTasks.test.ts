@@ -12,8 +12,15 @@ vi.mock('@/lib/services/bmsApi', () => ({
       create: vi.fn(),
       update: vi.fn(),
       updateStatus: vi.fn(),
-      assign: vi.fn(),
+      addAssignee: vi.fn(),
+      removeAssignee: vi.fn(),
       delete: vi.fn(),
+      toggleComplete: vi.fn(),
+      submitForReview: vi.fn(),
+      approve: vi.fn(),
+      reject: vi.fn(),
+      getRejections: vi.fn(),
+      getHistory: vi.fn(),
     },
   },
 }))
@@ -338,47 +345,49 @@ describe('useTasks', () => {
     })
   })
 
-  describe('assignTask', () => {
-    it('should assign a task to a user', async () => {
-      vi.mocked(bmsApi.tasks.assign).mockResolvedValue({ id: '1', assignedToUserId: 'user-1' })
+  describe('assignees', () => {
+    it('should add an assignee', async () => {
+      vi.mocked(bmsApi.tasks.addAssignee).mockResolvedValue({ id: '1', assignees: [{ userId: 'user-1', userName: 'User 1' }] } as any)
 
       const { result } = renderHook(() => useTasks())
 
-      let success: boolean
+      let updated: any
       await act(async () => {
-        success = await result.current.assignTask('1', 'user-1')
+        updated = await result.current.addAssignee('1', 'user-1')
       })
 
-      expect(success!).toBe(true)
-      expect(toast.success).toHaveBeenCalledWith('Task assigned successfully')
+      expect(updated).toBeTruthy()
+      expect(bmsApi.tasks.addAssignee).toHaveBeenCalledWith('1', 'user-1')
+      expect(toast.success).toHaveBeenCalledWith('Assignee added')
     })
 
-    it('should unassign a task when no userId', async () => {
-      vi.mocked(bmsApi.tasks.assign).mockResolvedValue({ id: '1', assignedToUserId: null })
+    it('should remove an assignee', async () => {
+      vi.mocked(bmsApi.tasks.removeAssignee).mockResolvedValue({ id: '1', assignees: [] } as any)
 
       const { result } = renderHook(() => useTasks())
 
-      let success: boolean
+      let updated: any
       await act(async () => {
-        success = await result.current.assignTask('1')
+        updated = await result.current.removeAssignee('1', 'user-1')
       })
 
-      expect(success!).toBe(true)
-      expect(toast.success).toHaveBeenCalledWith('Task unassigned')
+      expect(updated).toBeTruthy()
+      expect(bmsApi.tasks.removeAssignee).toHaveBeenCalledWith('1', 'user-1')
+      expect(toast.success).toHaveBeenCalledWith('Assignee removed')
     })
 
-    it('should return false and toast on failure', async () => {
-      vi.mocked(bmsApi.tasks.assign).mockRejectedValue(new Error('Not allowed'))
+    it('should toast and return null on addAssignee failure', async () => {
+      vi.mocked(bmsApi.tasks.addAssignee).mockRejectedValue(new Error('Not allowed'))
 
       const { result } = renderHook(() => useTasks())
 
-      let success: boolean
+      let updated: any
       await act(async () => {
-        success = await result.current.assignTask('1', 'user-1')
+        updated = await result.current.addAssignee('1', 'user-1')
       })
 
-      expect(success!).toBe(false)
-      expect(toast.error).toHaveBeenCalledWith('Failed to assign task', {
+      expect(updated).toBeNull()
+      expect(toast.error).toHaveBeenCalledWith('Failed to add assignee', {
         description: 'Not allowed',
       })
     })

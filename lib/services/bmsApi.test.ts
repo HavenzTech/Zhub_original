@@ -558,14 +558,25 @@ describe('BmsApiService', () => {
         )
       })
 
-      it('should assign task to user', async () => {
+      it('should add assignee to task', async () => {
         mockFetch.mockResolvedValueOnce(createMockResponse({ json: {} }))
 
-        await bmsApi.tasks.assign('task-1', 'user-1')
+        await bmsApi.tasks.addAssignee('task-1', 'user-1')
 
         expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining('/tasks/task-1/assign/user-1'),
-          expect.objectContaining({ method: 'PATCH' })
+          expect.stringContaining('/tasks/task-1/assignees/user-1'),
+          expect.objectContaining({ method: 'POST' })
+        )
+      })
+
+      it('should remove assignee from task', async () => {
+        mockFetch.mockResolvedValueOnce(createMockResponse({ status: 204 }))
+
+        await bmsApi.tasks.removeAssignee('task-1', 'user-1')
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          expect.stringContaining('/tasks/task-1/assignees/user-1'),
+          expect.objectContaining({ method: 'DELETE' })
         )
       })
     })

@@ -307,7 +307,7 @@ export default function HavenzHubDashboard() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => router.push("/my-tasks")}
+                onClick={() => router.push("/workflow-tasks")}
                 className="text-xs"
               >
                 View All
@@ -334,7 +334,7 @@ export default function HavenzHubDashboard() {
                   return (
                     <div
                       key={task.id}
-                      onClick={() => router.push("/my-tasks")}
+                      onClick={() => router.push(`/workflow-tasks?taskId=${task.id}`)}
                       className="px-5 py-3.5 border-b border-stone-100 dark:border-stone-800 last:border-b-0 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors flex items-start gap-3"
                     >
                       {task.status === "in_progress" ? (
