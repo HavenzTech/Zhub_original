@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect, useCallback } from "react"
 import {
   Dialog,
   DialogContent,
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import {
   CheckCircle,
   Circle,
@@ -26,8 +28,17 @@ import {
   Edit,
   Trash2,
   Hourglass,
+  ShieldCheck,
+  Send,
+  ThumbsUp,
+  ThumbsDown,
+  History,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
 } from "lucide-react"
-import type { TaskDto } from "@/types/bms"
+import type { TaskDto, TaskRejectionDto, TaskHistoryEntryDto } from "@/types/bms"
+import { bmsApi } from "@/lib/services/bmsApi"
 import {
   getTaskStatusColor,
   getTaskStatusLabel,
@@ -47,6 +58,11 @@ interface TaskDetailDialogProps {
   onStatusChange?: (task: TaskDto, status: string) => void
   onEdit?: (task: TaskDto) => void
   onDelete?: (task: TaskDto) => void
+  onSubmitForReview?: (task: TaskDto) => void
+  onApprove?: (task: TaskDto) => void
+  onReject?: (task: TaskDto, reason: string) => void
+  currentUserId?: string
+  isProjectLeadOrAdmin?: boolean
   canEdit?: boolean
   canDelete?: boolean
   canChangeStatus?: boolean
@@ -66,14 +82,93 @@ export function TaskDetailDialog({
   onStatusChange,
   onEdit,
   onDelete,
+  onSubmitForReview,
+  onApprove,
+  onReject,
+  currentUserId,
+  isProjectLeadOrAdmin = false,
   canEdit = true,
   canDelete = true,
   canChangeStatus = true,
 }: TaskDetailDialogProps) {
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
+  const [rejectReason, setRejectReason] = useState("")
+  const [rejections, setRejections] = useState<TaskRejectionDto[]>([])
+  const [rejectionsLoading, setRejectionsLoading] = useState(false)
+  const [historyEntries, setHistoryEntries] = useState<TaskHistoryEntryDto[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyTotal, setHistoryTotal] = useState(0)
+  const [historyPage, setHistoryPage] = useState(1)
+  const [historyExpanded, setHistoryExpanded] = useState(false)
+  const [rejectionsExpanded, setRejectionsExpanded] = useState(true)
+
+  // Load rejections when dialog opens for review-required tasks
+  const loadRejections = useCallback(async () => {
+    if (!task?.id || !task.requiresReview) return
+    setRejectionsLoading(true)
+    try {
+      const data = await bmsApi.tasks.getRejections(task.id)
+      setRejections(Array.isArray(data) ? data as TaskRejectionDto[] : [])
+    } catch {
+      setRejections([])
+    } finally {
+      setRejectionsLoading(false)
+    }
+  }, [task?.id, task?.requiresReview])
+
+  // Load history on demand
+  const loadHistory = useCallback(async (page = 1) => {
+    if (!task?.id) return
+    setHistoryLoading(true)
+    try {
+      const result = await bmsApi.tasks.getHistory(task.id, { page, pageSize: 20 }) as {
+        data: TaskHistoryEntryDto[]
+        total: number
+      }
+      if (page === 1) {
+        setHistoryEntries(result.data || [])
+      } else {
+        setHistoryEntries((prev) => [...prev, ...(result.data || [])])
+      }
+      setHistoryTotal(result.total || 0)
+      setHistoryPage(page)
+    } catch {
+      if (page === 1) setHistoryEntries([])
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [task?.id])
+
+  useEffect(() => {
+    if (open && task?.requiresReview) {
+      loadRejections()
+    }
+    if (open) {
+      // Reset history when dialog opens with a new task
+      setHistoryExpanded(false)
+      setHistoryEntries([])
+      setHistoryPage(1)
+      setRejectDialogOpen(false)
+      setRejectReason("")
+    }
+  }, [open, task?.id, task?.status, task?.requiresReview, loadRejections])
+
   if (!task) return null
 
   const overdue = isOverdue(task.dueDate, task.status)
   const dueRelative = getRelativeTime(task.dueDate)
+
+  // Review flow permissions
+  const isAssignee = (task.assignees || []).some((a) => a.userId === currentUserId)
+  const canSubmitForReview = task.requiresReview && task.status === "in_progress" && isAssignee
+  const canApproveReject = task.requiresReview && task.status === "in_review" && isProjectLeadOrAdmin
+
+  const handleRejectConfirm = () => {
+    if (!rejectReason.trim()) return
+    onReject?.(task, rejectReason.trim())
+    setRejectDialogOpen(false)
+    setRejectReason("")
+  }
 
   const getStatusIcon = (status?: string | null) => {
     switch (status) {
@@ -125,6 +220,12 @@ export function TaskDetailDialog({
               Overdue
             </Badge>
           )}
+          {task.requiresReview && (
+            <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
+              <ShieldCheck className="w-3 h-3 mr-1" />
+              Requires Review
+            </Badge>
+          )}
         </div>
 
         {/* Status progress bar — Trello-style */}
@@ -147,11 +248,24 @@ export function TaskDetailDialog({
                     key={step.value}
                     onClick={() => {
                       if (step.value !== task.status) {
+                        // For review-required tasks, block direct status changes to completed/in_review
+                        if (task.requiresReview && step.value === "completed") return
+                        if (task.requiresReview && step.value === "in_review" && isAssignee) return
                         onStatusChange?.(task, step.value)
                       }
                     }}
-                    className="flex-1 group"
-                    title={`Set to ${step.label}`}
+                    className={`flex-1 group ${
+                      task.requiresReview && (step.value === "completed" || (step.value === "in_review" && isAssignee))
+                        ? "cursor-not-allowed opacity-60"
+                        : ""
+                    }`}
+                    title={
+                      task.requiresReview && step.value === "completed"
+                        ? "Review required before completion"
+                        : task.requiresReview && step.value === "in_review" && isAssignee
+                        ? "Use 'Submit for Review' button"
+                        : `Set to ${step.label}`
+                    }
                   >
                     <div
                       className={`h-2 rounded-full transition-colors ${
@@ -201,11 +315,11 @@ export function TaskDetailDialog({
 
         {/* Details grid */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-          {task.assignedToUserName && (
+          {(task.assignees || []).length > 0 && (
             <DetailItem
               icon={User}
               label="Assigned To"
-              value={task.assignedToUserName}
+              value={(task.assignees || []).map((a) => a.userName || "Unknown").join(", ")}
             />
           )}
           {task.createdByUserName && (
@@ -272,6 +386,13 @@ export function TaskDetailDialog({
               value={task.tags}
             />
           )}
+          {task.approvedByUserName && (
+            <DetailItem
+              icon={ShieldCheck}
+              label="Approved By"
+              value={`${task.approvedByUserName}${task.approvedAt ? ` on ${formatDate(task.approvedAt)}` : ""}`}
+            />
+          )}
         </div>
 
         {/* Notes */}
@@ -336,6 +457,218 @@ export function TaskDetailDialog({
         {task.id && (
           <div className="border-t border-stone-200 dark:border-stone-700 pt-4">
             <TaskCommentSection taskId={task.id} />
+          </div>
+        )}
+
+        {/* Review action buttons */}
+        {(canSubmitForReview || canApproveReject) && (
+          <div className="border-t border-stone-200 dark:border-stone-700 pt-4">
+            <p className="text-xs font-medium text-stone-500 dark:text-stone-400 mb-2 uppercase tracking-wide">
+              Review Actions
+            </p>
+            <div className="flex items-center gap-2">
+              {canSubmitForReview && onSubmitForReview && (
+                <Button
+                  size="sm"
+                  onClick={() => onSubmitForReview(task)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  <Send className="w-4 h-4 mr-1.5" />
+                  Submit for Review
+                </Button>
+              )}
+              {canApproveReject && onApprove && (
+                <Button
+                  size="sm"
+                  onClick={() => onApprove(task)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <ThumbsUp className="w-4 h-4 mr-1.5" />
+                  Approve
+                </Button>
+              )}
+              {canApproveReject && onReject && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRejectDialogOpen(true)}
+                  className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950"
+                >
+                  <ThumbsDown className="w-4 h-4 mr-1.5" />
+                  Reject
+                </Button>
+              )}
+            </div>
+
+            {/* Reject reason dialog (inline) */}
+            {rejectDialogOpen && (
+              <div className="mt-3 p-3 border border-red-200 dark:border-red-800 rounded-lg bg-red-50/50 dark:bg-red-950/20">
+                <p className="text-sm font-medium text-red-700 dark:text-red-400 mb-2">
+                  Rejection Reason
+                </p>
+                <Textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Explain why this task is being rejected..."
+                  rows={3}
+                  className="mb-2"
+                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleRejectConfirm}
+                    disabled={!rejectReason.trim()}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Confirm Rejection
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setRejectDialogOpen(false)
+                      setRejectReason("")
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Rejection History */}
+        {task.requiresReview && rejections.length > 0 && (
+          <div className="border-t border-stone-200 dark:border-stone-700 pt-4">
+            <button
+              onClick={() => setRejectionsExpanded(!rejectionsExpanded)}
+              className="flex items-center gap-1.5 text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide hover:text-stone-700 dark:hover:text-stone-300 w-full"
+            >
+              <ThumbsDown className="w-3.5 h-3.5" />
+              Rejection History ({rejections.length})
+              {rejectionsExpanded ? (
+                <ChevronUp className="w-3.5 h-3.5 ml-auto" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 ml-auto" />
+              )}
+            </button>
+            {rejectionsExpanded && (
+              <div className="mt-2 space-y-2">
+                {rejectionsLoading ? (
+                  <div className="flex justify-center py-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
+                  </div>
+                ) : (
+                  rejections.map((r) => (
+                    <div
+                      key={r.id}
+                      className="p-2.5 rounded-lg bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/30"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium text-stone-700 dark:text-stone-300">
+                          {r.rejectedByUserName || "Unknown"}
+                        </span>
+                        <span className="text-[11px] text-stone-400 dark:text-stone-500">
+                          {r.rejectedAt ? formatDate(r.rejectedAt) : ""}
+                        </span>
+                      </div>
+                      <p className="text-sm text-stone-600 dark:text-stone-400">
+                        {r.reason}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Task History */}
+        {task.id && (
+          <div className="border-t border-stone-200 dark:border-stone-700 pt-4">
+            <button
+              onClick={() => {
+                const newExpanded = !historyExpanded
+                setHistoryExpanded(newExpanded)
+                if (newExpanded && historyEntries.length === 0) {
+                  loadHistory(1)
+                }
+              }}
+              className="flex items-center gap-1.5 text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide hover:text-stone-700 dark:hover:text-stone-300 w-full"
+            >
+              <History className="w-3.5 h-3.5" />
+              Task History
+              {historyExpanded ? (
+                <ChevronUp className="w-3.5 h-3.5 ml-auto" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 ml-auto" />
+              )}
+            </button>
+            {historyExpanded && (
+              <div className="mt-2 space-y-1.5">
+                {historyLoading && historyEntries.length === 0 ? (
+                  <div className="flex justify-center py-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
+                  </div>
+                ) : historyEntries.length === 0 ? (
+                  <p className="text-xs text-stone-400 dark:text-stone-500 py-1">
+                    No history available
+                  </p>
+                ) : (
+                  <>
+                    {historyEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="flex items-start gap-2 py-1.5 text-xs"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-stone-300 dark:bg-stone-600 mt-1.5 shrink-0" />
+                        <div className="min-w-0">
+                          <span className="font-medium text-stone-700 dark:text-stone-300">
+                            {entry.changedByUserName || "System"}
+                          </span>{" "}
+                          <span className="text-stone-500 dark:text-stone-400">
+                            changed{" "}
+                            <span className="font-medium">{entry.fieldName}</span>
+                            {entry.oldValue && (
+                              <>
+                                {" "}from{" "}
+                                <span className="text-stone-600 dark:text-stone-400">
+                                  &quot;{entry.oldValue}&quot;
+                                </span>
+                              </>
+                            )}
+                            {" "}to{" "}
+                            <span className="text-stone-600 dark:text-stone-400">
+                              &quot;{entry.newValue}&quot;
+                            </span>
+                          </span>
+                          {entry.changedAt && (
+                            <span className="text-stone-400 dark:text-stone-500 ml-1">
+                              {formatDate(entry.changedAt)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {historyEntries.length < historyTotal && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => loadHistory(historyPage + 1)}
+                        disabled={historyLoading}
+                        className="w-full text-xs"
+                      >
+                        {historyLoading ? (
+                          <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                        ) : null}
+                        Load More
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
         )}
 

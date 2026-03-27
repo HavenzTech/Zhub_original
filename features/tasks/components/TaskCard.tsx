@@ -21,6 +21,7 @@ import {
   PlayCircle,
   PauseCircle,
   XCircle,
+  ShieldCheck,
 } from "lucide-react"
 import type { TaskDto } from "@/types/bms"
 import {
@@ -123,14 +124,20 @@ export function TaskCard({
                     {getTaskPriorityLabel(task.priority)}
                   </Badge>
                 )}
+                {task.requiresReview && (
+                  <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
+                    <ShieldCheck className="w-3 h-3 mr-1" />
+                    Requires Review
+                  </Badge>
+                )}
               </div>
 
               {/* Additional details */}
               <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-stone-500 dark:text-stone-400">
-                {task.assignedToUserName && (
+                {(task.assignees || []).length > 0 && (
                   <div className="flex items-center gap-1">
                     <User className="w-3 h-3" />
-                    <span>{task.assignedToUserName}</span>
+                    <span>{(task.assignees || []).map((a) => a.userName || "Unknown").join(", ")}</span>
                   </div>
                 )}
                 {task.dueDate && (

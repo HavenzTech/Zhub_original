@@ -1905,6 +1905,11 @@ export interface UpdateMemberRoleRequest {
 export type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'completed' | 'cancelled';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
 
+export interface TaskAssigneeDto {
+  userId: string;
+  userName: string | null;
+}
+
 export interface Task {
   id?: string;
   companyId?: string;
@@ -1917,7 +1922,7 @@ export interface Task {
   priority?: TaskPriority | string | null;
   taskType?: string | null;
   createdByUserId?: string;
-  assignedToUserId?: string | null;
+  assignees?: TaskAssigneeDto[];
   dueDate?: string | null;
   startDate?: string | null;
   completedAt?: string | null;
@@ -1926,6 +1931,7 @@ export interface Task {
   tags?: string | null;
   notes?: string | null;
   parentTaskId?: string | null;
+  requiresReview?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -1942,7 +1948,7 @@ export interface TaskDto {
   priority?: string | null;
   taskType?: string | null;
   createdByUserId?: string;
-  assignedToUserId?: string | null;
+  assignees?: TaskAssigneeDto[];
   dueDate?: string | null;
   startDate?: string | null;
   completedAt?: string | null;
@@ -1955,30 +1961,34 @@ export interface TaskDto {
   updatedAt?: string;
   // Joined fields from API
   createdByUserName?: string | null;
-  assignedToUserName?: string | null;
   projectName?: string | null;
   departmentName?: string | null;
   propertyName?: string | null;
   subTasksCount?: number;
   completedSubTasksCount?: number;
+  requiresReview?: boolean;
+  approvedByUserId?: string | null;
+  approvedByUserName?: string | null;
+  approvedAt?: string | null;
 }
 
 export interface CreateTaskRequest {
   title: string;
   description?: string | null;
-  projectId?: string | null;
+  projectId: string;
   departmentId?: string | null;
   propertyId?: string | null;
   status?: string | null;
   priority?: string | null;
   taskType?: string | null;
-  assignedToUserId?: string | null;
+  assigneeUserIds?: string[];
   dueDate?: string | null;
   startDate?: string | null;
   estimatedHours?: number | null;
   tags?: string | null;
   notes?: string | null;
   parentTaskId?: string | null;
+  requiresReview?: boolean;
 }
 
 export interface UpdateTaskRequest {
@@ -1991,7 +2001,6 @@ export interface UpdateTaskRequest {
   status: string;
   priority?: string | null;
   taskType?: string | null;
-  assignedToUserId?: string | null;
   dueDate?: string | null;
   startDate?: string | null;
   estimatedHours?: number | null;
@@ -1999,6 +2008,47 @@ export interface UpdateTaskRequest {
   tags?: string | null;
   notes?: string | null;
   parentTaskId?: string | null;
+}
+
+// ============================================
+// Task Review / History Types
+// ============================================
+
+export interface RejectTaskRequest {
+  reason: string;
+}
+
+export interface TaskRejectionDto {
+  id?: string;
+  taskId?: string;
+  rejectedByUserId?: string;
+  rejectedByUserName?: string | null;
+  reason?: string | null;
+  rejectedAt?: string;
+}
+
+export interface TaskHistoryEntryDto {
+  id?: string;
+  taskId?: string;
+  fieldName?: string | null;
+  oldValue?: string | null;
+  newValue?: string | null;
+  changedByUserId?: string;
+  changedByUserName?: string | null;
+  changedAt?: string;
+}
+
+export interface ProjectActivityEntryDto {
+  id?: string;
+  projectId?: string;
+  entityType?: string | null;
+  entityId?: string | null;
+  action?: string | null;
+  actorUserId?: string;
+  actorUserName?: string | null;
+  /** JSON string — must be parsed with JSON.parse() before rendering */
+  details?: string | null;
+  occurredAt?: string;
 }
 
 // ============================================

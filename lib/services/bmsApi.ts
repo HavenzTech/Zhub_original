@@ -505,6 +505,14 @@ class BmsApiService {
       this.get<{ data: import("@/types/bms").ProjectDescriptionHistoryEntry[]; total: number; page: number; pageSize: number }>(
         `/projects/${projectId}/description-history?page=${page}&pageSize=${pageSize}`
       ),
+    // GET /projects/{projectId}/activity - paginated project activity feed
+    getActivity: (projectId: string, params?: { page?: number; pageSize?: number }) => {
+      const query = new URLSearchParams();
+      if (params?.page) query.append('page', params.page.toString());
+      if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
+      const queryString = query.toString();
+      return this.get(`/projects/${projectId}/activity${queryString ? `?${queryString}` : ''}`);
+    },
   };
 
   // Property endpoints (Note: Not found in Swagger - may need backend update)
@@ -931,15 +939,30 @@ class BmsApiService {
     update: (id: string, data: any) => this.put(`/tasks/${id}`, data),
     // PATCH /tasks/{id}/status/{status} - update status only (employees can use this)
     updateStatus: (id: string, status: string) => this.request(`/tasks/${id}/status/${status}`, { method: 'PATCH' }),
-    // PATCH /tasks/{id}/assign/{userId?} - assign/unassign task
-    assign: (id: string, userId?: string) => {
-      const endpoint = userId ? `/tasks/${id}/assign/${userId}` : `/tasks/${id}/assign`;
-      return this.request(endpoint, { method: 'PATCH' });
-    },
+    // POST /tasks/{id}/assignees/{userId} - add assignee
+    addAssignee: (id: string, userId: string) => this.post(`/tasks/${id}/assignees/${userId}`, {}),
+    // DELETE /tasks/{id}/assignees/{userId} - remove assignee
+    removeAssignee: (id: string, userId: string) => this.delete(`/tasks/${id}/assignees/${userId}`),
     // DELETE /tasks/{id} - soft delete
     delete: (id: string) => this.delete(`/tasks/${id}`),
     // PATCH /tasks/{id}/complete - toggle complete/uncomplete
     toggleComplete: (id: string) => this.request(`/tasks/${id}/complete`, { method: 'PATCH' }),
+    // POST /tasks/{id}/submit-for-review - assignee submits task for review (auto-sets status to in_review)
+    submitForReview: (id: string) => this.post(`/tasks/${id}/submit-for-review`, {}),
+    // POST /tasks/{id}/approve - project lead approves task (auto-sets status to completed)
+    approve: (id: string) => this.post(`/tasks/${id}/approve`, {}),
+    // POST /tasks/{id}/reject - project lead rejects task (sets status back to in_progress)
+    reject: (id: string, data: { reason: string }) => this.post(`/tasks/${id}/reject`, data),
+    // GET /tasks/{id}/rejections - full rejection history (flat array, not paginated)
+    getRejections: (id: string) => this.get(`/tasks/${id}/rejections`),
+    // GET /tasks/{id}/history - paginated field-level change history
+    getHistory: (id: string, params?: { page?: number; pageSize?: number }) => {
+      const query = new URLSearchParams();
+      if (params?.page) query.append('page', params.page.toString());
+      if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
+      const queryString = query.toString();
+      return this.get(`/tasks/${id}/history${queryString ? `?${queryString}` : ''}`);
+    },
   };
 
   // Task Comment endpoints - Swagger: /api/havenzhub/tasks/{taskId}/comments
