@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+// Tabs removed — using custom segmented control
 import {
   ArrowDownWideNarrow,
   ArrowUpWideNarrow,
@@ -62,7 +62,7 @@ export function TaskList({
   canChangeStatus = true,
   emptyMessage = "No tasks found",
 }: TaskListProps) {
-  const [view, setView] = useState<"list" | "kanban">("list")
+  const [view, setView] = useState<"list" | "kanban">("kanban")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
@@ -230,19 +230,23 @@ export function TaskList({
               ? "Critical Last"
               : "Sort Priority"}
           </Button>
-          <Badge variant="secondary">
+          <span className="text-xs text-stone-500 dark:text-stone-400">
             {sortedTasks.length} {sortedTasks.length === 1 ? "task" : "tasks"}
-          </Badge>
-          <Tabs value={view} onValueChange={(v) => setView(v as "list" | "kanban")}>
-            <TabsList className="h-8">
-              <TabsTrigger value="list" className="px-2">
-                <List className="w-4 h-4" />
-              </TabsTrigger>
-              <TabsTrigger value="kanban" className="px-2">
-                <Grid3X3 className="w-4 h-4" />
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          </span>
+          <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setView("list")}
+              className={`p-1.5 transition-colors ${view === "list" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setView("kanban")}
+              className={`p-1.5 transition-colors ${view === "kanban" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
+            >
+              <Grid3X3 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -278,7 +282,7 @@ export function TaskList({
       ) : (
         // Kanban view with drag and drop
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-x-auto pb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-4">
             {TASK_STATUS_OPTIONS.filter(s => s.value !== "cancelled").map((status) => (
               <Droppable key={status.value} droppableId={status.value}>
                 {(provided, snapshot) => (
