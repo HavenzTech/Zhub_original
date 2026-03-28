@@ -475,7 +475,7 @@ export default function ProjectDetailPage() {
                         {!aiSummary && !summaryLoading && (
                           <div className="rounded-lg bg-stone-50 dark:bg-stone-800/50 p-4">
                             <p className="text-sm text-stone-600 dark:text-stone-400 mb-3">
-                              Z AI will analyze this project's description, tasks, and activity to generate an intelligent summary with key insights and recommendations.
+                              Z AI will analyze this project&apos;s description, tasks, and activity to generate an intelligent summary with key insights and recommendations.
                             </p>
                             <Button
                               size="sm"
