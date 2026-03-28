@@ -1,0 +1,90 @@
+export const queryKeys = {
+  companies: {
+    all: ['companies'] as const,
+    detail: (id: string) => ['companies', id] as const,
+    byUser: (userId: string) => ['companies', 'byUser', userId] as const,
+  },
+  departments: {
+    all: ['departments'] as const,
+    detail: (id: string) => ['departments', id] as const,
+    members: (id: string) => ['departments', id, 'members'] as const,
+  },
+  projects: {
+    all: ['projects'] as const,
+    detail: (id: string) => ['projects', id] as const,
+    members: (id: string) => ['projects', id, 'members'] as const,
+    tasks: (id: string) => ['projects', id, 'tasks'] as const,
+    activity: (id: string) => ['projects', id, 'activity'] as const,
+    expenses: (id: string) => ['projects', id, 'expenses'] as const,
+    summary: (id: string) => ['projects', id, 'summary'] as const,
+    departments: (id: string) => ['projects', id, 'departments'] as const,
+    descriptionHistory: (id: string) => ['projects', id, 'descriptionHistory'] as const,
+  },
+  properties: {
+    all: ['properties'] as const,
+    detail: (id: string) => ['properties', id] as const,
+  },
+  users: {
+    all: ['users'] as const,
+    detail: (id: string) => ['users', id] as const,
+  },
+  bmsDevices: {
+    all: ['bmsDevices'] as const,
+    detail: (id: string) => ['bmsDevices', id] as const,
+  },
+  accessLogs: {
+    all: ['accessLogs'] as const,
+  },
+  documents: {
+    all: ['documents'] as const,
+    detail: (id: string) => ['documents', id] as const,
+    search: (params: Record<string, unknown>) => ['documents', 'search', params] as const,
+    checkedOut: ['documents', 'checkedOut'] as const,
+    myCheckouts: ['documents', 'myCheckouts'] as const,
+    needsReview: ['documents', 'needsReview'] as const,
+    favorites: ['documents', 'favorites'] as const,
+    recent: ['documents', 'recent'] as const,
+    versions: (docId: string) => ['documents', docId, 'versions'] as const,
+    permissions: (docId: string) => ['documents', docId, 'permissions'] as const,
+    effectivePermissions: (docId: string) => ['documents', docId, 'effectivePermissions'] as const,
+    shares: (docId: string) => ['documents', docId, 'shares'] as const,
+    checkout: (docId: string) => ['documents', docId, 'checkout'] as const,
+    workflow: (docId: string) => ['documents', docId, 'workflow'] as const,
+    workflowHistory: (docId: string) => ['documents', docId, 'workflowHistory'] as const,
+  },
+  tasks: {
+    all: (filters?: Record<string, unknown>) => ['tasks', 'list', filters ?? {}] as const,
+    myTasks: (status?: string) => ['tasks', 'my', status ?? 'all'] as const,
+    detail: (id: string) => ['tasks', id] as const,
+    history: (id: string, page?: number) => ['tasks', id, 'history', page ?? 1] as const,
+    rejections: (id: string) => ['tasks', id, 'rejections'] as const,
+    comments: (id: string) => ['tasks', id, 'comments'] as const,
+    attachments: (id: string) => ['tasks', id, 'attachments'] as const,
+  },
+  workflowTasks: {
+    my: ['workflowTasks', 'my'] as const,
+    completed: ['workflowTasks', 'completed'] as const,
+    detail: (id: string) => ['workflowTasks', id] as const,
+  },
+  workflows: {
+    all: ['workflows'] as const,
+    detail: (id: string) => ['workflows', id] as const,
+    default: ['workflows', 'default'] as const,
+  },
+  retentionPolicies: {
+    all: ['retentionPolicies'] as const,
+    detail: (id: string) => ['retentionPolicies', id] as const,
+  },
+  documentTypes: {
+    all: ['documentTypes'] as const,
+    detail: (id: string) => ['documentTypes', id] as const,
+  },
+  folderTemplates: {
+    all: ['folderTemplates'] as const,
+    detail: (id: string) => ['folderTemplates', id] as const,
+  },
+  notifications: {
+    all: (params?: Record<string, unknown>) => ['notifications', params ?? {}] as const,
+    unreadCount: ['notifications', 'unreadCount'] as const,
+  },
+} as const
