@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { authService } from "@/lib/services/auth";
-import { useCompanies } from "@/lib/hooks/useCompanies";
+import { useCompaniesQueryCompat } from "@/lib/hooks/queries/useCompaniesQuery";
 import { bmsApi } from "@/lib/services/bmsApi";
 import type { Company } from "@/types/bms";
 import {
@@ -77,7 +77,7 @@ export default function SettingsPage() {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   // Company management state
-  const { companies, loading: companiesLoading, loadCompanies, createCompany, updateCompany, deleteCompany } = useCompanies();
+  const { companies, loading: companiesLoading, loadCompanies, createCompany, updateCompany, deleteCompany } = useCompaniesQueryCompat();
   const [companyModalOpen, setCompanyModalOpen] = useState(false);
   const [companyModalMode, setCompanyModalMode] = useState<"add" | "edit">("add");
   const [companyFormData, setCompanyFormData] = useState<CompanyFormData>(emptyFormData);

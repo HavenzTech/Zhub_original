@@ -8,20 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, RefreshCw, Shield } from "lucide-react";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
-import { useBmsDevices } from "@/lib/hooks/useBmsDevices";
+import { useBmsDevicesQueryCompat } from "@/lib/hooks/queries/useBmsDevicesQuery";
 import { DeviceCard } from "@/features/bms-hardware/components/DeviceCard";
 import { DeviceDetails } from "@/features/bms-hardware/components/DeviceDetails";
 import { DeviceStats } from "@/features/bms-hardware/components/DeviceStats";
 import type { BmsDevice } from "@/types/bms";
 
 export default function BMSHardwarePage() {
-  const { devices, loading, error, loadDevices } = useBmsDevices();
+  const { devices, loading, error, loadDevices } = useBmsDevicesQueryCompat();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDevice, setSelectedDevice] = useState<BmsDevice | null>(null);
 
-  useEffect(() => {
-    loadDevices();
-  }, [loadDevices]);
+  // devices auto-fetched by React Query
 
   const filteredDevices = devices.filter(
     (device) =>

@@ -13,7 +13,8 @@ import { Department, UserResponse } from "@/types/bms";
 import { toast } from "sonner";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
-import { useDepartments } from "@/lib/hooks/useDepartments";
+import { useDepartmentsQueryCompat } from "@/lib/hooks/queries/useDepartmentsQuery";
+import { useUsersQueryCompat } from "@/lib/hooks/queries/useUsersQuery";
 import { DepartmentCard } from "@/features/departments/components/DepartmentCard";
 import { DepartmentStats } from "@/features/departments/components/DepartmentStats";
 import { Users, Plus, Search, RefreshCw, LayoutGrid, List, User, DollarSign, Trash2 } from "lucide-react";
@@ -49,14 +50,15 @@ const initialFormData = {
 export default function DepartmentsPage() {
   const router = useRouter();
   const { departments, loading, error, loadDepartments, setDepartments } =
-    useDepartments();
+    useDepartmentsQueryCompat();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
   const [deleteDepartment, setDeleteDepartment] = useState<Department | null>(null);
-  const [users, setUsers] = useState<{ id: string; name: string; email: string }[]>([]);
+  const { users: rawUsers } = useUsersQueryCompat();
+  const users = rawUsers.map((u) => ({ id: u.id || "", name: u.name || "", email: u.email || "" }));
   const [selectedHeadUserId, setSelectedHeadUserId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "table">(() => {
     if (typeof window !== "undefined") {
@@ -64,24 +66,6 @@ export default function DepartmentsPage() {
     }
     return "grid";
   });
-
-  const loadUsers = useCallback(async () => {
-    try {
-      const response = await bmsApi.users.getAll();
-      const data = Array.isArray(response)
-        ? response
-        : (response as any)?.items || (response as any)?.data || [];
-      setUsers(
-        data.map((u: UserResponse) => ({
-          id: u.id || "",
-          name: u.name || "",
-          email: u.email || "",
-        }))
-      );
-    } catch (err) {
-      console.error("Error loading users:", err);
-    }
-  }, []);
 
   useEffect(() => {
     const auth = authService.getAuth();
@@ -95,10 +79,8 @@ export default function DepartmentsPage() {
 
     if (token) bmsApi.setToken(token);
     if (companyId) bmsApi.setCompanyId(companyId);
-
-    loadDepartments();
-    loadUsers();
-  }, [router, loadDepartments, loadUsers]);
+    // React Query auto-fetches departments and users
+  }, [router]);
 
   const buildPayload = () => {
     const payload: Record<string, unknown> = {
