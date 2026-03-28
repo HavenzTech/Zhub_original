@@ -4,12 +4,15 @@ import { useState, useEffect, useCallback } from "react"
 import dynamic from "next/dynamic"
 // Card replaced with plain divs for consistent styling
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+// Badge removed — using plain text for counts
 import { TaskList } from "./TaskList"
 import { initialTaskFormData, type TaskFormData } from "./TaskFormModal"
 import { bmsApi } from "@/lib/services/bmsApi"
 import { authService } from "@/lib/services/auth"
-import { useTasks } from "@/lib/hooks/useTasks"
+import { useProjectTasksQuery, useTasksQueryCompat } from "@/lib/hooks/queries/useTasksQuery"
+import { useDepartmentsQuery } from "@/lib/hooks/queries/useDepartmentsQuery"
+import { useUsersQuery } from "@/lib/hooks/queries/useUsersQuery"
+import { useProjectMembersQuery } from "@/lib/hooks/queries/useProjectsQuery"
 import { extractArray } from "@/lib/utils/api"
 import type { TaskDto, Department, UserResponse, ProjectMemberDto } from "@/types/bms"
 import { toast } from "sonner"
@@ -44,10 +47,12 @@ export function ProjectTasksSection({
   projectId,
   projectName,
 }: ProjectTasksSectionProps) {
+  const projectTasksQuery = useProjectTasksQuery(projectId)
+  const tasks = projectTasksQuery.data ?? []
+  const loading = projectTasksQuery.isLoading
+  const loadProjectTasks = async (_projectId: string) => { await projectTasksQuery.refetch() }
+
   const {
-    tasks,
-    loading,
-    loadProjectTasks,
     createTask,
     updateTask,
     updateTaskStatus,
@@ -56,7 +61,7 @@ export function ProjectTasksSection({
     submitForReview,
     approveTask,
     rejectTask,
-  } = useTasks()
+  } = useTasksQueryCompat()
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
@@ -69,10 +74,12 @@ export function ProjectTasksSection({
   const [deleteTaskItem, setDeleteTaskItem] = useState<TaskDto | null>(null)
   const [viewingTask, setViewingTask] = useState<TaskDto | null>(null)
 
-  // Data for dropdowns
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [users, setUsers] = useState<UserResponse[]>([])
-  const [loadingData, setLoadingData] = useState(true)
+  // Data for dropdowns — served by React Query
+  const { data: departments = [] } = useDepartmentsQuery()
+  const { data: usersData = [] } = useUsersQuery()
+  const users = usersData as UserResponse[]
+  const { data: membersData } = useProjectMembersQuery(projectId)
+  const [loadingData, setLoadingData] = useState(false)
 
   // Current user info for review permissions
   const auth = authService.getAuth()
@@ -88,36 +95,18 @@ export function ProjectTasksSection({
   // All users can change status (employees limited to assigned tasks at API level)
   const canChangeStatus = true
 
-  // Load data
-  const loadData = useCallback(async () => {
-    setLoadingData(true)
-    try {
-      await loadProjectTasks(projectId)
-      const [departmentsData, usersData, membersData] = await Promise.all([
-        bmsApi.departments.getAll(),
-        bmsApi.users.getAll(),
-        bmsApi.projects.getMembers(projectId),
-      ])
-      setDepartments(extractArray<Department>(departmentsData))
-      setUsers(extractArray<UserResponse>(usersData))
-      // Check if current user is project lead or admin
-      if (authService.isAdmin()) {
-        setIsProjectLeadOrAdmin(true)
-      } else {
-        const members = extractArray<ProjectMemberDto>(membersData)
-        const currentMember = members.find((m) => m.userId === currentUserId)
-        setIsProjectLeadOrAdmin(currentMember?.role === "lead")
-      }
-    } catch (err) {
-      console.error("Error loading data:", err)
-    } finally {
-      setLoadingData(false)
-    }
-  }, [projectId, loadProjectTasks])
-
+  // Check project lead status from cached members data
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    if (authService.isAdmin()) {
+      setIsProjectLeadOrAdmin(true)
+    } else if (membersData) {
+      const members = extractArray<ProjectMemberDto>(membersData)
+      const currentMember = members.find((m) => m.userId === currentUserId)
+      setIsProjectLeadOrAdmin(currentMember?.role === "lead")
+    }
+  }, [membersData, currentUserId])
+
+  // All data auto-fetched by React Query
 
   // Build payload
   const buildPayload = () => {
@@ -274,14 +263,14 @@ export function ProjectTasksSection({
           <CheckSquare className="w-5 h-5 text-stone-500 dark:text-stone-400" />
           <h3 className="text-base font-semibold text-stone-900 dark:text-stone-50">Tasks</h3>
           {totalCount > 0 && (
-            <Badge variant="secondary">
+            <span className="text-xs text-stone-500 dark:text-stone-400">
               {completedCount}/{totalCount} ({progressPercent}%)
-            </Badge>
+            </span>
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={loadData} disabled={loadingData}>
-            <RefreshCw className={`w-4 h-4 ${loadingData ? "animate-spin" : ""}`} />
+          <Button variant="ghost" size="sm" onClick={() => projectTasksQuery.refetch()} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
           {canCreate && (
             <Button size="sm" onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">

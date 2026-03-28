@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useUsers } from "@/lib/hooks/useUsers";
+import { useUsersQueryCompat } from "@/lib/hooks/queries/useUsersQuery";
 import { UserCard } from "./UserCard";
 import { UserStats } from "./UserStats";
 import { UserFormModal } from "./UserFormModal";
@@ -39,7 +39,7 @@ const initialEditFormData = {
 export function UserManagementPanel() {
   const router = useRouter();
   const { users, loading, error, loadUsers, createUser, updateUser, deleteUser } =
-    useUsers();
+    useUsersQueryCompat();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);

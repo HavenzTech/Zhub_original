@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Play, Loader2, GitBranch, CheckCircle2 } from "lucide-react";
-import { useWorkflows } from "@/lib/hooks/useWorkflows";
+import { useWorkflowsQueryCompat } from "@/lib/hooks/queries/useWorkflowsQuery";
 import type { WorkflowDto } from "@/types/bms";
 
 interface StartWorkflowModalProps {
@@ -36,7 +36,7 @@ export function StartWorkflowModal({
   documentName,
   onStartWorkflow,
 }: StartWorkflowModalProps) {
-  const { workflows, loading: loadingWorkflows, loadWorkflows } = useWorkflows();
+  const { workflows, loading: loadingWorkflows, loadWorkflows } = useWorkflowsQueryCompat();
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>("default");
   const [isStarting, setIsStarting] = useState(false);
   const [selectedWorkflow, setSelectedWorkflow] = useState<WorkflowDto | null>(null);

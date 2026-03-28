@@ -3,7 +3,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { useDocuments } from "@/lib/hooks/useDocuments";
+import { useDocumentsQueryCompat } from "@/lib/hooks/queries/useDocumentsQuery";
+import { useProjectsQuery } from "@/lib/hooks/queries/useProjectsQuery";
+import { useDepartmentsQuery } from "@/lib/hooks/queries/useDepartmentsQuery";
+import { useUsersQuery } from "@/lib/hooks/queries/useUsersQuery";
+import { usePropertiesQuery } from "@/lib/hooks/queries/usePropertiesQuery";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
@@ -67,7 +71,7 @@ import { WorkflowTimeline } from "@/features/documents/components/workflow/Workf
 import { StartWorkflowModal } from "@/features/documents/components/workflow/StartWorkflowModal";
 import { WorkflowStatusBadge } from "@/features/documents/components/workflow/WorkflowStatusBadge";
 import { ClassificationBadge } from "@/components/ui/classification-badge";
-import { useRetentionPolicies } from "@/lib/hooks/useRetentionPolicies";
+import { useRetentionPoliciesQueryCompat } from "@/lib/hooks/queries/useRetentionPoliciesQuery";
 import type {
   UploadFormData,
 } from "@/features/documents/components/UploadDocumentModal";
@@ -145,13 +149,17 @@ function filterFoldersByProject(folders: Folder[], projectId: string): Folder[] 
 
 export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocumentsTabProps) {
   const router = useRouter();
-  const { documents, loading, error, loadDocuments, setDocuments } = useDocuments();
+  const { documents, loading, error, loadDocuments, setDocuments } = useDocumentsQueryCompat();
 
   const [folders, setFolders] = useState<Folder[]>([]);
-  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
-  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
-  const [users, setUsers] = useState<{ id: string; name: string; email: string }[]>([]);
-  const [properties, setProperties] = useState<{ id: string; name: string }[]>([]);
+  const { data: projectsData } = useProjectsQuery();
+  const projects = (projectsData ?? []).map((p) => ({ id: p.id || "", name: p.name || "" }));
+  const { data: departmentsData } = useDepartmentsQuery();
+  const departments = (departmentsData ?? []).map((d) => ({ id: d.id || "", name: d.name || "" }));
+  const { data: usersRaw } = useUsersQuery();
+  const users = (usersRaw ?? []).map((u: UserResponse) => ({ id: u.id || "", name: u.name || "", email: u.email || "" }));
+  const { data: propertiesData } = usePropertiesQuery();
+  const properties = (propertiesData ?? []).map((p) => ({ id: p.id || "", name: p.name || "" }));
   const [documentTypes, setDocumentTypes] = useState<DocumentTypeDto[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [selectedDocumentForModal, setSelectedDocumentForModal] = useState<Document | null>(null);
@@ -203,7 +211,7 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
   } = useDocumentWorkflow(selectedDocumentForModal?.id || "");
 
   // Retention policies
-  const { retentionPolicies, loadRetentionPolicies } = useRetentionPolicies();
+  const { retentionPolicies, loadRetentionPolicies } = useRetentionPoliciesQueryCompat();
   const [applyingRetention, setApplyingRetention] = useState(false);
 
   // Checkout hook
@@ -251,59 +259,7 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
     }
   }, []);
 
-  const loadProjects = useCallback(async () => {
-    try {
-      const response = await bmsApi.projects.getAll();
-      const data = Array.isArray(response)
-        ? response
-        : (response as any)?.items || (response as any)?.data || [];
-      setProjects(data as { id: string; name: string }[]);
-    } catch (err) {
-      console.error("Error loading projects:", err);
-    }
-  }, []);
-
-  const loadDepartments = useCallback(async () => {
-    try {
-      const response = await bmsApi.departments.getAll();
-      const data = Array.isArray(response)
-        ? response
-        : (response as any)?.items || (response as any)?.data || [];
-      setDepartments(data as { id: string; name: string }[]);
-    } catch (err) {
-      console.error("Error loading departments:", err);
-    }
-  }, []);
-
-  const loadUsers = useCallback(async () => {
-    try {
-      const response = await bmsApi.users.getAll();
-      const data = Array.isArray(response)
-        ? response
-        : (response as any)?.items || (response as any)?.data || [];
-      setUsers(
-        data.map((u: UserResponse) => ({
-          id: u.id || "",
-          name: u.name || "",
-          email: u.email || "",
-        }))
-      );
-    } catch (err) {
-      console.error("Error loading users:", err);
-    }
-  }, []);
-
-  const loadProperties = useCallback(async () => {
-    try {
-      const response = await bmsApi.properties.getAll();
-      const data = Array.isArray(response)
-        ? response
-        : (response as any)?.items || (response as any)?.data || [];
-      setProperties(data as { id: string; name: string }[]);
-    } catch (err) {
-      console.error("Error loading properties:", err);
-    }
-  }, []);
+  // projects, departments, users, properties served by React Query hooks above
 
   const loadDocumentTypes = useCallback(async () => {
     try {
@@ -329,23 +285,12 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
     if (token) bmsApi.setToken(token);
     if (companyId) bmsApi.setCompanyId(companyId);
 
-    loadDocuments();
     loadFolders();
-    loadProjects();
-    loadDepartments();
-    loadUsers();
-    loadProperties();
     loadDocumentTypes();
-    loadRetentionPolicies();
+    // documents, projects, departments, users, properties, retentionPolicies auto-fetched by React Query
   }, [
-    loadDocuments,
     loadFolders,
-    loadProjects,
-    loadDepartments,
-    loadUsers,
-    loadProperties,
     loadDocumentTypes,
-    loadRetentionPolicies,
   ]);
 
   // Reset tab when a different document is selected

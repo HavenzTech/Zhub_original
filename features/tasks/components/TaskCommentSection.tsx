@@ -4,9 +4,8 @@ import { useEffect, useState, useCallback } from "react"
 import { MessageSquare, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTaskComments } from "@/lib/hooks/useTaskComments"
-import { bmsApi } from "@/lib/services/bmsApi"
-import { extractArray } from "@/lib/utils/api"
 import { authService } from "@/lib/services/auth"
+import { useUsersQuery } from "@/lib/hooks/queries/useUsersQuery"
 import type { UserResponse } from "@/types/bms"
 import { TaskCommentInput } from "./TaskCommentInput"
 import { TaskCommentItem } from "./TaskCommentItem"
@@ -28,7 +27,8 @@ export function TaskCommentSection({ taskId }: TaskCommentSectionProps) {
     deleteComment,
   } = useTaskComments()
 
-  const [users, setUsers] = useState<UserResponse[]>([])
+  const { data: usersData } = useUsersQuery()
+  const users = (usersData ?? []) as UserResponse[]
   const [currentUserId, setCurrentUserId] = useState<string>()
   const [isAdmin, setIsAdmin] = useState(false)
 
@@ -37,18 +37,6 @@ export function TaskCommentSection({ taskId }: TaskCommentSectionProps) {
   }, [taskId, loadComments])
 
   useEffect(() => {
-    // Load company users for @mentions
-    const loadUsers = async () => {
-      try {
-        const data = await bmsApi.users.getAll()
-        setUsers(extractArray<UserResponse>(data))
-      } catch {
-        // Silently fail — mentions just won't autocomplete
-      }
-    }
-    loadUsers()
-
-    // Get current user info
     const auth = authService.getAuth()
     if (auth) {
       setCurrentUserId(auth.userId ?? undefined)

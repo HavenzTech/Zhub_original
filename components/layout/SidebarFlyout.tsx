@@ -5,6 +5,10 @@ import Link from "next/link";
 import { Loader2, ChevronRight } from "lucide-react";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { extractArray } from "@/lib/utils/api";
+import { useDepartmentsQuery } from "@/lib/hooks/queries/useDepartmentsQuery";
+import { useProjectsQuery } from "@/lib/hooks/queries/useProjectsQuery";
+import { usePropertiesQuery } from "@/lib/hooks/queries/usePropertiesQuery";
+import { useMyWorkflowTasksQuery } from "@/lib/hooks/queries/useWorkflowTasksQuery";
 import type { Department, Project, Property } from "@/types/bms";
 
 interface FlyoutItem {
@@ -37,48 +41,41 @@ const FLYOUT_CONFIGS: Record<string, { title: string; viewAllHref: string; viewA
   "workflow-tasks": { title: "My Tasks", viewAllHref: "/workflow-tasks", viewAllLabel: "View all tasks" },
 };
 
-async function fetchFlyoutItems(itemId: string): Promise<FlyoutItem[]> {
+function useFlyoutData(itemId: string) {
+  const { data: departments } = useDepartmentsQuery();
+  const { data: projects } = useProjectsQuery();
+  const { data: properties } = usePropertiesQuery();
+  const { data: tasks } = useMyWorkflowTasksQuery();
+
   switch (itemId) {
-    case "departments": {
-      const data = await bmsApi.departments.getAll();
-      const departments = extractArray<Department>(data);
-      return departments.map((d) => ({
+    case "departments":
+      return (departments ?? []).map((d) => ({
         id: d.id || "",
         name: d.name,
         href: `/departments/${d.id}`,
         subtitle: d.headName || undefined,
       }));
-    }
-    case "projects": {
-      const data = await bmsApi.projects.getAll();
-      const projects = extractArray<Project>(data);
-      return projects.map((p) => ({
+    case "projects":
+      return (projects ?? []).map((p) => ({
         id: p.id || "",
         name: p.name,
         href: `/projects/${p.id}`,
         subtitle: p.status || undefined,
       }));
-    }
-    case "properties": {
-      const data = await bmsApi.properties.getAll();
-      const properties = extractArray<Property>(data);
-      return properties.map((p) => ({
+    case "properties":
+      return (properties ?? []).map((p) => ({
         id: p.id || "",
         name: p.name,
         href: `/properties/${p.id}`,
-        subtitle: p.type || undefined,
+        subtitle: (p as any).type || undefined,
       }));
-    }
-    case "workflow-tasks": {
-      const data = await bmsApi.workflowTasks.getMyTasks();
-      const tasks = extractArray<any>(data);
-      return tasks.slice(0, 15).map((t: any) => ({
+    case "workflow-tasks":
+      return (tasks ?? []).slice(0, 15).map((t: any) => ({
         id: t.id || "",
         name: t.documentTitle || t.title || "Untitled Task",
         href: `/workflow-tasks`,
         subtitle: t.status || t.actionRequired || undefined,
       }));
-    }
     default:
       return [];
   }
@@ -90,35 +87,10 @@ export function SidebarFlyout({
   onMouseEnter,
   onMouseLeave,
 }: SidebarFlyoutProps) {
-  const [items, setItems] = useState<FlyoutItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const items = useFlyoutData(itemId);
+  const loading = items.length === 0;
 
   const config = FLYOUT_CONFIGS[itemId];
-
-  useEffect(() => {
-    if (!config) return;
-
-    let cancelled = false;
-    const cached = flyoutCache[itemId as keyof FlyoutCache];
-    if (cached) {
-      setItems(cached);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    fetchFlyoutItems(itemId).then((result) => {
-      if (!cancelled) {
-        flyoutCache[itemId as keyof FlyoutCache] = result;
-        setItems(result);
-        setLoading(false);
-      }
-    }).catch(() => {
-      if (!cancelled) setLoading(false);
-    });
-
-    return () => { cancelled = true; };
-  }, [itemId, config]);
 
   if (!config) return null;
 

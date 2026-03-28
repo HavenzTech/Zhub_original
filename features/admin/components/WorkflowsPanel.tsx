@@ -45,7 +45,8 @@ import {
 } from "lucide-react";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { toast } from "sonner";
-import { useWorkflows } from "@/lib/hooks/useWorkflows";
+import { useWorkflowsQueryCompat } from "@/lib/hooks/queries/useWorkflowsQuery";
+import { useUsersQuery } from "@/lib/hooks/queries/useUsersQuery";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import type { WorkflowDto, CreateWorkflowRequest, UpdateWorkflowRequest, WorkflowStepDto } from "@/types/bms";
@@ -71,13 +72,14 @@ export function WorkflowsPanel() {
     deleteWorkflow,
     activateWorkflow,
     deactivateWorkflow,
-  } = useWorkflows();
+  } = useWorkflowsQueryCompat();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingWorkflow, setEditingWorkflow] = useState<WorkflowDto | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [users, setUsers] = useState<{ id: string; name: string; email: string }[]>([]);
+  const { data: usersRaw } = useUsersQuery();
+  const users = (usersRaw ?? []).map((u: any) => ({ id: u.id || "", name: u.name || u.email || "", email: u.email || "" }));
 
   const [formData, setFormData] = useState({
     name: "",
@@ -104,27 +106,8 @@ export function WorkflowsPanel() {
       console.warn("WorkflowsPanel: No company ID found - workflow listing may fail");
     }
 
-    loadWorkflows();
-    loadUsers();
-  }, [loadWorkflows, router]);
-
-  const loadUsers = async () => {
-    try {
-      const response = await bmsApi.users.getAll();
-      const data = Array.isArray(response)
-        ? response
-        : (response as any)?.items || (response as any)?.data || [];
-      setUsers(
-        data.map((u: any) => ({
-          id: u.id || "",
-          name: u.name || u.email || "",
-          email: u.email || "",
-        }))
-      );
-    } catch (err) {
-      console.error("Error loading users:", err);
-    }
-  };
+    // workflows and users auto-fetched by React Query
+  }, [router]);
 
   const resetForm = () => {
     setFormData({ name: "", code: "", description: "", steps: [], isDefault: false });
