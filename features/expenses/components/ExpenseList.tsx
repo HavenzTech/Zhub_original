@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 // Card replaced with plain divs for consistent styling
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+// Badge removed — using plain spans for status/category
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -39,7 +39,6 @@ import {
   FileText,
   CheckCircle,
   XCircle,
-  Clock,
   Download,
   Loader2,
 } from "lucide-react";
@@ -62,45 +61,37 @@ interface ExpenseListProps {
 }
 
 function getStatusBadge(status: string | null | undefined) {
-  switch (status) {
-    case "approved":
-      return (
-        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Approved
-        </Badge>
-      );
-    case "rejected":
-      return (
-        <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-          <XCircle className="w-3 h-3 mr-1" />
-          Rejected
-        </Badge>
-      );
-    case "pending":
-    default:
-      return (
-        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-          <Clock className="w-3 h-3 mr-1" />
-          Pending
-        </Badge>
-      );
-  }
+  const styles: Record<string, string> = {
+    approved: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400",
+    rejected: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400",
+    pending: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400",
+  };
+  const labels: Record<string, string> = {
+    approved: "Approved",
+    rejected: "Rejected",
+    pending: "Pending",
+  };
+  const s = status || "pending";
+  return (
+    <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${styles[s] || styles.pending}`}>
+      {labels[s] || "Pending"}
+    </span>
+  );
 }
 
 function getCategoryBadge(category: string | null | undefined) {
   if (!category) return null;
   const colors: Record<string, string> = {
-    software: "bg-blue-100 text-blue-800",
-    contractor: "bg-purple-100 text-purple-800",
-    equipment: "bg-orange-100 text-orange-800",
-    travel: "bg-teal-100 text-teal-800",
-    other: "bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300",
+    software: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400",
+    contractor: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-400",
+    equipment: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-400",
+    travel: "bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-400",
+    other: "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400",
   };
   return (
-    <Badge className={`${colors[category] || colors.other} hover:opacity-90`}>
+    <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${colors[category] || colors.other}`}>
       {category.charAt(0).toUpperCase() + category.slice(1)}
-    </Badge>
+    </span>
   );
 }
 
