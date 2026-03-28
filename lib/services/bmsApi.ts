@@ -107,6 +107,30 @@ class BmsApiService {
   private token: string | null = null;
   private companyId: string | null = null;
 
+  // Concurrency limiter to prevent 429s from too many parallel requests
+  private activeRequests = 0;
+  private readonly maxConcurrent = 6;
+  private requestQueue: Array<() => void> = [];
+
+  private acquireSlot(): Promise<void> | void {
+    if (this.activeRequests < this.maxConcurrent) {
+      this.activeRequests++;
+      return;
+    }
+    return new Promise<void>((resolve) => {
+      this.requestQueue.push(() => {
+        this.activeRequests++;
+        resolve();
+      });
+    });
+  }
+
+  private releaseSlot(): void {
+    this.activeRequests--;
+    const next = this.requestQueue.shift();
+    if (next) next();
+  }
+
   constructor(baseUrl: string = BASE_URL!) {
     this.baseUrl = baseUrl;
   }
@@ -149,6 +173,19 @@ class BmsApiService {
     endpoint: string,
     options: RequestOptions = {}
   ): Promise<T> {
+    const slot = this.acquireSlot();
+    if (slot) await slot;
+    try {
+      return await this._request<T>(endpoint, options);
+    } finally {
+      this.releaseSlot();
+    }
+  }
+
+  private async _request<T>(
+    endpoint: string,
+    options: RequestOptions = {}
+  ): Promise<T> {
     const { timeout = TIMEOUT, skipAuth = false, _retryCount = 0, prefix, ...fetchOptions } = options;
 
     // Sanitize query parameters in the endpoint URL
@@ -161,6 +198,18 @@ class BmsApiService {
       'Content-Type': 'application/json',
       ...((fetchOptions.headers as Record<string, string>) || {}),
     };
+
+    // Auto-load token from localStorage if not yet set (handles React Query firing before useEffect)
+    if (!skipAuth && !this.token && typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('auth');
+        if (stored) {
+          const auth = JSON.parse(stored);
+          if (auth?.token) this.token = auth.token;
+          if (auth?.currentCompanyId) this.companyId = auth.currentCompanyId;
+        }
+      } catch { /* ignore */ }
+    }
 
     if (!skipAuth && this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
@@ -212,8 +261,8 @@ class BmsApiService {
             if (newAuth?.token) {
               this.setToken(newAuth.token);
             }
-            // Retry the request once
-            return this.request<T>(endpoint, { ...options, _retryCount: _retryCount + 1 });
+            // Retry the request once (reuse existing slot)
+            return this._request<T>(endpoint, { ...options, _retryCount: _retryCount + 1 });
           }
         }
 
@@ -228,7 +277,7 @@ class BmsApiService {
         } catch {
           errorData = { message: response.statusText };
         }
-        if (response.status !== 404) {
+        if (response.status !== 404 && response.status !== 429) {
           console.error('❌ API Error Response:', {
             status: response.status,
             statusText: response.statusText,
