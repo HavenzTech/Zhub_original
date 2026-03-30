@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
+import { useUsersQuery } from "@/lib/hooks/queries/useUsersQuery";
 import { toast } from "sonner";
 import { Users, UserPlus, X, Loader2 } from "lucide-react";
 
@@ -78,22 +79,16 @@ export function MembersAssignment({
     }
   }, [entityType, entityId]);
 
-  const loadAvailableUsers = useCallback(async () => {
-    try {
-      const data = await bmsApi.users.getAll();
-      const usersList = Array.isArray(data)
-        ? data
-        : (data as any)?.items || (data as any)?.data || [];
-      setAvailableUsers(usersList);
-    } catch (err) {
-      console.error("Error loading users:", err);
+  const { data: usersQueryData } = useUsersQuery();
+  useEffect(() => {
+    if (usersQueryData) {
+      setAvailableUsers(usersQueryData as any[]);
     }
-  }, []);
+  }, [usersQueryData]);
 
   useEffect(() => {
     loadMembers();
-    loadAvailableUsers();
-  }, [loadMembers, loadAvailableUsers]);
+  }, [loadMembers]);
 
   const handleAddMember = async () => {
     if (!selectedUserId) {
@@ -240,9 +235,9 @@ export function MembersAssignment({
                 </div>
                 <div className="flex items-center gap-2">
                   {member.role && (
-                    <Badge variant="secondary" className="text-xs">
+                    <span className="text-xs px-2.5 py-1 rounded-md font-medium bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400">
                       {member.role}
-                    </Badge>
+                    </span>
                   )}
                   <Button
                     variant="ghost"

@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
-import { useWorkflowTasks } from "@/lib/hooks/useWorkflowTasks";
-import { useTasks } from "@/lib/hooks/useTasks";
+import { useWorkflowTasksQueryCompat } from "@/lib/hooks/queries/useWorkflowTasksQuery";
+import { useMyTasksQuery, useTasksQueryCompat } from "@/lib/hooks/queries/useTasksQuery";
+import { useUsersQuery } from "@/lib/hooks/queries/useUsersQuery";
 import { WorkflowTaskCard } from "@/features/documents/components/workflow/WorkflowTaskCard";
 import {
   getTaskStatusColor,
@@ -70,9 +71,11 @@ export default function MyTasksPage() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [availableUsers, setAvailableUsers] = useState<Array<{ id: string; name: string }>>([]);
+  const { data: usersQueryData } = useUsersQuery();
+  const availableUsers = (usersQueryData ?? []).map((u) => ({ id: u.id || "", name: u.name || u.email || "" }));
   const [confirmStatus, setConfirmStatus] = useState<{ taskId: string; taskTitle: string; status: string } | null>(null);
   const [viewingTask, setViewingTask] = useState<TaskDto | null>(null);
+  const [dismissedTaskId, setDismissedTaskId] = useState<string | null>(null);
   const [rejectDialogTask, setRejectDialogTask] = useState<TaskDto | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [projectLeadMap, setProjectLeadMap] = useState<Record<string, boolean>>({});
@@ -86,19 +89,22 @@ export default function MyTasksPage() {
     loadCompletedTasks,
     completeTask,
     delegateTask,
-  } = useWorkflowTasks();
+  } = useWorkflowTasksQueryCompat();
 
+  const myProjectTasksQuery = useMyTasksQuery();
+  const myProjectTasks = myProjectTasksQuery.data ?? [];
+  const tasksLoading = myProjectTasksQuery.isLoading;
+  const loadMyProjectTasks = async () => { await myProjectTasksQuery.refetch(); };
+
+  const taskMutations = useTasksQueryCompat();
   const {
-    tasks: myProjectTasks,
-    loading: tasksLoading,
-    loadMyTasks: loadMyProjectTasks,
     updateTaskStatus,
     toggleComplete,
     getTaskById,
     submitForReview,
     approveTask,
     rejectTask,
-  } = useTasks();
+  } = taskMutations;
 
   useEffect(() => {
     const auth = authService.getAuth();
@@ -114,12 +120,8 @@ export default function MyTasksPage() {
     if (companyId) bmsApi.setCompanyId(companyId);
 
     setCurrentUserId(auth.userId || "");
-
-    loadMyTasks();
-    loadCompletedTasks();
-    loadMyProjectTasks();
-    loadUsers();
-  }, [router, loadMyTasks, loadCompletedTasks, loadMyProjectTasks]);
+    // All queries auto-fetched by React Query
+  }, [router]);
 
   // Check project lead status for review-required tasks
   useEffect(() => {
@@ -161,6 +163,7 @@ export default function MyTasksPage() {
   useEffect(() => {
     const taskId = searchParams.get("taskId");
     if (!taskId) return;
+    if (taskId === dismissedTaskId) return;
 
     // First check if it's already in the loaded project tasks
     const found = myProjectTasks.find((t) => t.id === taskId);
@@ -177,22 +180,7 @@ export default function MyTasksPage() {
     }
   }, [searchParams, myProjectTasks, tasksLoading, getTaskById]);
 
-  const loadUsers = async () => {
-    try {
-      const response = await bmsApi.users.getAll();
-      const data = Array.isArray(response)
-        ? response
-        : (response as any)?.items || (response as any)?.data || [];
-      setAvailableUsers(
-        data.map((u: any) => ({
-          id: u.id || "",
-          name: u.name || u.email || "",
-        }))
-      );
-    } catch (err) {
-      console.error("Error loading users:", err);
-    }
-  };
+  // users auto-fetched by React Query
 
   const handleCompleteTask = async (taskId: string, request: CompleteTaskRequest) => {
     try {
@@ -442,9 +430,9 @@ export default function MyTasksPage() {
                     <Button
                       size="sm"
                       onClick={() => handleSubmitForReview(task)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                      className="bg-accent-cyan hover:bg-accent-cyan/90 text-white text-xs"
                     >
-                      <Send className="w-3.5 h-3.5 mr-1.5" />
+                      <Send className="w-3 h-3 mr-1" />
                       Submit for Review
                     </Button>
                   ) : task.requiresReview && task.status === "in_review" && isLeadForTask(task) ? (
@@ -452,29 +440,28 @@ export default function MyTasksPage() {
                       <Button
                         size="sm"
                         onClick={() => handleApproveTask(task)}
-                        className="bg-green-600 hover:bg-green-700 text-white"
+                        className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:hover:bg-emerald-900 text-xs"
                       >
-                        <ThumbsUp className="w-3.5 h-3.5 mr-1.5" />
+                        <ThumbsUp className="w-3 h-3 mr-1" />
                         Approve
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
                         onClick={() => {
                           setRejectDialogTask(task);
                           setRejectReason("");
                         }}
-                        className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950"
+                        className="bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900 text-xs"
                       >
-                        <ThumbsDown className="w-3.5 h-3.5 mr-1.5" />
+                        <ThumbsDown className="w-3 h-3 mr-1" />
                         Reject
                       </Button>
                     </>
                   ) : task.requiresReview && task.status === "in_review" ? (
-                    <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                    <span className="inline-flex items-center text-xs px-2.5 py-1 rounded-md font-medium bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400">
                       <PauseCircle className="w-3 h-3 mr-1" />
                       Awaiting Review
-                    </Badge>
+                    </span>
                   ) : (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -804,7 +791,9 @@ export default function MyTasksPage() {
         open={!!viewingTask}
         onOpenChange={(open) => {
           if (!open) {
+            const closedId = viewingTask?.id || null;
             setViewingTask(null);
+            if (closedId) setDismissedTaskId(closedId);
             // Clean up the taskId from the URL without a full navigation
             const url = new URL(window.location.href);
             if (url.searchParams.has("taskId")) {

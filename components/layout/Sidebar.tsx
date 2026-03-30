@@ -28,6 +28,13 @@ import { authService } from "@/lib/services/auth";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { Company } from "@/types/bms";
 import { NotificationDropdown } from "@/components/common/NotificationDropdown";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SidebarFlyout } from "@/components/layout/SidebarFlyout";
 import {
   Tooltip,
@@ -410,9 +417,39 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
           "flex items-center rounded-lg p-2",
           collapsed ? "justify-center" : "gap-2.5"
         )}>
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-cyan text-xs font-medium text-white">
-            {userInitials || "U"}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-cyan text-xs font-medium text-white hover:bg-accent-cyan/80 transition-colors cursor-pointer">
+                {userInitials || "U"}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-48 bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700">
+              <div className="px-3 py-2">
+                <p className="text-sm font-medium text-stone-900 dark:text-stone-50">{userName}</p>
+                <p className="text-xs text-stone-500 dark:text-stone-400">{currentCompany ? getRoleLabel(currentCompany.role) : "Member"}</p>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/change-password")} className="cursor-pointer">
+                <Settings className="w-4 h-4 mr-2" />
+                Change Password
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={async () => {
+                  await authService.logout();
+                  router.push("/login");
+                }}
+                className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Log Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {!collapsed && (
             <>
               <div className="flex-1 overflow-hidden">

@@ -6,8 +6,8 @@ import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
-import { useProjects } from "@/lib/hooks/useProjects";
-import { useUsers } from "@/lib/hooks/useUsers";
+import { useProjectsQueryCompat } from "@/lib/hooks/queries/useProjectsQuery";
+import { useUsersQueryCompat } from "@/lib/hooks/queries/useUsersQuery";
 import { ProjectCard } from "@/features/projects/components/ProjectCard";
 import { ProjectStats } from "@/features/projects/components/ProjectStats";
 import { Button } from "@/components/ui/button";
@@ -52,8 +52,8 @@ const initialFormData = {
 
 export default function ProjectsPage() {
   const router = useRouter();
-  const { projects, loading, error, loadProjects, setProjects } = useProjects();
-  const { users, loadUsers } = useUsers();
+  const { projects, loading, error, loadProjects, setProjects } = useProjectsQueryCompat();
+  const { users, loadUsers } = useUsersQueryCompat();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -80,9 +80,8 @@ export default function ProjectsPage() {
     if (token) bmsApi.setToken(token);
     if (companyId) bmsApi.setCompanyId(companyId);
 
-    loadProjects();
-    loadUsers();
-  }, [router, loadProjects, loadUsers]);
+    // projects and users auto-fetched by React Query
+  }, [router]);
 
   const buildPayload = () => {
     const payload: Record<string, unknown> = {

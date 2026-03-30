@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, CheckCheck, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,88 +11,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { bmsApi } from "@/lib/services/bmsApi";
-import { authService } from "@/lib/services/auth";
+import {
+  useUnreadCountQuery,
+  useNotificationsQuery,
+  useMarkAsRead,
+  useMarkAllAsRead,
+} from "@/lib/hooks/queries/useNotificationsQuery";
 import type { NotificationDto } from "@/types/bms";
 
-const POLL_INTERVAL = 30000; // Poll every 30 seconds
-const READ_NOTIFICATION_MAX_AGE_DAYS = 7; // Hide read notifications older than 7 days
+const READ_NOTIFICATION_MAX_AGE_DAYS = 7;
 
 export function NotificationDropdown() {
   const router = useRouter();
-  const [notifications, setNotifications] = useState<NotificationDto[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const fetchUnreadCount = useCallback(async () => {
-    try {
-      const token = authService.getToken();
-      const companyId = authService.getCurrentCompanyId();
-      if (!token) return;
+  const { data: unreadCount = 0 } = useUnreadCountQuery();
+  const { data: rawNotifications = [], isLoading: loading } = useNotificationsQuery(open);
+  const markAsReadMutation = useMarkAsRead();
+  const markAllAsReadMutation = useMarkAllAsRead();
 
-      if (token) bmsApi.setToken(token);
-      if (companyId) bmsApi.setCompanyId(companyId);
-
-      const result = await bmsApi.notifications.getUnreadCount();
-      setUnreadCount(result.count || 0);
-    } catch (err) {
-      console.error("Failed to fetch unread count:", err);
-    }
-  }, []);
-
-  const fetchNotifications = useCallback(async () => {
-    try {
-      setLoading(true);
-      const token = authService.getToken();
-      const companyId = authService.getCurrentCompanyId();
-      if (!token) return;
-
-      if (token) bmsApi.setToken(token);
-      if (companyId) bmsApi.setCompanyId(companyId);
-
-      const result = await bmsApi.notifications.getAll({ pageSize: 50 });
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - READ_NOTIFICATION_MAX_AGE_DAYS);
-      const filtered = (result.data || []).filter((n) => {
-        // Always show unread notifications
-        if (!n.isRead) return true;
-        // Hide read notifications older than 7 days
-        if (!n.createdAt) return true;
-        return new Date(n.createdAt) >= cutoff;
-      });
-      setNotifications(filtered);
-    } catch (err) {
-      console.error("Failed to fetch notifications:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Initial fetch and polling for unread count
-  useEffect(() => {
-    fetchUnreadCount();
-
-    const interval = setInterval(fetchUnreadCount, POLL_INTERVAL);
-    return () => clearInterval(interval);
-  }, [fetchUnreadCount]);
-
-  // Fetch notifications when dropdown opens
-  useEffect(() => {
-    if (open) {
-      fetchNotifications();
-    }
-  }, [open, fetchNotifications]);
+  const notifications = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - READ_NOTIFICATION_MAX_AGE_DAYS);
+    return rawNotifications.filter((n: NotificationDto) => {
+      if (!n.isRead) return true;
+      if (!n.createdAt) return true;
+      return new Date(n.createdAt) >= cutoff;
+    });
+  }, [rawNotifications]);
 
   const handleMarkAsRead = async (notification: NotificationDto) => {
     if (!notification.id || notification.isRead) return;
-
     try {
-      await bmsApi.notifications.markAsRead(notification.id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      await markAsReadMutation.mutateAsync(notification.id);
     } catch (err) {
       console.error("Failed to mark as read:", err);
     }
@@ -100,41 +51,32 @@ export function NotificationDropdown() {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await bmsApi.notifications.markAllAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      setUnreadCount(0);
+      await markAllAsReadMutation.mutateAsync();
     } catch (err) {
       console.error("Failed to mark all as read:", err);
     }
   };
 
   const handleClearRead = async () => {
-    // Mark all as read first, then remove read notifications from the list
     try {
       if (unreadCount > 0) {
-        await bmsApi.notifications.markAllAsRead();
-        setUnreadCount(0);
+        await markAllAsReadMutation.mutateAsync();
       }
-      setNotifications((prev) => prev.filter((n) => !n.isRead));
     } catch (err) {
       console.error("Failed to clear notifications:", err);
     }
   };
 
   const handleNotificationClick = async (notification: NotificationDto) => {
-    // Mark as read
     await handleMarkAsRead(notification);
 
-    // Handle task_comment_mention — route to workflow-tasks with specific task
     if (notification.type === "task_comment_mention") {
-      // data field may contain taskId as JSON or plain string
       let taskId = notification.referenceId;
       if (notification.data) {
         try {
           const parsed = JSON.parse(notification.data);
           if (parsed.taskId) taskId = parsed.taskId;
         } catch {
-          // data might be a plain taskId string
           taskId = notification.data;
         }
       }
@@ -143,7 +85,6 @@ export function NotificationDropdown() {
       return;
     }
 
-    // Navigate based on reference type
     if (notification.referenceType && notification.referenceId) {
       const routes: Record<string, string> = {
         project: `/projects/${notification.referenceId}`,
@@ -227,7 +168,7 @@ export function NotificationDropdown() {
               <p className="text-stone-500 dark:text-stone-400">No notifications yet</p>
             </div>
           ) : (
-            notifications.map((notification) => (
+            notifications.map((notification: NotificationDto) => (
               <DropdownMenuItem
                 key={notification.id}
                 className={`flex items-start gap-3 p-3 cursor-pointer ${

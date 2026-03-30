@@ -12,7 +12,7 @@ import { Property, PropertyType, PropertyStatus } from "@/types/bms";
 import { toast } from "sonner";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
-import { useProperties } from "@/lib/hooks/useProperties";
+import { usePropertiesQueryCompat } from "@/lib/hooks/queries/usePropertiesQuery";
 import { PropertyCard } from "@/features/properties/components/PropertyCard";
 import { PropertyStats } from "@/features/properties/components/PropertyStats";
 import {
@@ -59,7 +59,7 @@ export default function PropertiesPage() {
     loadProperties,
     createProperty,
     setProperties,
-  } = useProperties();
+  } = usePropertiesQueryCompat();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
@@ -86,8 +86,8 @@ export default function PropertiesPage() {
     if (token) bmsApi.setToken(token);
     if (companyId) bmsApi.setCompanyId(companyId);
 
-    loadProperties();
-  }, [router, loadProperties]);
+    // properties auto-fetched by React Query
+  }, [router]);
 
   const buildPayload = () => {
     const payload: Record<string, unknown> = {

@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -195,6 +196,7 @@ export function TaskDetailDialog({
               <DialogTitle className="text-xl leading-tight">
                 {task.title}
               </DialogTitle>
+              <DialogDescription className="sr-only">Task details and actions</DialogDescription>
               {task.taskType && (
                 <p className="text-xs text-stone-400 dark:text-stone-500 mt-1 uppercase tracking-wide">
                   {task.taskType}
@@ -471,9 +473,9 @@ export function TaskDetailDialog({
                 <Button
                   size="sm"
                   onClick={() => onSubmitForReview(task)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  className="bg-accent-cyan hover:bg-accent-cyan/90 text-white text-xs"
                 >
-                  <Send className="w-4 h-4 mr-1.5" />
+                  <Send className="w-3 h-3 mr-1" />
                   Submit for Review
                 </Button>
               )}
@@ -481,20 +483,19 @@ export function TaskDetailDialog({
                 <Button
                   size="sm"
                   onClick={() => onApprove(task)}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:hover:bg-emerald-900 text-xs"
                 >
-                  <ThumbsUp className="w-4 h-4 mr-1.5" />
+                  <ThumbsUp className="w-3 h-3 mr-1" />
                   Approve
                 </Button>
               )}
               {canApproveReject && onReject && (
                 <Button
-                  variant="outline"
                   size="sm"
                   onClick={() => setRejectDialogOpen(true)}
-                  className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950"
+                  className="bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900 text-xs"
                 >
-                  <ThumbsDown className="w-4 h-4 mr-1.5" />
+                  <ThumbsDown className="w-3 h-3 mr-1" />
                   Reject
                 </Button>
               )}
@@ -518,7 +519,7 @@ export function TaskDetailDialog({
                     size="sm"
                     onClick={handleRejectConfirm}
                     disabled={!rejectReason.trim()}
-                    className="bg-red-600 hover:bg-red-700 text-white"
+                    className="bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900 text-xs"
                   >
                     Confirm Rejection
                   </Button>

@@ -23,17 +23,13 @@ Example:
 
 <!-- List what you changed, fixed, or added -->
 
--
-
----
+- ***
 
 # 🧠 Reason for Changes
 
 <!-- Explain why this change was necessary -->
 
--
-
----
+- ***
 
 # 🧪 Testing Performed
 
@@ -65,3 +61,4 @@ Example: `https://trello.com/c/your-task-id`
 <!-- Anything special to highlight, known issues, extra context, etc. -->
 
 <!-- Make sure to select an Assignee or Reviewer. -->
+<!-- Test -->

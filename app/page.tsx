@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
-import { useDashboard } from "@/lib/hooks/useDashboard";
+import { useDashboardQuery } from "@/lib/hooks/queries/useDashboardQuery";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 function getGreeting(): string {
@@ -42,15 +42,13 @@ export default function HavenzHubDashboard() {
     departments,
     projects,
     properties,
-    bmsDevices,
-    accessLogs,
     users,
     documents,
     myTasks,
     loading,
     error,
     loadDashboardData,
-  } = useDashboard();
+  } = useDashboardQuery();
 
   useEffect(() => {
     const auth = authService.getAuth();
@@ -59,6 +57,7 @@ export default function HavenzHubDashboard() {
       return;
     }
 
+    // Ensure token is set (may already be set from useState initializer)
     const token = authService.getToken();
     const currentCompanyId = authService.getCurrentCompanyId();
     if (token) bmsApi.setToken(token);
@@ -69,12 +68,6 @@ export default function HavenzHubDashboard() {
     setIsAuthenticated(true);
     setAuthLoading(false);
   }, [router]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadDashboardData();
-    }
-  }, [isAuthenticated, loadDashboardData]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);

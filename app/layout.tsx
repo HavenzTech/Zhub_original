@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter, Geist_Mono as GeistMono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { QueryProvider } from "@/lib/query/QueryProvider"
 import { AppHealthGate } from "@/components/common/AppHealthGate"
 import { Toaster } from "@/components/ui/sonner"
 
@@ -57,11 +58,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <QueryProvider>
           <AppHealthGate>
             <div className="min-h-screen bg-gradient-to-br from-background to-muted/10">
               {children}
             </div>
           </AppHealthGate>
+          </QueryProvider>
 
           <Toaster richColors position="top-right" />
 

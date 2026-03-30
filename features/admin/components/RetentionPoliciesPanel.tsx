@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Edit, Trash2, Archive, Loader2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
-import { useRetentionPolicies } from "@/lib/hooks/useRetentionPolicies";
+import { useRetentionPoliciesQueryCompat } from "@/lib/hooks/queries/useRetentionPoliciesQuery";
 import type { CreateRetentionPolicyRequest, UpdateRetentionPolicyRequest, RetentionPolicyDto } from "@/types/bms";
 
 export function RetentionPoliciesPanel() {
@@ -43,7 +43,7 @@ export function RetentionPoliciesPanel() {
     createRetentionPolicy,
     updateRetentionPolicy,
     deleteRetentionPolicy,
-  } = useRetentionPolicies();
+  } = useRetentionPoliciesQueryCompat();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<RetentionPolicyDto | null>(null);

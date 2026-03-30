@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
+import { useDepartmentsQuery } from "@/lib/hooks/queries/useDepartmentsQuery";
 import { toast } from "sonner";
 import { Building2, Plus, X, Loader2 } from "lucide-react";
 
@@ -65,22 +66,16 @@ export function DepartmentsAssignment({
     }
   }, [projectId]);
 
-  const loadAvailableDepartments = useCallback(async () => {
-    try {
-      const data = await bmsApi.departments.getAll();
-      const deptList = Array.isArray(data)
-        ? data
-        : (data as any)?.items || (data as any)?.data || [];
-      setAvailableDepartments(deptList);
-    } catch (err) {
-      console.error("Error loading departments:", err);
+  const { data: deptsQueryData } = useDepartmentsQuery();
+  useEffect(() => {
+    if (deptsQueryData) {
+      setAvailableDepartments(deptsQueryData as any[]);
     }
-  }, []);
+  }, [deptsQueryData]);
 
   useEffect(() => {
     loadAssignedDepartments();
-    loadAvailableDepartments();
-  }, [loadAssignedDepartments, loadAvailableDepartments]);
+  }, [loadAssignedDepartments]);
 
   const handleAssignDepartment = async () => {
     if (!selectedDepartmentId) {

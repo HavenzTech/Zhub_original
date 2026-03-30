@@ -35,7 +35,7 @@ export function PropertyDetails({ property, companyName, onBack, onEdit }: Prope
 
               <div className="flex gap-3 mb-4">
                 <Badge className={getStatusColor(property.status)}>{property.status}</Badge>
-                {property.type && <Badge variant="secondary" className="capitalize">{property.type}</Badge>}
+                {property.type && <span className="text-xs px-2.5 py-1 rounded-md font-medium bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400 capitalize">{property.type}</span>}
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
@@ -186,7 +186,7 @@ export function PropertyDetails({ property, companyName, onBack, onEdit }: Prope
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-stone-500 dark:text-stone-400">Type</span>
-              <Badge variant="secondary" className="capitalize">{property.type || 'N/A'}</Badge>
+              <span className="text-xs px-2.5 py-1 rounded-md font-medium bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400 capitalize">{property.type || 'N/A'}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-stone-500 dark:text-stone-400">Status</span>
