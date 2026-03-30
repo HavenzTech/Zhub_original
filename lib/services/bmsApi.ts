@@ -72,14 +72,10 @@ import { authService } from './auth';
 import { sanitizeInput } from '@/lib/utils/sanitize';
 
 // Environment variables - configured in .env.local
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 const API_PREFIX = '/api/havenzhub';
 const ADMIN_PREFIX = '/api/admin';
 const TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
-
-if (!BASE_URL) {
-  throw new Error('NEXT_PUBLIC_API_URL is not defined in environment variables');
-}
 
 class BmsApiError extends Error {
   status: number;
