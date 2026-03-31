@@ -162,8 +162,10 @@ export default function SettingsPage() {
   const tabs = useMemo(() => {
     const baseTabs = [
       { id: "general", label: "General", icon: Settings },
-      { id: "users", label: "Staff & Roles", icon: Users },
     ];
+    if (isAdmin) {
+      baseTabs.push({ id: "users", label: "Staff & Roles", icon: Users });
+    }
     if (isSuperAdmin) {
       baseTabs.push({ id: "companies", label: "Companies", icon: Building2 });
     }
@@ -429,7 +431,7 @@ export default function SettingsPage() {
         {/* Tab Content */}
         <div className="mt-6">
           {activeTab === "general" && renderGeneralSettings()}
-          {activeTab === "users" && renderUsersRoles()}
+          {activeTab === "users" && isAdmin && renderUsersRoles()}
           {activeTab === "companies" && isSuperAdmin && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
