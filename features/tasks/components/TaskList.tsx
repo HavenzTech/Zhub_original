@@ -262,7 +262,7 @@ export function TaskList({
           )}
         </div>
       ) : view === "list" ? (
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[calc(100vh-320px)] overflow-y-auto pr-1">
           {sortedTasks.map((task) => (
             <TaskCard
               key={task.id}
@@ -289,13 +289,13 @@ export function TaskList({
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={`rounded-lg p-3 min-w-[250px] border transition-colors ${
+                    className={`rounded-lg p-3 min-w-[250px] border transition-colors flex flex-col ${
                       snapshot.isDraggingOver
                         ? "bg-accent-cyan/5 border-accent-cyan/30 dark:bg-accent-cyan/10"
                         : "bg-stone-50 dark:bg-stone-800/50 border-stone-200 dark:border-stone-700"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-3 shrink-0">
                       <Badge className={getTaskStatusColor(status.value)}>
                         {status.label}
                       </Badge>
@@ -303,7 +303,7 @@ export function TaskList({
                         {tasksByStatus[status.value]?.length || 0}
                       </span>
                     </div>
-                    <div className="space-y-2 min-h-[60px]">
+                    <div className="space-y-2 min-h-[60px] max-h-[calc(100vh-380px)] overflow-y-auto pr-1">
                       {tasksByStatus[status.value]?.map((task, index) => (
                         <Draggable
                           key={task.id}

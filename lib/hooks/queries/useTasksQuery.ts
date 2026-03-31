@@ -54,7 +54,7 @@ export function useProjectTasksQuery(projectId: string) {
   return useQuery({
     queryKey: queryKeys.projects.tasks(projectId),
     queryFn: async () => {
-      const data = await bmsApi.tasks.getByProject(projectId)
+      const data = await bmsApi.tasks.getByProject(projectId, { pageSize: 1000 })
       return extractArray<TaskDto>(data)
     },
     enabled: !!projectId,

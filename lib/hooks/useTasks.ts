@@ -100,7 +100,7 @@ export function useTasks(): UseTasksReturn {
     try {
       setLoading(true)
       setError(null)
-      const data = await bmsApi.tasks.getByProject(projectId)
+      const data = await bmsApi.tasks.getByProject(projectId, { pageSize: 1000 })
       setTasks(extractArray<TaskDto>(data))
       setTotal(extractArray<TaskDto>(data).length)
     } catch (err) {

@@ -976,8 +976,14 @@ class BmsApiService {
       const query = status ? `?status=${status}` : '';
       return this.get(`/tasks/my-tasks${query}`);
     },
-    // GET /tasks/project/{projectId}
-    getByProject: (projectId: string) => this.get(`/tasks/project/${projectId}`),
+    // GET /tasks/project/{projectId} - supports pagination (default page=1, pageSize=20)
+    getByProject: (projectId: string, params?: { page?: number; pageSize?: number }) => {
+      const query = new URLSearchParams();
+      if (params?.page) query.append('page', params.page.toString());
+      if (params?.pageSize) query.append('pageSize', params.pageSize.toString());
+      const queryString = query.toString();
+      return this.get(`/tasks/project/${projectId}${queryString ? `?${queryString}` : ''}`);
+    },
     // POST /tasks - create new task
     create: (data: any) => this.post('/tasks', data),
     // PUT /tasks/{id} - full update (admin, dept_manager, project_lead only)
