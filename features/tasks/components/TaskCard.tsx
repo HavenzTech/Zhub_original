@@ -22,6 +22,7 @@ import {
   PauseCircle,
   XCircle,
   ShieldCheck,
+  Import,
 } from "lucide-react"
 import type { TaskDto } from "@/types/bms"
 import {
@@ -128,6 +129,12 @@ export function TaskCard({
                   <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
                     <ShieldCheck className="w-3 h-3 mr-1" />
                     Requires Review
+                  </Badge>
+                )}
+                {task.tags?.toLowerCase().includes("imported") && (
+                  <Badge className="bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20">
+                    <Import className="w-3 h-3 mr-1" />
+                    Imported
                   </Badge>
                 )}
               </div>

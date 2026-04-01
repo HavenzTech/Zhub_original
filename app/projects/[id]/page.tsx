@@ -19,8 +19,10 @@ import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { Project, Company, ProjectSummaryDto } from "@/types/bms";
 import { toast } from "sonner";
 import { formatDateForInput } from "@/features/tasks/utils/taskHelpers";
-import { ArrowLeft, Sparkles, Loader2, Bot, X, History } from "lucide-react";
+import { ArrowLeft, Sparkles, Loader2, Bot, X, History, AlertTriangle, Clock, ChevronRight } from "lucide-react";
 import { useUsersQueryCompat } from "@/lib/hooks/queries/useUsersQuery";
+import { useProjectTasksQuery } from "@/lib/hooks/queries/useTasksQuery";
+import { isOverdue, getRelativeTime } from "@/features/tasks/utils/taskHelpers";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ProjectDescriptionHistoryEntry } from "@/types/bms";
@@ -69,6 +71,20 @@ export default function ProjectDetailPage() {
   const [showRegenConfirm, setShowRegenConfirm] = useState(false);
   const [descHistory, setDescHistory] = useState<ProjectDescriptionHistoryEntry[]>([]);
   const [descHistoryLoading, setDescHistoryLoading] = useState(false);
+
+  // Fetch project tasks for overdue widget on overview tab
+  const projectTasksQuery = useProjectTasksQuery(projectId);
+  const overdueTasks = useMemo(() => {
+    if (!projectTasksQuery.data) return [];
+    return projectTasksQuery.data
+      .filter((t) => isOverdue(t.dueDate, t.status))
+      .sort((a, b) => {
+        // Most overdue first
+        const aDate = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+        const bDate = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+        return aDate - bDate;
+      });
+  }, [projectTasksQuery.data]);
 
   const summaryMessages = [
     "Generating AI summary...",
@@ -372,16 +388,35 @@ export default function ProjectDetailPage() {
           {activeTab === "overview" && (
             <>
               {/* Stat Cards — matching dashboard style */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {[
                   { label: "Progress", value: `${progress}%` },
                   { label: "Budget", value: formatBudget(project.budgetAllocated) },
                   { label: "Spent", value: formatBudget(project.budgetSpent) },
                   { label: "End Date", value: project.endDate ? new Date(project.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-" },
+                  { label: "Overdue", value: String(overdueTasks.length), alert: overdueTasks.length > 0 },
                 ].map((stat) => (
-                  <div key={stat.label} className="p-5 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
-                    <div className="text-sm text-stone-500 dark:text-stone-400 mb-2">{stat.label}</div>
-                    <div className="text-3xl font-semibold text-stone-900 dark:text-stone-50">{stat.value}</div>
+                  <div
+                    key={stat.label}
+                    className={`p-5 bg-white dark:bg-stone-900 rounded-xl border ${
+                      "alert" in stat && stat.alert
+                        ? "border-red-200 dark:border-red-900/50"
+                        : "border-stone-200 dark:border-stone-700"
+                    } ${"alert" in stat && stat.alert ? "cursor-pointer hover:bg-red-50/50 dark:hover:bg-red-950/10 transition-colors" : ""}`}
+                    onClick={() => {
+                      if ("alert" in stat && stat.alert) setActiveTab("tasks");
+                    }}
+                  >
+                    <div className={`text-sm mb-2 ${
+                      "alert" in stat && stat.alert
+                        ? "text-red-500 dark:text-red-400"
+                        : "text-stone-500 dark:text-stone-400"
+                    }`}>{stat.label}</div>
+                    <div className={`text-3xl font-semibold ${
+                      "alert" in stat && stat.alert
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-stone-900 dark:text-stone-50"
+                    }`}>{stat.value}</div>
                   </div>
                 ))}
               </div>
@@ -628,7 +663,76 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
 
-              {/* AI Summary is now inline in the description card above */}
+              {/* Overdue Tasks */}
+              {overdueTasks.length > 0 && (
+                <div className="bg-white dark:bg-stone-900 rounded-xl border border-red-200 dark:border-red-900/50">
+                  <div className="px-5 py-3 border-b border-red-100 dark:border-red-900/30 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                      <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-50">
+                        Overdue Tasks
+                      </h2>
+                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 font-medium">
+                        {overdueTasks.length}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab("tasks")}
+                      className="flex items-center gap-1 text-xs text-accent-cyan hover:text-accent-cyan/80 transition-colors"
+                    >
+                      View all tasks
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="divide-y divide-stone-100 dark:divide-stone-800 max-h-[280px] overflow-y-auto">
+                    {overdueTasks.slice(0, 10).map((task) => (
+                      <button
+                        key={task.id}
+                        onClick={() => setActiveTab("tasks")}
+                        className="w-full px-5 py-3 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors text-left"
+                      >
+                        <div className="flex-1 min-w-0 mr-3">
+                          <p className="text-sm text-stone-900 dark:text-stone-100 truncate">
+                            {task.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {task.assignees?.[0]?.userName && (
+                              <span className="text-xs text-stone-400 dark:text-stone-500">
+                                {task.assignees[0].userName}
+                              </span>
+                            )}
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${
+                              task.priority === "critical"
+                                ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"
+                                : task.priority === "high"
+                                ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400"
+                                : "bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400"
+                            }`}>
+                              {task.priority}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Clock className="w-3.5 h-3.5 text-red-400" />
+                          <span className="text-xs text-red-500 dark:text-red-400 font-medium">
+                            {getRelativeTime(task.dueDate)}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                    {overdueTasks.length > 10 && (
+                      <div className="px-5 py-2 text-center">
+                        <button
+                          onClick={() => setActiveTab("tasks")}
+                          className="text-xs text-accent-cyan hover:text-accent-cyan/80 transition-colors"
+                        >
+                          +{overdueTasks.length - 10} more overdue tasks
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </>
           )}
 

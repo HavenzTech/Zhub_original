@@ -16,7 +16,7 @@ import { useProjectMembersQuery } from "@/lib/hooks/queries/useProjectsQuery"
 import { extractArray } from "@/lib/utils/api"
 import type { TaskDto, Department, UserResponse, ProjectMemberDto } from "@/types/bms"
 import { toast } from "sonner"
-import { Plus, RefreshCw, CheckSquare, Loader2 } from "lucide-react"
+import { Plus, RefreshCw, CheckSquare, Loader2, Upload } from "lucide-react"
 import { TaskDetailDialog } from "./TaskDetailDialog"
 import { formatDateForInput } from "../utils/taskHelpers"
 import {
@@ -34,6 +34,14 @@ const TaskFormModal = dynamic(
   () =>
     import("./TaskFormModal").then((mod) => ({
       default: mod.TaskFormModal,
+    })),
+  { ssr: false }
+)
+
+const ImportTasksDialog = dynamic(
+  () =>
+    import("./import/ImportTasksDialog").then((mod) => ({
+      default: mod.ImportTasksDialog,
     })),
   { ssr: false }
 )
@@ -65,6 +73,7 @@ export function ProjectTasksSection({
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
+  const [showImportDialog, setShowImportDialog] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<TaskFormData>({
     ...initialTaskFormData,
@@ -273,10 +282,16 @@ export function ProjectTasksSection({
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
           {canCreate && (
-            <Button size="sm" onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
-              <Plus className="w-4 h-4 mr-1" />
-              Add Task
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={() => setShowImportDialog(true)}>
+                <Upload className="w-4 h-4 mr-1" />
+                Import
+              </Button>
+              <Button size="sm" onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
+                <Plus className="w-4 h-4 mr-1" />
+                Add Task
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -381,6 +396,14 @@ export function ProjectTasksSection({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Import Tasks Dialog */}
+        <ImportTasksDialog
+          open={showImportDialog}
+          onOpenChange={setShowImportDialog}
+          projectId={projectId}
+          onImportComplete={() => projectTasksQuery.refetch()}
+        />
       </div>
     </div>
   )
