@@ -65,6 +65,9 @@ import {
 } from "lucide-react";
 import type { CompleteTaskRequest, DelegateTaskRequest, TaskDto, ProjectMemberDto } from "@/types/bms";
 import { extractArray } from "@/lib/utils/api";
+import { PageTour } from "@/components/tour/PageTour";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getWorkflowTasksSteps } from "@/lib/tour/steps";
 
 export default function MyTasksPage() {
   const router = useRouter();
@@ -707,6 +710,7 @@ export default function MyTasksPage() {
 
   return (
     <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.WORKFLOW_TASKS} options={{ steps: getWorkflowTasksSteps(), enabled: true }} />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -741,7 +745,7 @@ export default function MyTasksPage() {
 
         {/* Search + Tabs */}
         <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 max-w-md" data-tour="tasks-search">
             <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 dark:text-stone-500" />
             <Input
               placeholder="Search tasks..."
@@ -751,7 +755,7 @@ export default function MyTasksPage() {
             />
           </div>
           <div className="flex-1" />
-          <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
+          <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden" data-tour="tasks-tabs">
             {["all", "tasks", "completed"].map((tab) => (
               <button
                 key={tab}
@@ -769,6 +773,7 @@ export default function MyTasksPage() {
         </div>
 
         {/* Tab Content */}
+        <div data-tour="tasks-list">
         {activeTab === "all" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {renderApprovalsSection()}
@@ -784,6 +789,7 @@ export default function MyTasksPage() {
             {renderCompletedSection()}
           </div>
         )}
+        </div>
       </div>
 
       <TaskDetailDialog

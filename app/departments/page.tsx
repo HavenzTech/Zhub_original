@@ -18,6 +18,9 @@ import { useUsersQueryCompat } from "@/lib/hooks/queries/useUsersQuery";
 import { DepartmentCard } from "@/features/departments/components/DepartmentCard";
 import { DepartmentStats } from "@/features/departments/components/DepartmentStats";
 import { Users, Plus, Search, RefreshCw, LayoutGrid, List, User, DollarSign, Trash2 } from "lucide-react";
+import { PageTour } from "@/components/tour/PageTour";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getDepartmentsListSteps } from "@/lib/tour/steps";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -183,6 +186,7 @@ export default function DepartmentsPage() {
 
   return (
     <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.DEPARTMENTS_LIST} options={{ steps: getDepartmentsListSteps(), enabled: !loading }} />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -200,7 +204,7 @@ export default function DepartmentsPage() {
               Refresh
             </Button>
             {authService.hasPermission("create", "department") && (
-              <Button onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
+              <Button onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white" data-tour="departments-add">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Department
               </Button>
@@ -239,11 +243,13 @@ export default function DepartmentsPage() {
         ) : (
           <>
             {/* Stats Overview */}
-            <DepartmentStats departments={departments} />
+            <div data-tour="departments-stats">
+              <DepartmentStats departments={departments} />
+            </div>
 
             {/* Search + View Toggle */}
             <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
+              <div className="relative flex-1 max-w-md" data-tour="departments-search">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 dark:text-stone-500" />
                 <Input
                   placeholder="Search departments..."
@@ -259,7 +265,7 @@ export default function DepartmentsPage() {
                   : "departments"}
               </span>
               <div className="flex-1" />
-              <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
+              <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden" data-tour="departments-view-toggle">
                 <button
                   onClick={() => { setViewMode("grid"); localStorage.setItem("departments-view", "grid"); }}
                   className={`p-2 transition-colors ${viewMode === "grid" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
@@ -278,7 +284,7 @@ export default function DepartmentsPage() {
             {/* Departments */}
             {filteredDepartments.length > 0 ? (
               viewMode === "grid" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" data-tour="departments-list">
                   {filteredDepartments.map((dept) => {
                     const budget = dept.budgetAllocated
                       ? `$${(dept.budgetAllocated / 1000).toFixed(0)}K`
@@ -346,7 +352,7 @@ export default function DepartmentsPage() {
                   })}
                 </div>
               ) : (
-                <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+                <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden" data-tour="departments-list">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>

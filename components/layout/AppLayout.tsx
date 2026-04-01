@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { AiAssistantSidebar } from "./AiAssistantSidebar";
 import { CommandPalette } from "./CommandPalette";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
+import { TourProvider } from "@/contexts/TourContext";
 import { useSessionTimeout } from "@/lib/hooks/useSessionTimeout";
 import { authService } from "@/lib/services/auth";
 import { toast } from "sonner";
@@ -15,9 +16,14 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
+/** Routes where the AI assistant sidebar is hidden (page has its own chat) */
+const HIDE_AI_SIDEBAR_ROUTES = ["/document-control", "/z-ai"];
+
 function AppLayoutContent({ children }: AppLayoutProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const showAiSidebar = !HIDE_AI_SIDEBAR_ROUTES.includes(pathname);
 
   const openCommandPalette = useCallback(() => setCommandPaletteOpen(true), []);
 
@@ -57,8 +63,8 @@ function AppLayoutContent({ children }: AppLayoutProps) {
           </main>
         </div>
 
-        {/* AI Assistant Sidebar */}
-        <AiAssistantSidebar />
+        {/* AI Assistant Sidebar — hidden on pages with built-in chat */}
+        {showAiSidebar && <AiAssistantSidebar />}
       </div>
 
       {/* Command Palette */}
@@ -74,7 +80,9 @@ function AppLayoutContent({ children }: AppLayoutProps) {
 export function AppLayout({ children }: AppLayoutProps) {
   return (
     <BreadcrumbProvider>
-      <AppLayoutContent>{children}</AppLayoutContent>
+      <TourProvider>
+        <AppLayoutContent>{children}</AppLayoutContent>
+      </TourProvider>
     </BreadcrumbProvider>
   );
 }

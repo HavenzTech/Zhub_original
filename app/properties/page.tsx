@@ -20,6 +20,9 @@ import {
   PropertyFormData,
 } from "@/features/properties/components/PropertyFormModal";
 import { Home, Building, Plus, Search, RefreshCw, LayoutGrid, List, MapPin, Layers, Trash2 } from "lucide-react";
+import { PageTour } from "@/components/tour/PageTour";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getPropertiesListSteps } from "@/lib/tour/steps";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -199,6 +202,7 @@ export default function PropertiesPage() {
 
   return (
     <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.PROPERTIES_LIST} options={{ steps: getPropertiesListSteps(), enabled: !loading }} />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -214,7 +218,7 @@ export default function PropertiesPage() {
               Refresh
             </Button>
             {authService.hasPermission("create", "property") && (
-              <Button onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
+              <Button onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white" data-tour="properties-add">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Property
               </Button>
@@ -253,11 +257,13 @@ export default function PropertiesPage() {
         ) : (
           <>
             {/* Stats Overview */}
-            <PropertyStats properties={properties} />
+            <div data-tour="properties-stats">
+              <PropertyStats properties={properties} />
+            </div>
 
             {/* Search + View Toggle */}
             <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
+              <div className="relative flex-1 max-w-md" data-tour="properties-search">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 dark:text-stone-500" />
                 <Input
                   placeholder="Search properties..."
@@ -271,7 +277,7 @@ export default function PropertiesPage() {
                 {filteredProperties.length === 1 ? "property" : "properties"}
               </span>
               <div className="flex-1" />
-              <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
+              <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden" data-tour="properties-view-toggle">
                 <button
                   onClick={() => { setViewMode("grid"); localStorage.setItem("properties-view", "grid"); }}
                   className={`p-2 transition-colors ${viewMode === "grid" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
@@ -290,7 +296,7 @@ export default function PropertiesPage() {
             {/* Properties */}
             {filteredProperties.length > 0 ? (
               viewMode === "grid" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" data-tour="properties-list">
                   {filteredProperties.map((property) => {
                     const location = [property.locationCity, property.locationProvince]
                       .filter(Boolean)
@@ -371,7 +377,7 @@ export default function PropertiesPage() {
                   })}
                 </div>
               ) : (
-                <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden">
+                <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden" data-tour="properties-list">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>

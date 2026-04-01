@@ -75,6 +75,9 @@ import { StartWorkflowModal } from "@/features/documents/components/workflow/Sta
 import { WorkflowStatusBadge } from "@/features/documents/components/workflow/WorkflowStatusBadge";
 import { ClassificationBadge } from "@/components/ui/classification-badge";
 import { useRetentionPoliciesQueryCompat } from "@/lib/hooks/queries/useRetentionPoliciesQuery";
+import { PageTour } from "@/components/tour/PageTour";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getDocumentControlSteps } from "@/lib/tour/steps";
 import type {
   UploadFormData,
   UserAccess,
@@ -829,6 +832,7 @@ export default function DocumentControlPage() {
 
   return (
     <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.DOCUMENT_CONTROL} options={{ steps: getDocumentControlSteps(), enabled: !loading }} />
       {/* Mobile Layout */}
       <div className="flex flex-col md:hidden -mx-4 -my-4" style={{ height: 'calc(100vh - 3.5rem)' }}>
         {/* Mobile Header */}
@@ -909,7 +913,7 @@ export default function DocumentControlPage() {
         {/* ─── Left Panel: Tree, Search, Filters ─── */}
         <div className={`flex shrink-0 flex-col border-r border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900 transition-[width] duration-200 ease-in-out overflow-hidden ${showLeftSidebar ? "w-[300px]" : "w-0 border-r-0"}`}>
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-stone-200 px-3 py-3 dark:border-stone-700">
+          <div className="flex items-center justify-between border-b border-stone-200 px-3 py-3 dark:border-stone-700" data-tour="doccontrol-toolbar">
             <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">
               Documents
             </span>
@@ -943,7 +947,7 @@ export default function DocumentControlPage() {
           </div>
 
           {/* Search Bar */}
-          <div className="border-b border-stone-200 p-3 dark:border-stone-700">
+          <div className="border-b border-stone-200 p-3 dark:border-stone-700" data-tour="doccontrol-filters">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
               <input
@@ -1069,7 +1073,7 @@ export default function DocumentControlPage() {
           )}
 
           {/* Search Results or Folder Tree */}
-          <div className="flex-1 overflow-y-auto p-2 scrollbar-modern">
+          <div className="flex-1 overflow-y-auto p-2 scrollbar-modern" data-tour="doccontrol-folder-tree">
             {searchResults ? (
               <>
                 <div className="mb-2 flex items-center justify-between px-2">
@@ -1167,6 +1171,7 @@ export default function DocumentControlPage() {
 
         {/* ─── Center Panel: Document Preview + Tabs ─── */}
         <div
+          data-tour="doccontrol-preview"
           className={`flex flex-1 flex-col overflow-hidden bg-stone-50 dark:bg-stone-950 relative ${isDraggingOver ? "ring-2 ring-inset ring-accent-cyan" : ""}`}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -1198,7 +1203,7 @@ export default function DocumentControlPage() {
           {selectedDocumentForModal ? (
             <>
               {/* Document Action Bar */}
-              <div className="shrink-0 border-b border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900">
+              <div className="shrink-0 border-b border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900" data-tour="doccontrol-document-list">
                 <div className="flex items-center justify-between px-4 py-3">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="min-w-0">
@@ -1675,10 +1680,12 @@ export default function DocumentControlPage() {
           )}
         </div>
 
-        {/* ─── Right Panel: AI Chat ─── */}
-        <div className={`hidden shrink-0 border-l border-stone-200 bg-white lg:flex lg:flex-col dark:border-stone-700 dark:bg-stone-900 transition-[width] duration-200 ease-in-out overflow-hidden ${showRightSidebar ? "w-[320px]" : "w-0 border-l-0"}`}>
-          <DocumentChatPanel document={selectedDocumentForModal} />
-        </div>
+        {/* ─── Right Panel: AI Chat — only visible when a document is selected ─── */}
+        {selectedDocumentForModal && (
+          <div data-tour="doccontrol-chat" className={`hidden shrink-0 border-l border-stone-200 bg-white lg:flex lg:flex-col dark:border-stone-700 dark:bg-stone-900 transition-[width] duration-200 ease-in-out overflow-hidden ${showRightSidebar ? "w-[320px]" : "w-0 border-l-0"}`}>
+            <DocumentChatPanel document={selectedDocumentForModal} />
+          </div>
+        )}
       </div>
 
       {/* ─── Modals ─── */}

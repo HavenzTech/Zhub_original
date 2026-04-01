@@ -15,6 +15,9 @@ import { authService } from "@/lib/services/auth";
 import { SetBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { Property, PropertyType, PropertyStatus, Company } from "@/types/bms";
 import { toast } from "sonner";
+import { PageTour } from "@/components/tour/PageTour";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getPropertyDetailSteps } from "@/lib/tour/steps";
 
 const initialFormData: PropertyFormData = {
   name: "",
@@ -193,51 +196,42 @@ export default function PropertyDetailPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <AppLayout>
-        <LoadingSpinnerCentered text="Loading property..." />
-      </AppLayout>
-    );
-  }
+  return (
+    <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.PROPERTY_DETAIL} options={{ steps: getPropertyDetailSteps(), enabled: !loading && !!property }} />
 
-  if (error || !property) {
-    return (
-      <AppLayout>
+      {loading ? (
+        <LoadingSpinnerCentered text="Loading property..." />
+      ) : error || !property ? (
         <ErrorDisplayCentered
           title="Error loading property"
           message={error?.message || "Property not found"}
           onRetry={loadProperty}
         />
-      </AppLayout>
-    );
-  }
-
-  return (
-    <AppLayout>
-      {/* Set breadcrumb inside AppLayout where provider exists */}
-      {breadcrumbItems.length > 0 && <SetBreadcrumb items={breadcrumbItems} />}
-
-      <div className="space-y-6">
-        {/* Property Details */}
-        <PropertyDetails
-          property={property}
-          companyName={company?.name}
-          onBack={handleBack}
-          onEdit={handleEdit}
-        />
-
-        {/* Edit Modal */}
-        <PropertyFormModal
-          open={showEditForm}
-          onOpenChange={setShowEditForm}
-          mode="edit"
-          formData={formData}
-          setFormData={setFormData}
-          isSubmitting={isSubmitting}
-          onSubmit={handleEditSubmit}
-        />
-      </div>
+      ) : (
+        <>
+          {breadcrumbItems.length > 0 && <SetBreadcrumb items={breadcrumbItems} />}
+          <div className="space-y-6">
+            <div data-tour="property-details">
+              <PropertyDetails
+                property={property}
+                companyName={company?.name}
+                onBack={handleBack}
+                onEdit={handleEdit}
+              />
+            </div>
+            <PropertyFormModal
+              open={showEditForm}
+              onOpenChange={setShowEditForm}
+              mode="edit"
+              formData={formData}
+              setFormData={setFormData}
+              isSubmitting={isSubmitting}
+              onSubmit={handleEditSubmit}
+            />
+          </div>
+        </>
+      )}
     </AppLayout>
   );
 }

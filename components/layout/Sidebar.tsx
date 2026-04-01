@@ -20,6 +20,7 @@ import {
   PanelLeft,
   X,
   LogOut,
+  HelpCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -28,6 +29,7 @@ import { authService } from "@/lib/services/auth";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { Company } from "@/types/bms";
 import { NotificationDropdown } from "@/components/common/NotificationDropdown";
+import { useTourReplay } from "@/components/tour/TourReplayButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +71,7 @@ interface SidebarProps {
 
 export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
   const router = useRouter();
+  const { replay: replayTour, hasTour, isTourActive } = useTourReplay();
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("sidebar-collapsed") === "true";
@@ -85,6 +88,13 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
     const handler = () => setCollapsed(true);
     window.addEventListener("sidebar-collapse", handler);
     return () => window.removeEventListener("sidebar-collapse", handler);
+  }, []);
+
+  // Listen for tour expand requests
+  useEffect(() => {
+    const handler = () => setCollapsed(false);
+    window.addEventListener("tour-expand-sidebar", handler);
+    return () => window.removeEventListener("tour-expand-sidebar", handler);
   }, []);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userName, setUserName] = useState("");
@@ -354,7 +364,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-2.5">
+      <nav data-tour="sidebar-nav" className="flex-1 space-y-0.5 overflow-y-auto px-2.5">
         {visibleItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -363,6 +373,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
             <Link
               key={item.id}
               href={item.path}
+              data-tour={`sidebar-${item.id}`}
               ref={(el) => { navItemRefs.current[item.id] = el; }}
               onMouseEnter={() => handleNavMouseEnter(item.id)}
               onMouseLeave={handleNavMouseLeave}
@@ -411,78 +422,141 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
 
       </nav>
 
-      {/* User profile */}
-      <div className="border-t border-stone-200 dark:border-stone-800 p-3">
-        <div className={cn(
-          "flex items-center rounded-lg p-2",
-          collapsed ? "justify-center" : "gap-2.5"
-        )}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-cyan text-xs font-medium text-white hover:bg-accent-cyan/80 transition-colors cursor-pointer">
-                {userInitials || "U"}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-48 bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700">
-              <div className="px-3 py-2">
-                <p className="text-sm font-medium text-stone-900 dark:text-stone-50">{userName}</p>
-                <p className="text-xs text-stone-500 dark:text-stone-400">{currentCompany ? getRoleLabel(currentCompany.role) : "Member"}</p>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/change-password")} className="cursor-pointer">
-                <Settings className="w-4 h-4 mr-2" />
-                Change Password
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={async () => {
-                  await authService.logout();
-                  router.push("/login");
-                }}
-                className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Log Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {!collapsed && (
-            <>
-              <div className="flex-1 overflow-hidden">
-                <div className="truncate text-[13px] text-stone-900 dark:text-white">
-                  {userName}
-                </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-stone-500">
-                  <span>{currentCompany ? getRoleLabel(currentCompany.role) : "Member"}</span>
-                  <span className="mx-0.5">·</span>
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  <span>Secure</span>
-                </div>
-              </div>
-              <NotificationDropdown />
-              <Link
-                href="/settings"
-                className="rounded-md p-1 text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300"
-              >
-                <Settings className="h-4 w-4" />
-              </Link>
-              <button
-                onClick={async () => {
-                  await authService.logout();
-                  router.push("/login");
-                }}
-                className="rounded-md p-1 text-stone-400 dark:text-stone-500 hover:text-red-500 transition-colors"
-                title="Log out"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </>
+      {/* Page Tour Help */}
+      {hasTour && (
+        <div className="px-2.5 pb-2">
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={replayTour}
+                  disabled={isTourActive}
+                  className="flex w-full items-center justify-center rounded-lg py-2.5 px-2 text-stone-400 dark:text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-accent-cyan transition-colors disabled:opacity-50"
+                >
+                  <HelpCircle className="h-[18px] w-[18px]" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Replay page tour</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <button
+              onClick={replayTour}
+              disabled={isTourActive}
+              className="flex w-full items-center gap-2.5 rounded-lg py-2.5 px-3 text-[13px] text-stone-400 dark:text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-accent-cyan transition-colors disabled:opacity-50"
+            >
+              <HelpCircle className="h-[18px] w-[18px] shrink-0" />
+              <span className="font-medium">Page Tour</span>
+            </button>
           )}
         </div>
+      )}
+
+      {/* User profile */}
+      <div data-tour="sidebar-profile" className="border-t border-stone-200 dark:border-stone-800 p-3">
+        {collapsed ? (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-cyan text-xs font-medium text-white hover:bg-accent-cyan/80 transition-colors cursor-pointer">
+                  {userInitials || "U"}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-48 bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700">
+                <div className="px-3 py-2">
+                  <p className="text-sm font-medium text-stone-900 dark:text-stone-50">{userName}</p>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">{currentCompany ? getRoleLabel(currentCompany.role) : "Member"}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/change-password")} className="cursor-pointer">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Change Password
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await authService.logout();
+                    router.push("/login");
+                  }}
+                  className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ) : (
+          <div className="flex items-start gap-2.5 px-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-cyan text-xs font-medium text-white hover:bg-accent-cyan/80 transition-colors cursor-pointer mt-0.5">
+                  {userInitials || "U"}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-48 bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700">
+                <div className="px-3 py-2">
+                  <p className="text-sm font-medium text-stone-900 dark:text-stone-50">{userName}</p>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">{currentCompany ? getRoleLabel(currentCompany.role) : "Member"}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/change-password")} className="cursor-pointer">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Change Password
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={async () => {
+                    await authService.logout();
+                    router.push("/login");
+                  }}
+                  className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Log Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <div className="flex-1 min-w-0">
+              <div className="truncate text-sm font-semibold text-stone-900 dark:text-white">
+                {userName}
+              </div>
+              <div className="flex items-center mt-0.5">
+                <span className="text-xs text-stone-500 relative -top-[4px]">
+                  {currentCompany ? getRoleLabel(currentCompany.role) : "Member"}
+                </span>
+                <div className="flex items-center gap-1 ml-auto">
+                  <NotificationDropdown />
+                  <Link
+                    href="/settings"
+                    className="rounded-md p-1 text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      await authService.logout();
+                      router.push("/login");
+                    }}
+                    className="rounded-md p-1 text-stone-400 dark:text-stone-500 hover:text-red-500 transition-colors"
+                    title="Log out"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
     </TooltipProvider>

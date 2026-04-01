@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { WorkflowCard } from "@/features/workflows/components/WorkflowCard";
 import { WorkflowDetails } from "@/features/workflows/components/WorkflowDetails";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 interface WorkflowIntegration {
   id: string;
@@ -413,6 +414,7 @@ export default function WorkflowsPage() {
   });
 
   return (
+    <AppLayout>
     <div className="space-y-6">
       {!selectedWorkflow ? (
         <>
@@ -700,5 +702,6 @@ export default function WorkflowsPage() {
         />
       )}
     </div>
+    </AppLayout>
   );
 }
