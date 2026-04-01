@@ -174,7 +174,7 @@ describe('useTasks', () => {
         await result.current.loadProjectTasks('p1')
       })
 
-      expect(bmsApi.tasks.getByProject).toHaveBeenCalledWith('p1')
+      expect(bmsApi.tasks.getByProject).toHaveBeenCalledWith('p1', expect.objectContaining({ pageSize: 1000 }))
       expect(result.current.tasks).toEqual(mockTasks)
     })
 
