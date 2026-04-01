@@ -39,6 +39,9 @@ import {
   Edit,
   Loader2,
 } from "lucide-react";
+import { PageTour } from "@/components/tour/PageTour";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getSettingsSteps } from "@/lib/tour/steps";
 import { UserManagementPanel } from "@/features/users/components/UserManagementPanel";
 import { FolderTemplatesPanel } from "@/features/admin/components/FolderTemplatesPanel";
 import { RetentionPoliciesPanel } from "@/features/admin/components/RetentionPoliciesPanel";
@@ -399,6 +402,7 @@ export default function SettingsPage() {
 
   return (
     <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.SETTINGS} options={{ steps: getSettingsSteps(authService.isAdmin(), authService.isSuperAdmin()), enabled: true }} />
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -409,11 +413,12 @@ export default function SettingsPage() {
         </div>
 
         {/* Tabs Navigation */}
-        <div className="border-b border-stone-200 dark:border-stone-700">
+        <div className="border-b border-stone-200 dark:border-stone-700" data-tour="settings-tabs">
           <nav className="flex space-x-8 overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
+                data-tour={`settings-tab-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === tab.id
@@ -430,8 +435,8 @@ export default function SettingsPage() {
 
         {/* Tab Content */}
         <div className="mt-6">
-          {activeTab === "general" && renderGeneralSettings()}
-          {activeTab === "users" && isAdmin && renderUsersRoles()}
+          {activeTab === "general" && <div>{renderGeneralSettings()}</div>}
+          {activeTab === "users" && isAdmin && <div>{renderUsersRoles()}</div>}
           {activeTab === "companies" && isSuperAdmin && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">

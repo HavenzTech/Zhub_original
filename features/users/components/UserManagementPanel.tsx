@@ -12,6 +12,7 @@ import { UserStats } from "./UserStats";
 import { UserFormModal } from "./UserFormModal";
 import { PasswordDisplayModal } from "./PasswordDisplayModal";
 import { DeleteUserDialog } from "./DeleteUserDialog";
+import { UserDetailModal } from "./UserDetailModal";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import type {
@@ -21,6 +22,7 @@ import type {
 } from "@/types/bms";
 import { toast } from "sonner";
 import { UserPlus, Search, Users as UsersIcon, Loader2 } from "lucide-react";
+import { tourApi } from "@/lib/tour/tour-api";
 
 const initialFormData: CreateUserRequest = {
   email: "",
@@ -55,6 +57,9 @@ export function UserManagementPanel() {
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deletingUser, setDeletingUser] = useState<UserResponse | null>(null);
+
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
 
   useEffect(() => {
     const auth = authService.getAuth();
@@ -176,6 +181,16 @@ export function UserManagementPanel() {
     setShowDeleteDialog(true);
   };
 
+  const handleResetTours = async (user: UserResponse) => {
+    if (!user.id) return;
+    try {
+      await tourApi.resetAll(user.id);
+      toast.success(`Tours reset for ${user.name || user.email}`);
+    } catch {
+      toast.error("Failed to reset tours");
+    }
+  };
+
   const handleDeleteConfirm = async () => {
     if (!deletingUser?.id) return;
 
@@ -250,8 +265,10 @@ export function UserManagementPanel() {
             <UserCard
               key={user.id}
               user={user}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              onClick={(u) => {
+                setSelectedUser(u);
+                setShowDetailModal(true);
+              }}
             />
           ))}
         </div>
@@ -321,6 +338,15 @@ export function UserManagementPanel() {
         user={deletingUser}
         isSubmitting={isSubmitting}
         onConfirm={handleDeleteConfirm}
+      />
+
+      <UserDetailModal
+        user={selectedUser}
+        open={showDetailModal}
+        onOpenChange={setShowDetailModal}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onResetTours={handleResetTours}
       />
     </div>
   );

@@ -20,6 +20,10 @@ import { bmsApi } from "@/lib/services/bmsApi";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { useDashboardQuery } from "@/lib/hooks/queries/useDashboardQuery";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PageTour } from "@/components/tour/PageTour";
+import { OnboardingChecklist } from "@/components/tour/OnboardingChecklist";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getDashboardSteps } from "@/lib/tour/steps";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -136,7 +140,7 @@ export default function HavenzHubDashboard() {
       <div className="space-y-6">
         {/* Welcome Greeting + Company Overview */}
         {currentCompany ? (
-          <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 px-5 py-4 flex items-center gap-4">
+          <div data-tour="dashboard-welcome" className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 px-5 py-4 flex items-center gap-4">
             {currentCompany.logoUrl && !imageError ? (
               <Image
                 src={currentCompany.logoUrl}
@@ -182,8 +186,11 @@ export default function HavenzHubDashboard() {
           </h1>
         )}
 
+        {/* Onboarding Checklist */}
+        <OnboardingChecklist />
+
         {/* Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div data-tour="dashboard-stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             {
               label: "Properties",
@@ -219,7 +226,7 @@ export default function HavenzHubDashboard() {
         {/* Two-column: Projects + My Tasks */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Projects List */}
-          <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+          <div data-tour="dashboard-projects" className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
             <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
               <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50">
                 Projects
@@ -292,7 +299,7 @@ export default function HavenzHubDashboard() {
           </div>
 
           {/* My Tasks */}
-          <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+          <div data-tour="dashboard-tasks" className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
             <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
               <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50">
                 My Tasks
@@ -387,7 +394,7 @@ export default function HavenzHubDashboard() {
         </div>
 
         {/* Recent Documents - full width below */}
-        <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+        <div data-tour="dashboard-documents" className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
           <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700">
             <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50">
               Recent Documents
@@ -442,5 +449,10 @@ export default function HavenzHubDashboard() {
     return null;
   }
 
-  return <AppLayout>{renderDashboard()}</AppLayout>;
+  return (
+    <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.DASHBOARD} options={{ steps: getDashboardSteps(), enabled: !loading && isAuthenticated }} />
+      {renderDashboard()}
+    </AppLayout>
+  );
 }

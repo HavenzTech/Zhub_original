@@ -18,6 +18,9 @@ import { authService } from "@/lib/services/auth";
 import { Project } from "@/types/bms";
 import { toast } from "sonner";
 import { FolderOpen, Plus, Search, RefreshCw, Target, LayoutGrid, List, Clock, User, Trash2 } from "lucide-react";
+import { PageTour } from "@/components/tour/PageTour";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getProjectsListSteps } from "@/lib/tour/steps";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -176,6 +179,7 @@ export default function ProjectsPage() {
 
   return (
     <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.PROJECTS_LIST} options={{ steps: getProjectsListSteps(), enabled: !loading }} />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -191,7 +195,7 @@ export default function ProjectsPage() {
               Refresh
             </Button>
             {authService.hasPermission("create", "project") && (
-              <Button onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
+              <Button data-tour="projects-add" onClick={() => setShowAddForm(true)} className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Project
               </Button>
@@ -230,11 +234,13 @@ export default function ProjectsPage() {
         ) : (
           <>
             {/* Stats Overview */}
-            <ProjectStats projects={projects} />
+            <div data-tour="projects-stats">
+              <ProjectStats projects={projects} />
+            </div>
 
             {/* Search + View Toggle */}
             <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
+              <div data-tour="projects-search" className="relative flex-1 max-w-md">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-stone-400 dark:text-stone-500" />
                 <Input
                   placeholder="Search projects..."
@@ -248,7 +254,7 @@ export default function ProjectsPage() {
                 {filteredProjects.length === 1 ? "project" : "projects"}
               </span>
               <div className="flex-1" />
-              <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
+              <div data-tour="projects-view-toggle" className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden">
                 <button
                   onClick={() => { setViewMode("grid"); localStorage.setItem("projects-view", "grid"); }}
                   className={`p-2 transition-colors ${viewMode === "grid" ? "bg-accent-cyan text-white" : "bg-white dark:bg-stone-900 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-800"}`}
@@ -267,7 +273,7 @@ export default function ProjectsPage() {
             {/* Projects */}
             {filteredProjects.length > 0 ? (
               viewMode === "grid" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div data-tour="projects-list" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                   {filteredProjects.map((project) => {
                     const progress = project.progress ?? 0;
                     const budget = project.budgetAllocated

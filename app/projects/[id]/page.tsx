@@ -26,6 +26,9 @@ import { isOverdue, getRelativeTime } from "@/features/tasks/utils/taskHelpers";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ProjectDescriptionHistoryEntry } from "@/types/bms";
+import { PageTour } from "@/components/tour/PageTour";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getProjectDetailSteps } from "@/lib/tour/steps";
 
 const ProjectFormModal = dynamic(
   () =>
@@ -292,26 +295,6 @@ export default function ProjectDetailPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <AppLayout>
-        <LoadingSpinnerCentered text="Loading project..." />
-      </AppLayout>
-    );
-  }
-
-  if (error || !project) {
-    return (
-      <AppLayout>
-        <ErrorDisplayCentered
-          title="Error loading project"
-          message={error?.message || "Project not found"}
-          onRetry={loadProject}
-        />
-      </AppLayout>
-    );
-  }
-
   const formatBudget = (value?: number | null) => {
     if (!value) return "-";
     if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
@@ -319,15 +302,27 @@ export default function ProjectDetailPage() {
     return `$${value}`;
   };
 
-  const progress = project.progress ?? 0;
+  const progress = project?.progress ?? 0;
 
   return (
     <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.PROJECT_DETAIL} options={{ steps: getProjectDetailSteps(activeTab), enabled: !loading && !!project }} />
+
+      {loading ? (
+        <LoadingSpinnerCentered text="Loading project..." />
+      ) : error || !project ? (
+        <ErrorDisplayCentered
+          title="Error loading project"
+          message={error?.message || "Project not found"}
+          onRetry={loadProject}
+        />
+      ) : (
+      <>
       {breadcrumbItems.length > 0 && <SetBreadcrumb items={breadcrumbItems} />}
 
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div data-tour="project-header" className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={handleBack}
@@ -362,10 +357,12 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden w-fit">
+        <div data-tour="project-tabs" className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden w-fit">
           {["overview", "tasks", "documents", "team", "budget"].map((tab) => (
             <button
               key={tab}
+              data-tour={`project-tab-${tab}`}
+              data-active={activeTab === tab ? "true" : undefined}
               onClick={() => {
                 setActiveTab(tab);
                 if (tab === "documents") {
@@ -388,7 +385,7 @@ export default function ProjectDetailPage() {
           {activeTab === "overview" && (
             <>
               {/* Stat Cards — matching dashboard style */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div data-tour="project-stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {[
                   { label: "Progress", value: `${progress}%` },
                   { label: "Budget", value: formatBudget(project.budgetAllocated) },
@@ -424,7 +421,7 @@ export default function ProjectDetailPage() {
               {/* Two-column: Description + Tasks */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left: Description */}
-                <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+                <div data-tour="project-description" className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
                   <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
                     <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50">Description</h2>
                     <div className="flex items-center gap-3">
@@ -475,7 +472,7 @@ export default function ProjectDetailPage() {
 
                     {/* AI Summary — inline below description */}
                     {showSummary && (
-                      <div className="mt-4 pt-4 border-t border-stone-200 dark:border-stone-700">
+                      <div data-tour="project-ai-summary" className="mt-4 pt-4 border-t border-stone-200 dark:border-stone-700">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <Bot className="h-4 w-4 text-accent-cyan" />
@@ -853,6 +850,8 @@ export default function ProjectDetailPage() {
           </div>
         )}
       </div>
+      </>
+      )}
     </AppLayout>
   );
 }

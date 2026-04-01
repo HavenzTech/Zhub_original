@@ -16,6 +16,9 @@ import { Department, Company, UserResponse } from "@/types/bms";
 import { toast } from "sonner";
 import { ArrowLeft, Users } from "lucide-react";
 import { useUsersQuery } from "@/lib/hooks/queries/useUsersQuery";
+import { PageTour } from "@/components/tour/PageTour";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getDepartmentDetailSteps } from "@/lib/tour/steps";
 
 const DepartmentFormModal = dynamic(
   () =>
@@ -182,26 +185,6 @@ export default function DepartmentDetailPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <AppLayout>
-        <LoadingSpinnerCentered text="Loading department..." />
-      </AppLayout>
-    );
-  }
-
-  if (error || !department) {
-    return (
-      <AppLayout>
-        <ErrorDisplayCentered
-          title="Error loading department"
-          message={error?.message || "Department not found"}
-          onRetry={loadDepartment}
-        />
-      </AppLayout>
-    );
-  }
-
   const formatBudget = (value?: number | null) => {
     if (!value) return "-";
     if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
@@ -211,6 +194,18 @@ export default function DepartmentDetailPage() {
 
   return (
     <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.DEPARTMENT_DETAIL} options={{ steps: getDepartmentDetailSteps(), enabled: !loading && !!department }} />
+
+      {loading ? (
+        <LoadingSpinnerCentered text="Loading department..." />
+      ) : error || !department ? (
+        <ErrorDisplayCentered
+          title="Error loading department"
+          message={error?.message || "Department not found"}
+          onRetry={loadDepartment}
+        />
+      ) : (
+      <>
       {breadcrumbItems.length > 0 && <SetBreadcrumb items={breadcrumbItems} />}
 
       <div className="space-y-6">
@@ -243,7 +238,7 @@ export default function DepartmentDetailPage() {
           {/* Left column (2/3): Details card + Description */}
           <div className="lg:col-span-2 space-y-6">
             {/* Details card */}
-            <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+            <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700" data-tour="department-info">
               <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700">
                 <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50">Department Details</h2>
               </div>
@@ -282,7 +277,7 @@ export default function DepartmentDetailPage() {
             </div>
 
             {/* Description */}
-            <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+            <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700" data-tour="department-description">
               <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700">
                 <h2 className="text-base font-semibold text-stone-900 dark:text-stone-50">Description</h2>
               </div>
@@ -301,7 +296,7 @@ export default function DepartmentDetailPage() {
           </div>
 
           {/* Right column (1/3): Team Members */}
-          <div>
+          <div data-tour="department-members">
             <MembersAssignment
               entityType="department"
               entityId={department.id!}
@@ -323,6 +318,8 @@ export default function DepartmentDetailPage() {
           onHeadUserSelect={setSelectedHeadUserId}
         />
       </div>
+      </>
+      )}
     </AppLayout>
   );
 }

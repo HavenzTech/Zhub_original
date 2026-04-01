@@ -3,9 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import type { UserResponse } from "@/types/bms";
-import { Mail, Shield, Calendar, Edit, Trash2, ScanFace } from "lucide-react";
+import { Mail, Shield, Calendar, ScanFace } from "lucide-react";
 import {
   getRoleBadgeColor,
   getRoleLabel,
@@ -15,15 +14,17 @@ import {
 
 interface UserCardProps {
   user: UserResponse;
-  onEdit: (user: UserResponse) => void;
-  onDelete: (user: UserResponse) => void;
+  onClick: (user: UserResponse) => void;
 }
 
-export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
+export function UserCard({ user, onClick }: UserCardProps) {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 transition-colors">
+    <div
+      onClick={() => onClick(user)}
+      className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700 hover:border-accent-cyan/50 hover:shadow-md transition-all cursor-pointer"
+    >
       <div className="px-5 py-4">
         <div className="flex items-center gap-3 mb-4">
           {user.pictureUrl && !imageError ? (
@@ -84,27 +85,6 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
             </div>
           )}
         </div>
-      </div>
-
-      <div className="flex gap-2 px-5 py-3 border-t border-stone-100 dark:border-stone-800">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onEdit(user)}
-          className="flex-1 text-xs border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800"
-        >
-          <Edit className="w-3.5 h-3.5 mr-1.5" />
-          Edit
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => onDelete(user)}
-          className="flex-1 text-xs border-stone-200 dark:border-stone-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
-        >
-          <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-          Deactivate
-        </Button>
       </div>
     </div>
   );

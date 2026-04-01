@@ -9,7 +9,10 @@ import { ChatHeader } from "@/features/z-ai/components/ChatHeader";
 import { ChatMessage } from "@/features/z-ai/components/ChatMessage";
 import { ChatInput } from "@/features/z-ai/components/ChatInput";
 import { TypingIndicator } from "@/features/z-ai/components/TypingIndicator";
-import { QuickActionsSidebar } from "@/features/z-ai/components/QuickActionsSidebar";
+import { Bot, FolderOpen, FileText, Clock, Users } from "lucide-react";
+import { PageTour } from "@/components/tour/PageTour";
+import { TOUR_KEYS } from "@/lib/tour/tour-keys";
+import { getZAiSteps } from "@/lib/tour/steps";
 import DocumentViewModal from "@/features/documents/components/DocumentViewModal";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
@@ -186,10 +189,6 @@ export default function ZAiPage() {
     }
   };
 
-  const handleQuickAction = (prompt: string) => {
-    setInput(prompt);
-  };
-
   const handleDocumentPreview = async (doc: any) => {
     try {
       // Look up document for preview
@@ -292,40 +291,73 @@ export default function ZAiPage() {
 
   return (
     <AppLayout>
+      <PageTour tourKey={TOUR_KEYS.Z_AI} options={{ steps: getZAiSteps(), enabled: true }} />
       <div className="h-full flex">
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col bg-white dark:bg-stone-900">
           <ChatHeader />
 
           {/* Chat Messages */}
-          <div ref={scrollAreaRef} className="flex-1 min-h-0">
+          <div ref={scrollAreaRef} className="flex-1 min-h-0" data-tour="zai-chat">
             <ScrollArea className="h-full p-6">
               <div className="space-y-6 max-w-4xl mx-auto">
-                {messages.map((message, index) => (
-                  <ChatMessage
-                    key={index}
-                    message={message}
-                    onDocumentPreview={handleDocumentPreview}
-                  />
-                ))}
-                {(chatIsLoading || isLoading) && (
-                  <TypingIndicator />
+                {messages.length === 0 && !chatIsLoading && !isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-24 px-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-accent-cyan/10 mb-4">
+                      <Bot className="h-7 w-7 text-accent-cyan" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-50 mb-1">
+                      What can I help you with?
+                    </h2>
+                    <p className="text-sm text-stone-400 dark:text-stone-500 text-center max-w-sm mb-8">
+                      Search documents, summarize projects, or ask questions about your organization&apos;s data.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-lg">
+                      {[
+                        { label: "Summarize my active projects", Icon: FolderOpen },
+                        { label: "Recently updated documents", Icon: FileText },
+                        { label: "Show me overdue tasks", Icon: Clock },
+                        { label: "Department overview", Icon: Users },
+                      ].map((suggestion) => (
+                        <button
+                          key={suggestion.label}
+                          onClick={() => setInput(suggestion.label)}
+                          className="flex items-center gap-3 rounded-lg border border-stone-200 dark:border-stone-700 px-4 py-3 text-left text-sm text-stone-600 dark:text-stone-400 transition-colors hover:border-accent-cyan hover:text-accent-cyan dark:hover:border-accent-cyan dark:hover:text-accent-cyan"
+                        >
+                          <suggestion.Icon className="h-4 w-4 shrink-0" />
+                          <span>{suggestion.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((message, index) => (
+                      <ChatMessage
+                        key={index}
+                        message={message}
+                        onDocumentPreview={handleDocumentPreview}
+                      />
+                    ))}
+                    {(chatIsLoading || isLoading) && (
+                      <TypingIndicator />
+                    )}
+                  </>
                 )}
               </div>
             </ScrollArea>
           </div>
 
-          <ChatInput
-            input={input}
-            isLoading={chatIsLoading || isLoading}
-            onInputChange={setInput}
-            onSend={handleSendMessage}
-            onKeyPress={handleKeyPress}
-          />
+          <div data-tour="zai-input">
+            <ChatInput
+              input={input}
+              isLoading={chatIsLoading || isLoading}
+              onInputChange={setInput}
+              onSend={handleSendMessage}
+              onKeyPress={handleKeyPress}
+            />
+          </div>
         </div>
-
-        {/* Quick Actions Sidebar */}
-        <QuickActionsSidebar onQuickAction={handleQuickAction} />
 
         {/* Document View Modal - Same as Document Control */}
         <DocumentViewModal
