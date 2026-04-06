@@ -28,8 +28,8 @@ export const metadata: Metadata = {
   authors: [{ name: "Havenz Hub Team" }],
   robots: "index, follow",
   icons: {
-    icon: "/logos/H_favicon.png",
-    apple: "/logos/H_favicon.png",
+    icon: "/logos/H_favIcon.png",
+    apple: "/logos/H_favIcon.png",
   },
 }
 
