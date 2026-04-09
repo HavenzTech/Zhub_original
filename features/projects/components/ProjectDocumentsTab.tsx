@@ -75,6 +75,10 @@ import { useRetentionPoliciesQueryCompat } from "@/lib/hooks/queries/useRetentio
 import type {
   UploadFormData,
 } from "@/features/documents/components/UploadDocumentModal";
+import {
+  MAX_UPLOAD_BYTES,
+  MAX_UPLOAD_ERROR,
+} from "@/features/documents/components/UploadDocumentModal";
 
 const UploadDocumentModal = dynamic(
   () =>
@@ -555,6 +559,11 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
       return;
     }
 
+    if (selectedFile.size > MAX_UPLOAD_BYTES) {
+      toast.error(MAX_UPLOAD_ERROR);
+      return;
+    }
+
     if (!formData.name.trim()) {
       toast.error("Document name is required");
       return;
@@ -604,6 +613,9 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
       );
 
       if (!uploadResponse.ok) {
+        if (uploadResponse.status === 413) {
+          throw new Error(MAX_UPLOAD_ERROR);
+        }
         const errorText = await uploadResponse.text();
         throw new Error(`File upload failed: ${uploadResponse.statusText} - ${errorText}`);
       }

@@ -30,6 +30,9 @@ import {
 import { formatFileSize } from "../utils/documentHelpers";
 import type { Folder, DocumentClassification } from "@/types/bms";
 
+export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50MB
+export const MAX_UPLOAD_ERROR = "File exceeds the 50MB size limit.";
+
 export interface UserAccess {
   userId: string;
   userName: string;
@@ -90,7 +93,20 @@ export function UploadDocumentModal({
   onFileChange,
   lockedProjectId,
 }: UploadDocumentModalProps) {
+  const [fileError, setFileError] = useState<string | null>(null);
   const [selectedDeptToAdd, setSelectedDeptToAdd] = useState<string>("");
+
+  const handleFileChangeWithValidation = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.size > MAX_UPLOAD_BYTES) {
+      setFileError(MAX_UPLOAD_ERROR);
+      setSelectedFile(null);
+      e.target.value = "";
+      return;
+    }
+    setFileError(null);
+    onFileChange(e);
+  };
   const [selectedUserToAdd, setSelectedUserToAdd] = useState<string>("");
   const [selectedUserAccessLevel, setSelectedUserAccessLevel] = useState<"view" | "edit">("view");
 
@@ -197,6 +213,7 @@ export function UploadDocumentModal({
                     size="sm"
                     onClick={() => {
                       setSelectedFile(null);
+                      setFileError(null);
                       const fileInput = document.getElementById(
                         "file"
                       ) as HTMLInputElement;
@@ -210,10 +227,17 @@ export function UploadDocumentModal({
                 <Input
                   id="file"
                   type="file"
-                  onChange={onFileChange}
+                  onChange={handleFileChangeWithValidation}
                   className="cursor-pointer"
+                  aria-invalid={fileError ? true : undefined}
+                  aria-describedby={fileError ? "file-error" : undefined}
                   required
                 />
+              )}
+              {fileError && (
+                <p id="file-error" className="text-xs text-red-600">
+                  {fileError}
+                </p>
               )}
             </div>
 
