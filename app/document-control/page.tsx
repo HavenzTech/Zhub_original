@@ -82,6 +82,10 @@ import type {
   UploadFormData,
   UserAccess,
 } from "@/features/documents/components/UploadDocumentModal";
+import {
+  MAX_UPLOAD_BYTES,
+  MAX_UPLOAD_ERROR,
+} from "@/features/documents/components/UploadDocumentModal";
 
 const UploadDocumentModal = dynamic(
   () =>
@@ -247,6 +251,8 @@ export default function DocumentControlPage() {
   const loadFolders = useCallback(async () => {
     try {
       const data = await bmsApi.folders.getTree();
+      console.log("[loadFolders] raw response from /folders/tree:", data);
+      console.log("[loadFolders] isArray:", Array.isArray(data), "length:", Array.isArray(data) ? data.length : "n/a");
       setFolders(data as Folder[]);
     } catch (err) {
       console.error("Error loading folders:", err);
@@ -346,6 +352,9 @@ export default function DocumentControlPage() {
         description,
         parentFolderId: parentFolderId || undefined,
       })) as { id?: string };
+      console.log("[handleCreateFolder] create response:", folder);
+      console.log("[handleCreateFolder] current auth:", authService.getAuth());
+      console.log("[handleCreateFolder] companyId on bmsApi:", authService.getCurrentCompanyId());
 
       if (templateId && folder?.id) {
         try {
@@ -578,6 +587,11 @@ export default function DocumentControlPage() {
       return;
     }
 
+    if (selectedFile.size > MAX_UPLOAD_BYTES) {
+      toast.error(MAX_UPLOAD_ERROR);
+      return;
+    }
+
     if (!formData.name.trim()) {
       toast.error("Document name is required");
       return;
@@ -632,6 +646,9 @@ export default function DocumentControlPage() {
       );
 
       if (!uploadResponse.ok) {
+        if (uploadResponse.status === 413) {
+          throw new Error(MAX_UPLOAD_ERROR);
+        }
         const errorText = await uploadResponse.text();
         throw new Error(
           `File upload failed: ${uploadResponse.statusText} - ${errorText}`

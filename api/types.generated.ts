@@ -10818,6 +10818,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/havenzhub/projects/{projectId}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectActivityLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/havenzhub/properties": {
         parameters: {
             query?: never;
@@ -11785,15 +11834,6 @@ export interface paths {
                         "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.TaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
-                    };
-                };
             };
         };
         put?: never;
@@ -11821,15 +11861,6 @@ export interface paths {
                 };
                 /** @description Bad Request */
                 400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -11881,15 +11912,6 @@ export interface paths {
                         "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskDto"];
                     };
                 };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
-                    };
-                };
                 /** @description Not Found */
                 404: {
                     headers: {
@@ -11927,15 +11949,6 @@ export interface paths {
                 };
                 /** @description Bad Request */
                 400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -11981,15 +11994,6 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
-                };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
-                    };
                 };
                 /** @description Forbidden */
                 403: {
@@ -12045,15 +12049,6 @@ export interface paths {
                         "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.TaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
-                    };
-                };
             };
         };
         put?: never;
@@ -12094,15 +12089,6 @@ export interface paths {
                         "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.TaskDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
                     };
                 };
-                /** @description Unauthorized */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
-                    };
-                };
                 /** @description Not Found */
                 404: {
                     headers: {
@@ -12122,7 +12108,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/havenzhub/tasks/{id}/assign/{userId}": {
+    "/api/havenzhub/tasks/{id}/assignees/{userId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -12131,11 +12117,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: {
+        post: {
             parameters: {
                 query?: never;
                 header?: never;
@@ -12165,8 +12147,8 @@ export interface paths {
                         "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
                     };
                 };
-                /** @description Unauthorized */
-                401: {
+                /** @description Forbidden */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -12185,6 +12167,50 @@ export interface paths {
                 };
             };
         };
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskDto"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/havenzhub/tasks/{id}/status/{status}": {
@@ -12223,15 +12249,6 @@ export interface paths {
                 };
                 /** @description Bad Request */
                 400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
-                    };
-                };
-                /** @description Unauthorized */
-                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -12314,6 +12331,297 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/havenzhub/tasks/{id}/submit-for-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/tasks/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/tasks/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.RejectTaskRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/tasks/{id}/rejections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TaskRejectionDto"][];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/havenzhub/tasks/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.TaskChangeHistoryDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/havenzhub/tasks/{taskId}/attachments": {
@@ -12727,6 +13035,183 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/users/{userId}/tour-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.TourStatusResponse"];
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TourStatusResponse"];
+                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.TourStatusResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "text/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "text/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: {
+                    key?: string;
+                };
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "text/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "text/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "text/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebApp.Models.HavenzHub.UpdateTourStatusRequest"];
+                    "text/json": components["schemas"]["WebApp.Models.HavenzHub.UpdateTourStatusRequest"];
+                    "application/*+json": components["schemas"]["WebApp.Models.HavenzHub.UpdateTourStatusRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WebApp.Models.HavenzHub.TourStatusResponse"];
+                        "application/json": components["schemas"]["WebApp.Models.HavenzHub.TourStatusResponse"];
+                        "text/json": components["schemas"]["WebApp.Models.HavenzHub.TourStatusResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "text/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "text/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "application/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                        "text/json": components["schemas"]["Microsoft.AspNetCore.Mvc.ProblemDetails"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/havenzhub/users": {
@@ -15975,6 +16460,9 @@ export interface components {
             faceEnrollmentExempt?: boolean;
             /** Format: date-time */
             tokensValidAfter?: string | null;
+            tourStatus?: {
+                [key: string]: string;
+            } | null;
             userCompanies?: components["schemas"]["DomainModel.HavenzHub.UserCompany"][] | null;
             userDepartments?: components["schemas"]["DomainModel.HavenzHub.UserDepartment"][] | null;
             userProjects?: components["schemas"]["DomainModel.HavenzHub.UserProject"][] | null;
@@ -16624,6 +17112,16 @@ export interface components {
             pageSize?: number;
             readonly hasMore?: boolean;
         };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectActivityLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.ProjectActivityLogDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ProjectDepartmentDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.ProjectDepartmentDto"][] | null;
             /** Format: int32 */
@@ -16716,6 +17214,16 @@ export interface components {
         };
         "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.ShareAccessLogDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
             data?: components["schemas"]["WebApp.Models.HavenzHub.ShareAccessLogDto"][] | null;
+            /** Format: int32 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            readonly hasMore?: boolean;
+        };
+        "WebApp.Models.Common.PagedResult`1[[WebApp.Models.HavenzHub.TaskChangeHistoryDto, WebApp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]": {
+            data?: components["schemas"]["WebApp.Models.HavenzHub.TaskChangeHistoryDto"][] | null;
             /** Format: int32 */
             total?: number;
             /** Format: int32 */
@@ -17435,7 +17943,7 @@ export interface components {
             title: string;
             description?: string | null;
             /** Format: uuid */
-            projectId?: string | null;
+            projectId: string;
             /** Format: uuid */
             departmentId?: string | null;
             /** Format: uuid */
@@ -17443,8 +17951,7 @@ export interface components {
             status?: string | null;
             priority?: string | null;
             taskType?: string | null;
-            /** Format: uuid */
-            assignedToUserId?: string | null;
+            assigneeUserIds?: string[] | null;
             /** Format: date-time */
             dueDate?: string | null;
             /** Format: date-time */
@@ -17455,6 +17962,7 @@ export interface components {
             notes?: string | null;
             /** Format: uuid */
             parentTaskId?: string | null;
+            requiresReview?: boolean;
         };
         "WebApp.Models.HavenzHub.CreateUserRequest": {
             /** Format: email */
@@ -18495,6 +19003,22 @@ export interface components {
             sourceName?: string | null;
             permissionLevel?: string | null;
         };
+        "WebApp.Models.HavenzHub.ProjectActivityLogDto": {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            projectId?: string;
+            entityType?: string | null;
+            /** Format: uuid */
+            entityId?: string;
+            action?: string | null;
+            /** Format: uuid */
+            actorUserId?: string;
+            actorUserName?: string | null;
+            details?: string | null;
+            /** Format: date-time */
+            occurredAt?: string;
+        };
         "WebApp.Models.HavenzHub.ProjectDepartmentDto": {
             /** Format: uuid */
             departmentId?: string;
@@ -18694,6 +19218,9 @@ export interface components {
         "WebApp.Models.HavenzHub.RejectExpenseRequest": {
             reason: string;
         };
+        "WebApp.Models.HavenzHub.RejectTaskRequest": {
+            reason: string;
+        };
         "WebApp.Models.HavenzHub.RestoreVersionRequest": {
             restoreReason?: string | null;
         };
@@ -18836,6 +19363,11 @@ export interface components {
             workflowId?: string | null;
             notes?: string | null;
         };
+        "WebApp.Models.HavenzHub.TaskAssigneeDto": {
+            /** Format: uuid */
+            userId?: string;
+            userName?: string | null;
+        };
         "WebApp.Models.HavenzHub.TaskAttachmentDto": {
             /** Format: uuid */
             id?: string;
@@ -18851,6 +19383,20 @@ export interface components {
             fileSizeBytes?: number;
             /** Format: date-time */
             createdAt?: string;
+        };
+        "WebApp.Models.HavenzHub.TaskChangeHistoryDto": {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            taskId?: string;
+            fieldName?: string | null;
+            oldValue?: string | null;
+            newValue?: string | null;
+            /** Format: uuid */
+            changedByUserId?: string;
+            changedByUserName?: string | null;
+            /** Format: date-time */
+            changedAt?: string;
         };
         "WebApp.Models.HavenzHub.TaskCommentDto": {
             /** Format: uuid */
@@ -18891,8 +19437,6 @@ export interface components {
             taskType?: string | null;
             /** Format: uuid */
             createdByUserId?: string;
-            /** Format: uuid */
-            assignedToUserId?: string | null;
             /** Format: date-time */
             dueDate?: string | null;
             /** Format: date-time */
@@ -18907,12 +19451,18 @@ export interface components {
             notes?: string | null;
             /** Format: uuid */
             parentTaskId?: string | null;
+            requiresReview?: boolean;
+            /** Format: uuid */
+            approvedByUserId?: string | null;
+            approvedByUserName?: string | null;
+            /** Format: date-time */
+            approvedAt?: string | null;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
             createdByUserName?: string | null;
-            assignedToUserName?: string | null;
+            assignees?: components["schemas"]["WebApp.Models.HavenzHub.TaskAssigneeDto"][] | null;
             projectName?: string | null;
             departmentName?: string | null;
             propertyName?: string | null;
@@ -18920,6 +19470,23 @@ export interface components {
             subTasksCount?: number;
             /** Format: int32 */
             completedSubTasksCount?: number;
+        };
+        "WebApp.Models.HavenzHub.TaskRejectionDto": {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            taskId?: string;
+            /** Format: uuid */
+            rejectedByUserId?: string;
+            rejectedByUserName?: string | null;
+            reason?: string | null;
+            /** Format: date-time */
+            rejectedAt?: string;
+        };
+        "WebApp.Models.HavenzHub.TourStatusResponse": {
+            tours?: {
+                [key: string]: boolean;
+            } | null;
         };
         "WebApp.Models.HavenzHub.UnreadCountResponse": {
             /** Format: int32 */
@@ -19266,8 +19833,6 @@ export interface components {
             status: string;
             priority?: string | null;
             taskType?: string | null;
-            /** Format: uuid */
-            assignedToUserId?: string | null;
             /** Format: date-time */
             dueDate?: string | null;
             /** Format: date-time */
@@ -19280,6 +19845,9 @@ export interface components {
             notes?: string | null;
             /** Format: uuid */
             parentTaskId?: string | null;
+        };
+        "WebApp.Models.HavenzHub.UpdateTourStatusRequest": {
+            tourKey: string;
         };
         "WebApp.Models.HavenzHub.UpdateUserRequest": {
             name: string;
