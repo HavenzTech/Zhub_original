@@ -36,9 +36,14 @@ export function ShareLinkModal({
 
   if (!share) return null;
 
+  const shareToken = share.accessToken || share.shareUrl?.split("/shared/").pop();
+  const frontendShareUrl = shareToken
+    ? `${window.location.origin}/shared/${shareToken}`
+    : null;
+
   const handleCopyUrl = () => {
-    if (share.shareUrl) {
-      navigator.clipboard.writeText(share.shareUrl);
+    if (frontendShareUrl) {
+      navigator.clipboard.writeText(frontendShareUrl);
       setCopiedUrl(true);
       toast.success("Share link copied to clipboard");
       setTimeout(() => setCopiedUrl(false), 2000);
@@ -85,12 +90,12 @@ export function ShareLinkModal({
           </div>
 
           {/* Share URL */}
-          {share.shareUrl && (
+          {frontendShareUrl && (
             <div className="space-y-2">
               <Label>Share URL</Label>
               <div className="flex gap-2">
                 <Input
-                  value={share.shareUrl}
+                  value={frontendShareUrl}
                   readOnly
                   className="font-mono text-sm"
                 />
@@ -104,7 +109,7 @@ export function ShareLinkModal({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(share.shareUrl!, "_blank")}
+                  onClick={() => window.open(frontendShareUrl!, "_blank")}
                 >
                   <ExternalLink className="w-4 h-4" />
                 </Button>

@@ -12,7 +12,9 @@ import { usePropertiesQuery } from "@/lib/hooks/queries/usePropertiesQuery";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
+import { extractArray } from "@/lib/utils/api";
 import { authService } from "@/lib/services/auth";
+import { formatDistanceToNow } from "date-fns";
 import {
   Document,
   Folder,
@@ -21,6 +23,7 @@ import {
   DocumentSearchRequest,
   DocumentSearchResults,
   DocumentSearchResult,
+  DocumentAccessLogDto,
 } from "@/types/bms";
 import { toast } from "sonner";
 import FolderTreeView from "@/features/documents/components/FolderTreeView";
@@ -180,6 +183,8 @@ export default function DocumentControlPage() {
   );
   const [formData, setFormData] = useState<UploadFormData>(initialFormData);
   const [activeTab, setActiveTab] = useState("preview");
+  const [auditLogs, setAuditLogs] = useState<DocumentAccessLogDto[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const dragCounter = React.useRef(0);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -316,6 +321,17 @@ export default function DocumentControlPage() {
       loadWorkflowHistory();
     }
   }, [selectedDocumentForModal?.id, activeTab, loadWorkflowStatus, loadWorkflowHistory]);
+
+  // Load audit logs when audit tab is opened
+  useEffect(() => {
+    if (selectedDocumentForModal?.id && activeTab === "audit") {
+      setAuditLoading(true);
+      bmsApi.documents.getAccessHistory(selectedDocumentForModal.id)
+        .then((data) => setAuditLogs(extractArray<DocumentAccessLogDto>(data)))
+        .catch(() => setAuditLogs([]))
+        .finally(() => setAuditLoading(false));
+    }
+  }, [selectedDocumentForModal?.id, activeTab]);
 
   // ──────────────────────────────────────────────
   // Group folders by project for the sidebar tree
@@ -1290,11 +1306,9 @@ export default function DocumentControlPage() {
                         <span className="text-[11px] text-stone-400">
                           {selectedDocumentForModal.fileType?.toUpperCase()}
                         </span>
-                        {selectedDocumentForModal.version && (
-                          <span className="text-[11px] text-stone-400">
-                            v{selectedDocumentForModal.version}
-                          </span>
-                        )}
+                        <span className="text-[11px] text-stone-400">
+                          v{selectedDocumentForModal.version || 1}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1550,7 +1564,11 @@ export default function DocumentControlPage() {
                   <div className="p-4">
                     <DocumentVersionHistory
                       documentId={selectedDocumentForModal.id}
-                      currentVersion={selectedDocumentForModal.version}
+                      currentVersion={selectedDocumentForModal.version || 1}
+                      documentName={selectedDocumentForModal.name}
+                      documentCreatedAt={selectedDocumentForModal.createdAt}
+                      documentUploadedBy={(selectedDocumentForModal as any).uploadedByUserName || undefined}
+                      documentFileSizeBytes={selectedDocumentForModal.fileSizeBytes}
                     />
                   </div>
                 )}
@@ -1712,7 +1730,7 @@ export default function DocumentControlPage() {
                 {activeTab === "audit" && (
                   <div className="flex flex-col items-center justify-center py-16">
                     <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-stone-200 dark:bg-stone-800">
-                      <Clock className="h-6 w-6 text-stone-400 dark:text-stone-500" />
+                      <Shield className="h-6 w-6 text-stone-400 dark:text-stone-500" />
                     </div>
                     <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
                       Audit Trail

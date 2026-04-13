@@ -300,7 +300,7 @@ export function useTasksQueryCompat() {
     getTaskRejections: async (id: string): Promise<TaskRejectionDto[]> => {
       try {
         const data = await bmsApi.tasks.getRejections(id)
-        return (Array.isArray(data) ? data : []) as TaskRejectionDto[]
+        return (Array.isArray(data) ? data : ((data as any)?.data || [])) as TaskRejectionDto[]
       } catch { return [] }
     },
     getTaskHistory: async (id: string, page = 1, pageSize = 50): Promise<{ data: TaskHistoryEntryDto[]; total: number } | null> => {

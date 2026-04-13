@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type {
   DocumentTypeDto,
   CreateDocumentTypeRequest,
@@ -35,7 +36,7 @@ export function useDocumentTypes(): UseDocumentTypesReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.admin.documentTypes.list(true)
-      setDocumentTypes(Array.isArray(data) ? data : [])
+      setDocumentTypes(extractArray<DocumentTypeDto>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load document types")
       setError(error)

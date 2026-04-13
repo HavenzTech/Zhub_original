@@ -1436,7 +1436,11 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
                   <div className="p-4">
                     <DocumentVersionHistory
                       documentId={selectedDocumentForModal.id}
-                      currentVersion={selectedDocumentForModal.version}
+                      currentVersion={selectedDocumentForModal.version || 1}
+                      documentName={selectedDocumentForModal.name}
+                      documentCreatedAt={selectedDocumentForModal.createdAt}
+                      documentUploadedBy={(selectedDocumentForModal as any).uploadedByUserName || undefined}
+                      documentFileSizeBytes={selectedDocumentForModal.fileSizeBytes}
                     />
                   </div>
                 )}

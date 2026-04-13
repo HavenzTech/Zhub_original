@@ -341,7 +341,7 @@ export function useTasks(): UseTasksReturn {
     async (id: string): Promise<TaskRejectionDto[]> => {
       try {
         const data = await bmsApi.tasks.getRejections(id)
-        return (Array.isArray(data) ? data : []) as TaskRejectionDto[]
+        return (Array.isArray(data) ? data : ((data as any)?.data || [])) as TaskRejectionDto[]
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Failed to load rejections")
         toast.error("Failed to load rejections", {

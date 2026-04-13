@@ -22,12 +22,20 @@ interface DocumentVersionHistoryProps {
   documentId: string;
   currentVersion?: number;
   onDownload?: (versionNumber: number) => void;
+  documentName?: string;
+  documentCreatedAt?: string;
+  documentUploadedBy?: string;
+  documentFileSizeBytes?: number | null;
 }
 
 export function DocumentVersionHistory({
   documentId,
   currentVersion,
   onDownload,
+  documentName,
+  documentCreatedAt,
+  documentUploadedBy,
+  documentFileSizeBytes,
 }: DocumentVersionHistoryProps) {
   const {
     versions,
@@ -36,6 +44,19 @@ export function DocumentVersionHistory({
     downloadVersion,
     restoreVersion,
   } = useDocumentVersions(documentId);
+
+  // Fallback: if no versions from API, show v1 using document metadata
+  const displayVersions: DocumentVersionDto[] = versions.length > 0 ? versions : [
+    {
+      versionNumber: 1,
+      fileName: documentName || undefined,
+      uploadedByUserName: documentUploadedBy || undefined,
+      uploadedAt: documentCreatedAt || undefined,
+      fileSizeBytes: documentFileSizeBytes ?? undefined,
+      changeSummary: "Original upload",
+      isCurrent: true,
+    },
+  ];
 
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<DocumentVersionDto | null>(null);
@@ -98,17 +119,13 @@ export function DocumentVersionHistory({
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-stone-400 dark:text-stone-500" />
             </div>
-          ) : versions.length === 0 ? (
-            <div className="text-center py-8 text-stone-500 dark:text-stone-400">
-              No version history available
-            </div>
           ) : (
             <div className="space-y-3">
-              {versions.map((version) => (
+              {displayVersions.map((version) => (
                 <div
                   key={version.versionNumber}
                   className={`flex items-center justify-between p-3 rounded-lg border ${
-                    version.versionNumber === currentVersion
+                    version.isCurrent || version.versionNumber === currentVersion
                       ? "bg-accent-cyan/5 border-accent-cyan/30 dark:bg-accent-cyan/10 dark:border-accent-cyan/20"
                       : "bg-stone-50 border-stone-200 dark:bg-stone-800 dark:border-stone-700"
                   }`}
@@ -116,7 +133,7 @@ export function DocumentVersionHistory({
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">v{version.versionNumber}</span>
-                      {version.versionNumber === currentVersion && (
+                      {version.isCurrent || version.versionNumber === currentVersion && (
                         <Badge className="bg-accent-cyan/10 text-accent-cyan text-xs">
                           Current
                         </Badge>

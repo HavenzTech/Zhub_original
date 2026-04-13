@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type { FavoriteDocumentDto, FavoriteOrderItem, UpdateFavoriteOrderRequest } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -28,7 +29,7 @@ export function useFavoriteDocuments(): UseFavoriteDocumentsReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.documentRecent.getFavorites()
-      setFavorites(Array.isArray(data) ? data : [])
+      setFavorites(extractArray<FavoriteDocumentDto>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load favorites")
       setError(error)

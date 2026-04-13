@@ -49,8 +49,8 @@ export function DocumentSharePanel({
   const [isCreating, setIsCreating] = useState(false);
   const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
   const [expiresInDays, setExpiresInDays] = useState(7);
-  const [requirePassword, setRequirePassword] = useState(true);
-
+  const [requirePassword, setRequirePassword] = useState(false);
+  const [password, setPassword] = useState("");
   const [maxAccessCount, setMaxAccessCount] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -72,15 +72,15 @@ export function DocumentSharePanel({
         canDownload: true,
         expiresAt: expiresAt.toISOString(),
         ...(maxAccessCount != null && { maxAccessCount }),
-        ...(requirePassword === false && { password: null }),
+        ...(requirePassword && password ? { password } : {}),
       };
       const result = await createShare(request);
       if (result) {
         setCreateDialogOpen(false);
         // Reset form
         setExpiresInDays(7);
-        setRequirePassword(true);
-
+        setRequirePassword(false);
+        setPassword("");
         setMaxAccessCount(undefined);
       }
     } finally {
@@ -88,9 +88,15 @@ export function DocumentSharePanel({
     }
   };
 
+  const getFrontendShareUrl = (share: DocumentShareDto) => {
+    const token = share.accessToken || share.shareUrl?.split("/shared/").pop();
+    return token ? `${window.location.origin}/shared/${token}` : null;
+  };
+
   const handleCopyLink = (share: DocumentShareDto) => {
-    if (share.shareUrl) {
-      navigator.clipboard.writeText(share.shareUrl);
+    const url = getFrontendShareUrl(share);
+    if (url) {
+      navigator.clipboard.writeText(url);
       toast.success("Link copied to clipboard");
     }
   };
@@ -191,7 +197,7 @@ export function DocumentSharePanel({
                     </div>
 
                     <div className="flex items-center gap-1">
-                      {isActive(share) && share.shareUrl && (
+                      {isActive(share) && (share.accessToken || share.shareUrl) && (
                         <>
                           <Button
                             variant="ghost"
@@ -204,7 +210,7 @@ export function DocumentSharePanel({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => share.shareUrl && window.open(share.shareUrl, "_blank")}
+                            onClick={() => { const url = getFrontendShareUrl(share); if (url) window.open(url, "_blank"); }}
                             title="Open link"
                           >
                             <ExternalLink className="w-4 h-4" />
@@ -303,9 +309,29 @@ export function DocumentSharePanel({
               </div>
               <Switch
                 checked={requirePassword}
-                onCheckedChange={setRequirePassword}
+                onCheckedChange={(checked) => {
+                  setRequirePassword(checked);
+                  if (!checked) setPassword("");
+                }}
               />
             </div>
+
+            {requirePassword && (
+              <div className="grid gap-2">
+                <Label>Password</Label>
+                <Input
+                  type="password"
+                  placeholder="Minimum 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={8}
+                  maxLength={100}
+                />
+                {password.length > 0 && password.length < 8 && (
+                  <p className="text-xs text-red-500">Password must be at least 8 characters</p>
+                )}
+              </div>
+            )}
 
             <div className="grid gap-2">
               <Label>Max Views (Optional)</Label>
@@ -331,7 +357,7 @@ export function DocumentSharePanel({
             >
               Cancel
             </Button>
-            <Button onClick={handleCreateShare} disabled={isCreating}>
+            <Button onClick={handleCreateShare} disabled={isCreating || (requirePassword && password.length < 8)}>
               {isCreating ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

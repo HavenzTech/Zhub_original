@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
-import type { DocumentVersionDto, RestoreVersionRequest } from "@/types/bms"
+import type { DocumentVersionDto, RestoreVersionRequest, PagedResult } from "@/types/bms"
 import { toast } from "sonner"
 
 interface UseDocumentVersionsReturn {
@@ -29,9 +29,15 @@ export function useDocumentVersions(documentId: string): UseDocumentVersionsRetu
     try {
       setLoading(true)
       setError(null)
-      const data = await bmsApi.documentVersions.list(documentId)
-      setVersions(Array.isArray(data) ? data : [])
-    } catch (err) {
+      const result = await bmsApi.documentVersions.list(documentId) as PagedResult<DocumentVersionDto> | DocumentVersionDto[]
+      const versions = Array.isArray(result) ? result : (result as PagedResult<DocumentVersionDto>).data || []
+      setVersions(versions)
+    } catch (err: any) {
+      // 404 just means no versions exist yet — silently show empty list
+      if (err?.status === 404) {
+        setVersions([])
+        return
+      }
       const error = err instanceof Error ? err : new Error("Failed to load versions")
       setError(error)
       toast.error("Failed to load document versions", {
@@ -49,7 +55,12 @@ export function useDocumentVersions(documentId: string): UseDocumentVersionsRetu
       setError(null)
       const data = await bmsApi.documentVersions.getCurrent(documentId)
       setCurrentVersion(data)
-    } catch (err) {
+    } catch (err: any) {
+      // 404 means no versions exist yet
+      if (err?.status === 404) {
+        setCurrentVersion(null)
+        return
+      }
       const error = err instanceof Error ? err : new Error("Failed to load current version")
       setError(error)
     } finally {
