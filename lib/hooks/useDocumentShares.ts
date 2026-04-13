@@ -5,6 +5,7 @@ import type {
   CreateDocumentShareRequest,
   UpdateDocumentShareRequest,
   ShareAccessLogDto,
+  PagedResult,
 } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -33,8 +34,9 @@ export function useDocumentShares(documentId: string): UseDocumentSharesReturn {
     try {
       setLoading(true)
       setError(null)
-      const data = await bmsApi.documentShares.list(documentId)
-      setShares(Array.isArray(data) ? data : [])
+      const result = await bmsApi.documentShares.list(documentId) as PagedResult<DocumentShareDto> | DocumentShareDto[]
+      const items = Array.isArray(result) ? result : (result as PagedResult<DocumentShareDto>).data || []
+      setShares(items)
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load shares")
       setError(error)
@@ -119,7 +121,7 @@ export function useDocumentShares(documentId: string): UseDocumentSharesReturn {
       if (!documentId) return []
       try {
         const logs = await bmsApi.documentShares.getLogs(documentId, shareId)
-        return Array.isArray(logs) ? logs : []
+        return Array.isArray(logs) ? logs : ((logs as any)?.data || [])
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Failed to load share access logs")
         toast.error("Failed to load share access logs", {

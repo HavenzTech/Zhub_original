@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type { RecentDocumentDto } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -24,7 +25,7 @@ export function useRecentDocuments(): UseRecentDocumentsReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.documentRecent.getRecent()
-      setRecentDocuments(Array.isArray(data) ? data : [])
+      setRecentDocuments(extractArray<RecentDocumentDto>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load recent documents")
       setError(error)

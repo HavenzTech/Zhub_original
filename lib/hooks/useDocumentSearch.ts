@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type {
   DocumentSearchRequest,
   DocumentSearchResults,
@@ -56,7 +57,7 @@ export function useDocumentSearch(): UseDocumentSearchReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.documentSearch.getCheckedOut()
-      setCheckedOutDocuments(Array.isArray(data) ? data : [])
+      setCheckedOutDocuments(extractArray<CheckedOutDocumentDto>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load checked out documents")
       setError(error)
@@ -73,7 +74,7 @@ export function useDocumentSearch(): UseDocumentSearchReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.documentSearch.getMyCheckouts()
-      setMyCheckouts(Array.isArray(data) ? data : [])
+      setMyCheckouts(extractArray<CheckedOutDocumentDto>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load my checkouts")
       setError(error)
@@ -87,7 +88,7 @@ export function useDocumentSearch(): UseDocumentSearchReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.documentSearch.getNeedsReview()
-      setNeedsReview(Array.isArray(data) ? data : [])
+      setNeedsReview(extractArray<DocumentNeedsReviewDto>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load documents needing review")
       setError(error)

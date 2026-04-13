@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import { bmsApi } from "@/lib/services/bmsApi"
+import { extractArray } from "@/lib/utils/api"
 import type {
   FolderTemplateDto,
   CreateFolderTemplateRequest,
@@ -39,7 +40,7 @@ export function useFolderTemplates(): UseFolderTemplatesReturn {
       setLoading(true)
       setError(null)
       const data = await bmsApi.admin.folderTemplates.list(true)
-      setFolderTemplates(Array.isArray(data) ? data : [])
+      setFolderTemplates(extractArray<FolderTemplateDto>(data))
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load folder templates")
       setError(error)
@@ -74,7 +75,7 @@ export function useFolderTemplates(): UseFolderTemplatesReturn {
   const getTemplatesForScope = useCallback(async (scopeType: string): Promise<FolderTemplateDto[]> => {
     try {
       const data = await bmsApi.admin.folderTemplates.getForScope(scopeType)
-      return Array.isArray(data) ? data : []
+      return extractArray<FolderTemplateDto>(data)
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load templates for scope")
       toast.error("Failed to load templates", {
@@ -177,7 +178,7 @@ export function useFolderTemplates(): UseFolderTemplatesReturn {
   const getApplications = useCallback(async (templateId: string): Promise<FolderTemplateApplicationDto[]> => {
     try {
       const data = await bmsApi.admin.folderTemplates.getApplications(templateId)
-      return Array.isArray(data) ? data : []
+      return extractArray<FolderTemplateApplicationDto>(data)
     } catch (err) {
       return []
     }

@@ -5,6 +5,7 @@ import type {
   CreateDocumentPermissionRequest,
   UpdateDocumentPermissionRequest,
   EffectivePermissionsDto,
+  PagedResult,
 } from "@/types/bms"
 import { toast } from "sonner"
 
@@ -36,8 +37,9 @@ export function useDocumentPermissions(documentId: string): UseDocumentPermissio
     try {
       setLoading(true)
       setError(null)
-      const data = await bmsApi.documentPermissions.list(documentId)
-      setPermissions(Array.isArray(data) ? data : [])
+      const result = await bmsApi.documentPermissions.list(documentId) as PagedResult<DocumentPermissionDto> | DocumentPermissionDto[]
+      const perms = Array.isArray(result) ? result : (result as PagedResult<DocumentPermissionDto>).data || []
+      setPermissions(perms)
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to load permissions")
       setError(error)

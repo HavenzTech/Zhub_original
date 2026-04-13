@@ -16,7 +16,7 @@ export function useUsersQuery() {
   return useQuery({
     queryKey: queryKeys.users.all,
     queryFn: async () => {
-      const data = await bmsApi.adminUsers.getAll()
+      const data = await bmsApi.users.getAll()
       return extractArray<UserResponse>(data).map(normalizeUser)
     },
     staleTime: STALE_TIMES.STANDARD,
