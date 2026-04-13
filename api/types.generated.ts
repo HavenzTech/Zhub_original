@@ -8048,7 +8048,9 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    projectId?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -16273,6 +16275,8 @@ export interface components {
             createdByUserId: string;
             inheritPermissions?: boolean;
             /** Format: uuid */
+            projectId?: string | null;
+            /** Format: uuid */
             defaultDocumentTypeId?: string | null;
             defaultClassification?: string | null;
             /** Format: date-time */
@@ -16284,6 +16288,7 @@ export interface components {
             company?: components["schemas"]["DomainModel.HavenzHub.Company"];
             createdByUser?: components["schemas"]["DomainModel.HavenzHub.User"];
             parentFolder?: components["schemas"]["DomainModel.HavenzHub.Folder"];
+            project?: components["schemas"]["DomainModel.HavenzHub.Project"];
             defaultDocumentType?: components["schemas"]["DomainModel.HavenzHub.DocumentType"];
             childFolders?: components["schemas"]["DomainModel.HavenzHub.Folder"][] | null;
             documents?: components["schemas"]["DomainModel.HavenzHub.Document"][] | null;
@@ -17836,6 +17841,8 @@ export interface components {
             description?: string | null;
             /** Format: uuid */
             parentFolderId?: string | null;
+            /** Format: uuid */
+            projectId?: string | null;
         };
         "WebApp.Models.HavenzHub.CreateFolderTemplateRequest": {
             name: string;
@@ -18840,6 +18847,8 @@ export interface components {
             description?: string | null;
             path?: string | null;
             /** Format: uuid */
+            projectId?: string | null;
+            /** Format: uuid */
             createdByUserId?: string;
             /** Format: date-time */
             createdAt?: string;
@@ -19720,6 +19729,8 @@ export interface components {
         "WebApp.Models.HavenzHub.UpdateFolderRequest": {
             name: string;
             description?: string | null;
+            /** Format: uuid */
+            projectId?: string | null;
         };
         "WebApp.Models.HavenzHub.UpdateFolderTemplateRequest": {
             name: string;

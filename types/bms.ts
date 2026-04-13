@@ -1415,6 +1415,7 @@ export interface Folder {
   id?: string;
   companyId: string;
   parentFolderId?: string | null;
+  projectId?: string | null;
   name: string;
   description?: string | null;
   path?: string | null;
@@ -1430,6 +1431,7 @@ export interface FolderDto {
   id?: string;
   companyId?: string;
   parentFolderId?: string | null;
+  projectId?: string | null;
   name?: string | null;
   description?: string | null;
   path?: string | null;
@@ -1445,11 +1447,13 @@ export interface CreateFolderRequest {
   name: string;
   description?: string | null;
   parentFolderId?: string | null;
+  projectId?: string | null;
 }
 
 export interface UpdateFolderRequest {
   name: string;
   description?: string | null;
+  projectId?: string | null;
 }
 
 // ============================================

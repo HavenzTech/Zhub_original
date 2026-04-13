@@ -124,32 +124,6 @@ interface ProjectDocumentsTabProps {
   projectName: string;
 }
 
-/**
- * Filter folder tree to only include documents matching the given projectId.
- * Folders with no matching documents and no child folders with matching documents are excluded.
- */
-function filterFoldersByProject(folders: Folder[], projectId: string): Folder[] {
-  return folders
-    .map((folder) => {
-      const filteredDocs = (folder.documents || []).filter(
-        (doc) => doc.projectId === projectId
-      );
-      const filteredChildren = folder.childFolders
-        ? filterFoldersByProject(folder.childFolders, projectId)
-        : [];
-
-      if (filteredDocs.length === 0 && filteredChildren.length === 0) {
-        return null;
-      }
-
-      return {
-        ...folder,
-        documents: filteredDocs,
-        childFolders: filteredChildren,
-      };
-    })
-    .filter(Boolean) as Folder[];
-}
 
 export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocumentsTabProps) {
   const router = useRouter();
@@ -170,6 +144,7 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
   const [parentFolderForCreation, setParentFolderForCreation] = useState<string | null>(null);
+  const [folderCreatedFromUpload, setFolderCreatedFromUpload] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showEditMetadataModal, setShowEditMetadataModal] = useState(false);
@@ -253,15 +228,20 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
 
   const activeFilterCount = filterStatuses.length + filterClassifications.length;
 
-  // Data loading
+  // Data loading — fetch all folders (for general use) and project-scoped folders
+  const [projectFolders, setProjectFolders] = useState<Folder[]>([]);
   const loadFolders = useCallback(async () => {
     try {
-      const data = await bmsApi.folders.getTree();
-      setFolders(data as Folder[]);
+      const [allData, projectData] = await Promise.all([
+        bmsApi.folders.getTree(),
+        bmsApi.folders.getTree(projectId),
+      ]);
+      setFolders(allData as Folder[]);
+      setProjectFolders(projectData as Folder[]);
     } catch (err) {
       console.error("Error loading folders:", err);
     }
-  }, []);
+  }, [projectId]);
 
   // projects, departments, users, properties served by React Query hooks above
 
@@ -317,8 +297,8 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
     }
   }, [selectedDocumentForModal?.id, activeTab, loadWorkflowStatus, loadWorkflowHistory]);
 
-  // Filter folders to only show documents for this project
-  const filteredFolders = filterFoldersByProject(folders, projectId);
+  // Project-scoped folders from the API (replaces client-side filtering)
+  const filteredFolders = projectFolders;
 
   // Also get project documents not in any folder (unfiled)
   const unfiledProjectDocs = documents.filter(
@@ -346,13 +326,15 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
     name: string,
     description?: string,
     parentFolderId?: string,
-    templateId?: string
+    templateId?: string,
+    folderProjectId?: string
   ) => {
     try {
       const folder = (await bmsApi.folders.create({
         name,
         description,
         parentFolderId: parentFolderId || undefined,
+        projectId: folderProjectId || projectId,
       })) as { id?: string };
 
       if (templateId && folder?.id) {
@@ -1695,6 +1677,7 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
         setSelectedFile={setSelectedFile}
         isUploading={isUploading}
         folders={folders}
+        projectFolders={filteredFolders}
         projects={projects}
         departments={departments}
         properties={properties}
@@ -1702,6 +1685,11 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
         onSubmit={handleSubmit}
         onFileChange={handleFileChange}
         lockedProjectId={projectId}
+        onCreateFolder={() => {
+          setFolderCreatedFromUpload(true);
+          setShowUploadModal(false);
+          handleOpenCreateFolderModal();
+        }}
       />
 
       <CreateFolderModal
@@ -1709,6 +1697,10 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
         onClose={() => {
           setShowCreateFolderModal(false);
           setParentFolderForCreation(null);
+          if (folderCreatedFromUpload) {
+            setFolderCreatedFromUpload(false);
+            setShowUploadModal(true);
+          }
         }}
         onSubmit={handleCreateFolder}
         parentFolderId={parentFolderForCreation || undefined}
@@ -1717,6 +1709,8 @@ export function ProjectDocumentsTab({ projectId, projectName }: ProjectDocuments
             ? findFolderById(parentFolderForCreation)?.name
             : undefined
         }
+        projects={projects}
+        lockedProjectId={projectId}
       />
 
       <EditMetadataModal
