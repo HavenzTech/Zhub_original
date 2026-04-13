@@ -9582,6 +9582,16 @@
         "tags": [
           "Folder"
         ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -20349,6 +20359,11 @@
           "inheritPermissions": {
             "type": "boolean"
           },
+          "projectId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "defaultDocumentTypeId": {
             "type": "string",
             "format": "uuid",
@@ -20380,6 +20395,9 @@
           },
           "parentFolder": {
             "$ref": "#/components/schemas/DomainModel.HavenzHub.Folder"
+          },
+          "project": {
+            "$ref": "#/components/schemas/DomainModel.HavenzHub.Project"
           },
           "defaultDocumentType": {
             "$ref": "#/components/schemas/DomainModel.HavenzHub.DocumentType"
@@ -25313,6 +25331,11 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -28423,6 +28446,11 @@
             "type": "string",
             "nullable": true
           },
+          "projectId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "createdByUserId": {
             "type": "string",
             "format": "uuid"
@@ -31155,6 +31183,11 @@
           "description": {
             "maxLength": 1000,
             "type": "string",
+            "nullable": true
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           }
         },

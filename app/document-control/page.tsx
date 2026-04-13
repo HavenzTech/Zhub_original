@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -318,6 +318,38 @@ export default function DocumentControlPage() {
   }, [selectedDocumentForModal?.id, activeTab, loadWorkflowStatus, loadWorkflowHistory]);
 
   // ──────────────────────────────────────────────
+  // Group folders by project for the sidebar tree
+  // ──────────────────────────────────────────────
+  const groupedFolders = useMemo(() => {
+    // Group top-level folders by their projectId field
+    const projectGroups = new Map<string, Folder[]>();
+    const unassigned: Folder[] = [];
+
+    for (const folder of folders) {
+      if (folder.projectId) {
+        if (!projectGroups.has(folder.projectId)) projectGroups.set(folder.projectId, []);
+        projectGroups.get(folder.projectId)!.push(folder);
+      } else {
+        unassigned.push(folder);
+      }
+    }
+
+    // Convert to array with project names, sorted alphabetically
+    const groups: { projectId: string | null; projectName: string; folders: Folder[] }[] = [];
+    for (const [pid, pFolders] of projectGroups) {
+      const name = projects.find((p) => p.id === pid)?.name || "Unknown Project";
+      groups.push({ projectId: pid, projectName: name, folders: pFolders });
+    }
+    groups.sort((a, b) => a.projectName.localeCompare(b.projectName));
+
+    if (unassigned.length > 0) {
+      groups.push({ projectId: null, projectName: "General", folders: unassigned });
+    }
+
+    return groups;
+  }, [folders, projects]);
+
+  // ──────────────────────────────────────────────
   // Handlers
   // ──────────────────────────────────────────────
 
@@ -344,17 +376,16 @@ export default function DocumentControlPage() {
     name: string,
     description?: string,
     parentFolderId?: string,
-    templateId?: string
+    templateId?: string,
+    projectId?: string
   ) => {
     try {
       const folder = (await bmsApi.folders.create({
         name,
         description,
         parentFolderId: parentFolderId || undefined,
+        projectId: projectId || undefined,
       })) as { id?: string };
-      console.log("[handleCreateFolder] create response:", folder);
-      console.log("[handleCreateFolder] current auth:", authService.getAuth());
-      console.log("[handleCreateFolder] companyId on bmsApi:", authService.getCurrentCompanyId());
 
       if (templateId && folder?.id) {
         try {
@@ -907,17 +938,28 @@ export default function DocumentControlPage() {
               </Button>
             </div>
           ) : (
-            <FolderTreeView
-              folders={folders}
-              selectedFolderId={selectedFolderId}
-              onFolderSelect={setSelectedFolderId}
-              onDocumentSelect={(doc) =>
-                router.push(`/document-control/${doc.id}`)
-              }
-              onFolderCreate={handleOpenCreateFolderModal}
-              onFolderDelete={handleFolderDelete}
-              showDocuments={true}
-            />
+            <div className="space-y-3">
+              {groupedFolders.map((group) => (
+                <div key={group.projectId || "general"}>
+                  {groupedFolders.length > 1 && (
+                    <div className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
+                      {group.projectName}
+                    </div>
+                  )}
+                  <FolderTreeView
+                    folders={group.folders}
+                    selectedFolderId={selectedFolderId}
+                    onFolderSelect={setSelectedFolderId}
+                    onDocumentSelect={(doc) =>
+                      router.push(`/document-control/${doc.id}`)
+                    }
+                    onFolderCreate={handleOpenCreateFolderModal}
+                    onFolderDelete={handleFolderDelete}
+                    showDocuments={true}
+                  />
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -1166,20 +1208,31 @@ export default function DocumentControlPage() {
                     </Button>
                   </div>
                 ) : (
-                  <FolderTreeView
-                    folders={folders}
-                    selectedFolderId={selectedFolderId}
-                    selectedDocumentId={
-                      selectedDocumentForModal?.id
-                    }
-                    onFolderSelect={setSelectedFolderId}
-                    onDocumentSelect={(doc) =>
-                      setSelectedDocumentForModal(doc)
-                    }
-                    onFolderCreate={handleOpenCreateFolderModal}
-                    onFolderDelete={handleFolderDelete}
-                    showDocuments={true}
-                  />
+                  <div className="space-y-3">
+                    {groupedFolders.map((group) => (
+                      <div key={group.projectId || "general"}>
+                        {groupedFolders.length > 1 && (
+                          <div className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
+                            {group.projectName}
+                          </div>
+                        )}
+                        <FolderTreeView
+                          folders={group.folders}
+                          selectedFolderId={selectedFolderId}
+                          selectedDocumentId={
+                            selectedDocumentForModal?.id
+                          }
+                          onFolderSelect={setSelectedFolderId}
+                          onDocumentSelect={(doc) =>
+                            setSelectedDocumentForModal(doc)
+                          }
+                          onFolderCreate={handleOpenCreateFolderModal}
+                          onFolderDelete={handleFolderDelete}
+                          showDocuments={true}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 )}
               </>
             )}
@@ -1736,6 +1789,7 @@ export default function DocumentControlPage() {
             ? findFolderById(parentFolderForCreation)?.name
             : undefined
         }
+        projects={projects}
       />
 
       <EditMetadataModal

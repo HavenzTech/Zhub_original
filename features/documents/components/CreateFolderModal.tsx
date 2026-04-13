@@ -12,10 +12,15 @@ interface CreateFolderModalProps {
     name: string,
     description?: string,
     parentFolderId?: string,
-    templateId?: string
+    templateId?: string,
+    projectId?: string
   ) => Promise<void>;
   parentFolderId?: string;
   parentFolderName?: string;
+  /** List of projects for the optional project dropdown */
+  projects?: { id: string; name: string }[];
+  /** When set, locks the project selector to this project */
+  lockedProjectId?: string | null;
 }
 
 // Helper to render template preview
@@ -44,21 +49,27 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
   onSubmit,
   parentFolderId,
   parentFolderName,
+  projects,
+  lockedProjectId,
 }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [templates, setTemplates] = useState<FolderTemplateDto[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [loadingTemplates, setLoadingTemplates] = useState(false);
 
-  // Load folder templates when modal opens
+  // Initialize project selection when modal opens
   useEffect(() => {
     if (isOpen) {
       loadTemplates();
+      if (lockedProjectId) {
+        setSelectedProjectId(lockedProjectId);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, lockedProjectId]);
 
   const loadTemplates = async () => {
     setLoadingTemplates(true);
@@ -93,12 +104,14 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
         name.trim(),
         description.trim() || undefined,
         parentFolderId,
-        selectedTemplateId || undefined
+        selectedTemplateId || undefined,
+        selectedProjectId || undefined
       );
       // Reset form
       setName("");
       setDescription("");
       setSelectedTemplateId("");
+      setSelectedProjectId("");
       onClose();
     } catch (err: any) {
       setError(err.message || "Failed to create folder");
@@ -112,12 +125,17 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
       setName("");
       setDescription("");
       setSelectedTemplateId("");
+      setSelectedProjectId("");
       setError("");
       onClose();
     }
   };
 
   if (!isOpen) return null;
+
+  const lockedProject = lockedProjectId && projects
+    ? projects.find((p) => p.id === lockedProjectId)
+    : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -192,6 +210,41 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
               {description.length}/1000 characters
             </p>
           </div>
+
+          {/* Project (Optional or Locked) */}
+          {projects && projects.length > 0 && (
+            <div>
+              <label
+                htmlFor="folderProject"
+                className="block text-sm font-medium mb-1"
+              >
+                Project
+              </label>
+              {lockedProject ? (
+                <div className="w-full px-3 py-2 border rounded-md bg-muted text-sm text-muted-foreground">
+                  {lockedProject.name}
+                </div>
+              ) : (
+                <select
+                  id="folderProject"
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                  disabled={isSubmitting}
+                >
+                  <option value="">None</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Tie this folder to a project so it appears in the project&apos;s document view.
+              </p>
+            </div>
+          )}
 
           {/* Folder Template (Optional) */}
           {templates.length > 0 && (

@@ -854,7 +854,17 @@ class BmsApiService {
   // Folder endpoints - Swagger: /api/havenzhub/folders
   folders = {
     getAll: () => this.get('/folders'),
-    getTree: () => this.get('/folders/tree'),
+    getTree: (projectId?: string) => {
+      const url = `/folders/tree${projectId ? `?projectId=${projectId}` : ''}`;
+      console.log('[bmsApi.folders.getTree] calling:', url, { projectId: projectId || 'none' });
+      return this.get(url).then((res) => {
+        console.log('[bmsApi.folders.getTree] response OK, count:', Array.isArray(res) ? res.length : 'not array');
+        return res;
+      }).catch((err) => {
+        console.error('[bmsApi.folders.getTree] FAILED:', url, err);
+        throw err;
+      });
+    },
     getById: (id: string) => this.get(`/folders/${id}`),
     getDocuments: (id: string) => this.get<DocumentDto[]>(`/folders/${id}/documents`),
     create: (data: any) => this.post('/folders', data),
