@@ -16,6 +16,8 @@ import {
   Zap,
   Search,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Tooltip,
   TooltipContent,
@@ -242,9 +244,17 @@ export default function DocumentChatPanel({
                 }`}
                 style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
               >
-                <p className="whitespace-pre-wrap text-[13px] leading-relaxed" style={{ wordBreak: 'break-word' }}>
-                  {message.content}
-                </p>
+                {message.role === "assistant" ? (
+                  <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-relaxed prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-table:text-sm prose-td:border prose-td:border-stone-300 prose-td:px-2 prose-td:py-1 prose-th:border prose-th:border-stone-300 prose-th:px-2 prose-th:py-1 dark:prose-td:border-stone-600 dark:prose-th:border-stone-600" style={{ wordBreak: 'break-word' }}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-wrap text-[13px] leading-relaxed" style={{ wordBreak: 'break-word' }}>
+                    {message.content}
+                  </p>
+                )}
                 <span className="mt-1 block text-[10px] opacity-60">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
