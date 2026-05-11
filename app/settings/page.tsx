@@ -28,6 +28,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
   Settings,
   Users,
@@ -38,6 +40,10 @@ import {
   Trash2,
   Edit,
   Loader2,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Lock,
 } from "lucide-react";
 import { PageTour } from "@/components/tour/PageTour";
 import { TOUR_KEYS } from "@/lib/tour/tour-keys";
@@ -98,6 +104,44 @@ export default function SettingsPage() {
     setIsAdmin(authService.isAdmin());
     setIsSuperAdmin(authService.isSuperAdmin());
   }, []);
+
+  // Change password state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const pwRequirements = {
+    length: newPassword.length >= 12,
+    uppercase: /[A-Z]/.test(newPassword),
+    lowercase: /[a-z]/.test(newPassword),
+    number: /\d/.test(newPassword),
+    special: /[^a-zA-Z0-9]/.test(newPassword),
+  };
+  const allPwReqsMet = Object.values(pwRequirements).every(Boolean);
+  const passwordsMatch = newPassword === confirmPassword && confirmPassword !== "";
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!allPwReqsMet) { toast.error("Password does not meet all requirements"); return; }
+    if (!passwordsMatch) { toast.error("Passwords do not match"); return; }
+    if (currentPassword === newPassword) { toast.error("New password must be different from current password"); return; }
+    setIsChangingPassword(true);
+    try {
+      await authService.changePassword({ currentPassword, newPassword });
+      toast.success("Password changed successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: unknown) {
+      toast.error((err as { message?: string })?.message || "Failed to change password");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   const userRoles: UserRole[] = [
     {
@@ -315,6 +359,77 @@ export default function SettingsPage() {
               disabled
             />
           </div>
+        </div>
+      </div>
+
+      {/* Change Password */}
+      <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">
+        <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-700 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-stone-500 dark:text-stone-400" />
+          <h3 className="text-sm font-semibold text-stone-900 dark:text-stone-50">Security</h3>
+        </div>
+        <div className="p-5">
+          <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
+            <div className="space-y-1.5">
+              <Label htmlFor="settings-current-pw">Current Password</Label>
+              <div className="relative">
+                <Input id="settings-current-pw" type={showCurrentPw ? "text" : "password"}
+                  placeholder="Enter current password" value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)} required className="pr-10" />
+                <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300">
+                  {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="settings-new-pw">New Password</Label>
+              <div className="relative">
+                <Input id="settings-new-pw" type={showNewPw ? "text" : "password"}
+                  placeholder="Enter new password" value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)} required className="pr-10" />
+                <button type="button" onClick={() => setShowNewPw(!showNewPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300">
+                  {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {newPassword && (
+                <div className="pt-1 space-y-1">
+                  {[
+                    { met: pwRequirements.length, text: "At least 12 characters" },
+                    { met: pwRequirements.uppercase, text: "One uppercase letter" },
+                    { met: pwRequirements.lowercase, text: "One lowercase letter" },
+                    { met: pwRequirements.number, text: "One number" },
+                    { met: pwRequirements.special, text: "One special character" },
+                  ].map(({ met, text }) => (
+                    <div key={text} className={`flex items-center gap-1.5 text-xs ${met ? "text-emerald-600 dark:text-emerald-400" : "text-stone-400 dark:text-stone-500"}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${met ? "bg-emerald-500" : "bg-stone-300 dark:bg-stone-600"}`} />
+                      {text}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="settings-confirm-pw">Confirm New Password</Label>
+              <div className="relative">
+                <Input id="settings-confirm-pw" type={showConfirmPw ? "text" : "password"}
+                  placeholder="Confirm new password" value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)} required
+                  className={`pr-10 ${confirmPassword && !passwordsMatch ? "border-destructive focus-visible:ring-destructive" : ""}`} />
+                <button type="button" onClick={() => setShowConfirmPw(!showConfirmPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300">
+                  {showConfirmPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {confirmPassword && !passwordsMatch && (
+                <p className="text-xs text-destructive">Passwords do not match</p>
+              )}
+            </div>
+            <Button type="submit" disabled={isChangingPassword || !currentPassword || !allPwReqsMet || !passwordsMatch} size="sm">
+              {isChangingPassword ? <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Changing...</> : "Change Password"}
+            </Button>
+          </form>
         </div>
       </div>
 
