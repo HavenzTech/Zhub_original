@@ -46,7 +46,6 @@ export default function ChangePasswordPage() {
       return;
     }
     if (!auth.requiresPasswordChange) {
-      // User doesn't need to change password, redirect to next step or home
       if (auth.requiresMfaSetup) {
         router.push("/mfa-setup");
       } else {
@@ -111,11 +110,11 @@ export default function ChangePasswordPage() {
   };
 
   const RequirementItem = ({ met, text }: { met: boolean; text: string }) => (
-    <div className={`flex items-center gap-2 text-sm ${met ? "text-green-600" : "text-muted-foreground"}`}>
+    <div className={`flex items-center gap-2 text-sm ${met ? "text-green-600 dark:text-green-400" : "text-stone-600 dark:text-stone-300"}`}>
       {met ? (
-        <CheckCircle2 className="w-4 h-4" />
+        <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
       ) : (
-        <div className="w-4 h-4 rounded-full border border-muted-foreground/30" />
+        <div className="w-4 h-4 rounded-full border-2 border-stone-400 dark:border-stone-500 flex-shrink-0" />
       )}
       <span>{text}</span>
     </div>
@@ -221,8 +220,8 @@ export default function ChangePasswordPage() {
                 </div>
 
                 {/* Password Requirements */}
-                <div className="p-3 rounded-lg bg-muted/50 space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Password requirements:</p>
+                <div className="p-3 rounded-lg bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 space-y-2">
+                  <p className="text-xs font-medium text-stone-700 dark:text-stone-300 mb-2">Password requirements:</p>
                   <RequirementItem met={requirements.length} text="At least 12 characters" />
                   <RequirementItem met={requirements.uppercase} text="One uppercase letter" />
                   <RequirementItem met={requirements.lowercase} text="One lowercase letter" />
