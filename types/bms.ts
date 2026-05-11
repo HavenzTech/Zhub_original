@@ -2305,3 +2305,107 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   hasMore: boolean;
 }
+
+// ============================================
+// Access Control — Areas & Terminals (HID / Amico)
+// ============================================
+
+export interface PropertyArea {
+  id?: string;
+  propertyId?: string;
+  propertyName?: string | null;
+  name?: string | null;
+  description?: string | null;
+  floor?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateAreaRequest {
+  name: string;
+  description?: string | null;
+  floor?: string | null;
+}
+
+export interface AreaAccess {
+  id?: string;
+  userId?: string;
+  areaId?: string;
+  accessLevel?: string | null;
+  grantedAt?: string;
+  grantedByUserId?: string | null;
+  userName?: string | null;
+  userEmail?: string | null;
+  userPictureUrl?: string | null;
+  areaName?: string | null;
+  propertyName?: string | null;
+}
+
+export interface GrantAreaAccessRequest {
+  userId: string;
+  areaId: string;
+  accessLevel: string;
+}
+
+export interface BulkGrantAreaAccessRequest {
+  userIds: string[];
+  areaIds: string[];
+  accessLevel: string;
+}
+
+export interface AmicoTerminal {
+  id?: string;
+  name?: string | null;
+  ipAddress?: string | null;
+  status?: string | null;
+  monitorConfigured?: boolean;
+  lastSeenAt?: string | null;
+  firmwareVersion?: string | null;
+  deviceId?: string | null;
+  notes?: string | null;
+  area?: { id?: string; name?: string | null } | null;
+  property?: { id?: string; name?: string | null } | null;
+  pendingSyncs?: number;
+  failedSyncs?: number;
+}
+
+export interface RegisterTerminalRequest {
+  name: string;
+  ipAddress: string;
+  areaId: string;
+  username: string;
+  password: string;
+}
+
+export interface UpdateTerminalRequest {
+  name?: string;
+  ipAddress?: string;
+  areaId?: string;
+}
+
+export interface TerminalAccessEvent {
+  id?: string;
+  terminalId?: string;
+  terminalName?: string | null;
+  userId?: string | null;
+  userName?: string | null;
+  userEmail?: string | null;
+  timestamp?: string;
+  result?: string | null;
+  reason?: string | null;
+}
+
+export interface TerminalSync {
+  id?: string;
+  terminalId?: string;
+  syncedAt?: string;
+  status?: string | null;
+  userCount?: number;
+  errorMessage?: string | null;
+}
+
+export interface AreaSelection {
+  areaId: string;
+  areaName: string;
+  propertyName: string;
+}
