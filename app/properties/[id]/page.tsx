@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { LoadingSpinnerCentered } from "@/components/common/LoadingSpinner";
 import { ErrorDisplayCentered } from "@/components/common/ErrorDisplay";
 import { PropertyDetails } from "@/features/properties/components/PropertyDetails";
+import { PropertyAreasPanel } from "@/features/properties/components/PropertyAreasPanel";
 import {
   PropertyFormModal,
   PropertyFormData,
@@ -220,6 +221,7 @@ export default function PropertyDetailPage() {
                 onEdit={handleEdit}
               />
             </div>
+            <PropertyAreasPanel propertyId={propertyId} />
             <PropertyFormModal
               open={showEditForm}
               onOpenChange={setShowEditForm}

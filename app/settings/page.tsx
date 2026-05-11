@@ -38,6 +38,7 @@ import {
   Trash2,
   Edit,
   Loader2,
+  KeyRound,
 } from "lucide-react";
 import { PageTour } from "@/components/tour/PageTour";
 import { TOUR_KEYS } from "@/lib/tour/tour-keys";
@@ -46,6 +47,7 @@ import { UserManagementPanel } from "@/features/users/components/UserManagementP
 import { FolderTemplatesPanel } from "@/features/admin/components/FolderTemplatesPanel";
 import { RetentionPoliciesPanel } from "@/features/admin/components/RetentionPoliciesPanel";
 import { WorkflowsPanel } from "@/features/admin/components/WorkflowsPanel";
+import { AccessControlTab } from "@/features/access-control/AccessControlTab";
 
 interface UserRole {
   id: string;
@@ -174,6 +176,7 @@ export default function SettingsPage() {
     }
     if (isAdmin) {
       baseTabs.push({ id: "doc-settings", label: "Document Settings", icon: FileText });
+      baseTabs.push({ id: "access-control", label: "Access Control", icon: KeyRound });
     }
     return baseTabs;
   }, [isAdmin, isSuperAdmin]);
@@ -576,6 +579,17 @@ export default function SettingsPage() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            </div>
+          )}
+          {activeTab === "access-control" && isAdmin && (
+            <div className="space-y-2">
+              <div>
+                <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-50">Access Control</h2>
+                <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
+                  Manage HID terminals, area access, and emergency lockdown controls.
+                </p>
+              </div>
+              <AccessControlTab />
             </div>
           )}
           {activeTab === "doc-settings" && isAdmin && (
