@@ -13,8 +13,8 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { MapPin, Plus, Loader2, Layers } from "lucide-react";
-import type { PropertyArea } from "@/types/bms";
+import { MapPin, Plus, Loader2, Layers, Monitor, Wifi, WifiOff } from "lucide-react";
+import type { PropertyArea, AmicoTerminal } from "@/types/bms";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { authService } from "@/lib/services/auth";
 import { toast } from "sonner";
@@ -25,6 +25,7 @@ interface PropertyAreasPanelProps {
 
 export function PropertyAreasPanel({ propertyId }: PropertyAreasPanelProps) {
   const [areas, setAreas] = useState<PropertyArea[]>([]);
+  const [terminals, setTerminals] = useState<AmicoTerminal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -46,17 +47,15 @@ export function PropertyAreasPanel({ propertyId }: PropertyAreasPanelProps) {
   useEffect(() => {
     if (!propertyId) return;
     setLoading(true);
-    bmsApi.properties.getAreas(propertyId)
-      .then((res: any) => {
-        console.log('[PropertyAreasPanel] getAreas response:', res);
-        if (Array.isArray(res)) return setAreas(res);
-        if (res?.data && Array.isArray(res.data)) return setAreas(res.data);
-        if (res?.items && Array.isArray(res.items)) return setAreas(res.items);
-        if (res?.areas && Array.isArray(res.areas)) return setAreas(res.areas);
-        setAreas([]);
-      })
-      .catch((err) => { console.error('[PropertyAreasPanel] getAreas error:', err); setAreas([]); })
-      .finally(() => setLoading(false));
+    Promise.all([
+      bmsApi.properties.getAreas(propertyId).catch(() => []),
+      bmsApi.terminals.getAll().catch(() => []),
+    ]).then(([areasRes, terminalsRes]: [any, any]) => {
+      const unwrap = (r: any): any[] =>
+        Array.isArray(r) ? r : r?.data ?? r?.items ?? r?.areas ?? [];
+      setAreas(unwrap(areasRes));
+      setTerminals(unwrap(terminalsRes));
+    }).finally(() => setLoading(false));
   }, [propertyId]);
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -114,18 +113,39 @@ export function PropertyAreasPanel({ propertyId }: PropertyAreasPanelProps) {
             </div>
           ) : (
             <div className="divide-y divide-stone-100 dark:divide-stone-800">
-              {areas.map((area) => (
-                <div key={area.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-medium text-stone-900 dark:text-stone-50">{area.name}</p>
-                    <div className="flex items-center gap-3 text-xs text-stone-400 dark:text-stone-500">
-                      {area.floor && <span>Floor {area.floor}</span>}
-                      {area.description && <span>{area.description}</span>}
+              {areas.map((area) => {
+                const areaTerminals = terminals.filter((t) => t.area?.id === area.id);
+                return (
+                  <div key={area.id} className="py-3 first:pt-0 last:pb-0 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-medium text-stone-900 dark:text-stone-50">{area.name}</p>
+                        <div className="flex items-center gap-3 text-xs text-stone-400 dark:text-stone-500">
+                          {area.floor && <span>Floor {area.floor}</span>}
+                          {area.description && <span>{area.description}</span>}
+                        </div>
+                      </div>
+                      <span className="text-xs text-stone-300 dark:text-stone-600 font-mono">{area.id?.slice(0, 8)}…</span>
                     </div>
+                    {areaTerminals.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pl-1">
+                        {areaTerminals.map((t) => {
+                          const online = t.status === "Active";
+                          return (
+                            <div key={t.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-xs">
+                              <Monitor className="w-3 h-3 text-stone-400" />
+                              <span className="text-stone-700 dark:text-stone-300">{t.name}</span>
+                              {online
+                                ? <Wifi className="w-3 h-3 text-green-500" />
+                                : <WifiOff className="w-3 h-3 text-stone-400" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <span className="text-xs text-stone-300 dark:text-stone-600 font-mono">{area.id?.slice(0, 8)}…</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
