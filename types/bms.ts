@@ -40,6 +40,7 @@ export interface CreateUserRequest {
   role: string;
   departmentIds?: string[] | null;
   faceEnrollmentRequired?: boolean;
+  propertyIds?: string[] | null;
 }
 
 export interface CreateUserResponse {
@@ -2407,5 +2408,6 @@ export interface TerminalSync {
 export interface AreaSelection {
   areaId: string;
   areaName: string;
+  propertyId: string;
   propertyName: string;
 }

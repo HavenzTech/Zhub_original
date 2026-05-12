@@ -95,11 +95,16 @@ export function UserManagementPanel() {
 
     setIsSubmitting(true);
     try {
+      // Derive unique property IDs from selected areas so the backend
+      // auto-assigns this user to those properties as a viewer in property_staff.
+      const selectedPropertyIds = [...new Set(areaSelections.map((a) => a.propertyId).filter(Boolean))];
+
       const payload: CreateUserRequest = {
         email: formData.email.trim(),
         name: formData.name.trim(),
         role: formData.role,
         faceEnrollmentRequired: formData.faceEnrollmentRequired ?? false,
+        propertyIds: selectedPropertyIds.length > 0 ? selectedPropertyIds : undefined,
       };
 
       if (formData.pictureUrl?.trim()) {

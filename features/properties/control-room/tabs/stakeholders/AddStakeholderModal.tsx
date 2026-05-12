@@ -24,7 +24,7 @@ export function AddStakeholderModal({ open, onOpenChange, propertyId }: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!displayName.trim() || !email.trim()) return;
-    add({ displayName: displayName.trim(), email: email.trim(), role });
+    add({ userId: email.trim(), role });
     setDisplayName(""); setEmail(""); setRole("viewer");
     onOpenChange(false);
   }

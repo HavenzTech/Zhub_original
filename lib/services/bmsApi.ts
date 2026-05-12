@@ -590,6 +590,15 @@ class BmsApiService {
       this.get<PropertyArea[]>(`/properties/${propertyId}/areas`),
     createArea: (propertyId: string, data: CreateAreaRequest) =>
       this.post<PropertyArea>(`/properties/${propertyId}/areas`, data),
+    // Staff — GET/POST/PUT/DELETE /api/havenzhub/properties/{id}/staff
+    getStaff: (propertyId: string) =>
+      this.get<any[]>(`/properties/${propertyId}/staff`),
+    assignStaff: (propertyId: string, data: { userId: string; role: string }) =>
+      this.post(`/properties/${propertyId}/staff`, data),
+    updateStaffRole: (propertyId: string, userId: string, role: string) =>
+      this.put(`/properties/${propertyId}/staff/${userId}`, { role }),
+    removeStaff: (propertyId: string, userId: string) =>
+      this.delete(`/properties/${propertyId}/staff/${userId}`),
   };
 
   // Area Access — /api/admin/area-access

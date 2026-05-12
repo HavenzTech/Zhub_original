@@ -368,7 +368,7 @@ function AddWizard({
     if (existing >= 0) {
       onAreaSelectionsChange?.(areaSelections.filter((_, i) => i !== existing));
     } else {
-      onAreaSelectionsChange?.([...areaSelections, { areaId: area.id, areaName: area.name ?? area.id, propertyName }]);
+      onAreaSelectionsChange?.([...areaSelections, { areaId: area.id, areaName: area.name ?? area.id, propertyId: selectedPropertyId, propertyName }]);
     }
   };
 
