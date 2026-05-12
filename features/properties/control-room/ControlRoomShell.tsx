@@ -203,7 +203,17 @@ export function ControlRoomShell({ propertyId }: ControlRoomShellProps) {
                 />
               </TabsContent>
               <TabsContent value="twin" className="mt-4">
-                <DigitalTwinTab />
+                <DigitalTwinTab
+                  property={property}
+                  equipment={equipment}
+                  zones={zones}
+                  sensors={sensors}
+                  insights={insights}
+                  alerts={alerts}
+                  workOrders={workOrders}
+                  focusEquipmentId={focusEquipmentId ?? undefined}
+                  onCreateWorkOrder={(eq) => openNewWorkOrder({ equipmentId: eq, title: "Inspection" })}
+                />
               </TabsContent>
               <TabsContent value="systems" className="mt-4">
                 <SystemsTab systems={systems} equipment={equipment} sensors={sensors} />
