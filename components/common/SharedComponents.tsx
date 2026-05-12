@@ -328,7 +328,7 @@ interface StatCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   color: "blue" | "green" | "purple" | "orange" | "red" | "yellow";
   trend?: {
     value: number;
@@ -526,7 +526,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
 
 // Empty State Component
 interface EmptyStateProps {
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
   actionLabel?: string;

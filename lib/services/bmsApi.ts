@@ -1,6 +1,16 @@
 import {
   ApiResponse,
   ApiError,
+  AreaAccess,
+  GrantAreaAccessRequest,
+  BulkGrantAreaAccessRequest,
+  PropertyArea,
+  CreateAreaRequest,
+  AmicoTerminal,
+  RegisterTerminalRequest,
+  UpdateTerminalRequest,
+  TerminalAccessEvent,
+  TerminalSync,
   DocumentDownloadResponse,
   ExpenseDto,
   ExpenseDtoPagedResult,
@@ -75,6 +85,7 @@ import { sanitizeInput } from '@/lib/utils/sanitize';
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 const API_PREFIX = '/api/havenzhub';
 const ADMIN_PREFIX = '/api/admin';
+const AMICO_PREFIX = '/api/amico';
 const TIMEOUT = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000');
 
 class BmsApiError extends Error {
@@ -574,6 +585,66 @@ class BmsApiService {
     create: (data: any) => this.post('/properties', data),
     update: (id: string, data: any) => this.put(`/properties/${id}`, data),
     delete: (id: string) => this.delete(`/properties/${id}`),
+    // Areas within a property — GET /api/havenzhub/properties/{propertyId}/areas
+    getAreas: (propertyId: string) =>
+      this.get<PropertyArea[]>(`/properties/${propertyId}/areas`),
+    createArea: (propertyId: string, data: CreateAreaRequest) =>
+      this.post<PropertyArea>(`/properties/${propertyId}/areas`, data),
+    // Staff — GET/POST/PUT/DELETE /api/havenzhub/properties/{id}/staff
+    getStaff: (propertyId: string) =>
+      this.get<any[]>(`/properties/${propertyId}/staff`),
+    assignStaff: (propertyId: string, data: { userId: string; role: string }) =>
+      this.post(`/properties/${propertyId}/staff`, data),
+    updateStaffRole: (propertyId: string, userId: string, role: string) =>
+      this.put(`/properties/${propertyId}/staff/${userId}`, { role }),
+    removeStaff: (propertyId: string, userId: string) =>
+      this.delete(`/properties/${propertyId}/staff/${userId}`),
+  };
+
+  // Area Access — /api/admin/area-access
+  areaAccess = {
+    grant: (data: GrantAreaAccessRequest) =>
+      this.post<AreaAccess>('/area-access', data, { prefix: ADMIN_PREFIX }),
+    bulkGrant: (data: BulkGrantAreaAccessRequest) =>
+      this.post<AreaAccess[]>('/area-access/bulk', data, { prefix: ADMIN_PREFIX }),
+    revoke: (id: string) =>
+      this.delete(`/area-access/${id}`, { prefix: ADMIN_PREFIX }),
+    getByUser: (userId: string) =>
+      this.get<AreaAccess[]>(`/area-access/user/${userId}`, { prefix: ADMIN_PREFIX }),
+    getByArea: (areaId: string) =>
+      this.get<AreaAccess[]>(`/area-access/area/${areaId}`, { prefix: ADMIN_PREFIX }),
+    emergencyRevokeUser: (userId: string) =>
+      this.post(`/area-access/emergency/revoke-user/${userId}`, {}, { prefix: ADMIN_PREFIX }),
+    emergencyRevokeArea: (areaId: string) =>
+      this.post(`/area-access/emergency/revoke-area/${areaId}`, {}, { prefix: ADMIN_PREFIX }),
+    emergencyLockdown: () =>
+      this.post('/area-access/emergency/lockdown', {}, { prefix: ADMIN_PREFIX }),
+  };
+
+  // Terminals (Amico) — /api/amico/terminals
+  terminals = {
+    getAll: () =>
+      this.get<AmicoTerminal[]>('/terminals', { prefix: AMICO_PREFIX }),
+    register: (data: RegisterTerminalRequest) =>
+      this.post<AmicoTerminal>('/terminals', data, { prefix: AMICO_PREFIX }),
+    update: (id: string, data: UpdateTerminalRequest) =>
+      this.put<AmicoTerminal>(`/terminals/${id}`, data, { prefix: AMICO_PREFIX }),
+    deactivate: (id: string) =>
+      this.delete(`/terminals/${id}`, { prefix: AMICO_PREFIX }),
+    bootstrap: (id: string) =>
+      this.post(`/terminals/${id}/bootstrap`, {}, { prefix: AMICO_PREFIX }),
+    getAccessEvents: (id: string) =>
+      this.get<TerminalAccessEvent[]>(`/terminals/${id}/access-events`, { prefix: AMICO_PREFIX }),
+    getSyncs: (id: string) =>
+      this.get<TerminalSync[]>(`/terminals/${id}/syncs`, { prefix: AMICO_PREFIX }),
+  };
+
+  // Amico mobile endpoints — /api/amico/me and /api/amico/terminals/{id}/open
+  amicoMe = {
+    getAccessibleTerminals: () =>
+      this.get<AmicoTerminal[]>('/me/accessible-terminals', { prefix: AMICO_PREFIX }),
+    openDoor: (terminalId: string) =>
+      this.post(`/terminals/${terminalId}/open`, {}, { prefix: AMICO_PREFIX }),
   };
 
   // Document endpoints - Swagger: /api/havenzhub/documents

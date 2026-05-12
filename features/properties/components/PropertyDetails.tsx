@@ -7,17 +7,19 @@ import { formatCurrency, formatDate, getStatusColor, getTypeIcon } from "../util
 interface PropertyDetailsProps {
   property: Property
   companyName?: string
-  onBack: () => void
+  onBack?: () => void
   onEdit: (property: Property) => void
 }
 
 export function PropertyDetails({ property, companyName, onBack, onEdit }: PropertyDetailsProps) {
   return (
     <div className="space-y-6">
-      <Button variant="ghost" onClick={onBack} className="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-50">
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Properties
-      </Button>
+      {onBack && (
+        <Button variant="ghost" onClick={onBack} className="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-50">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Properties
+        </Button>
+      )}
 
       {/* Property Header */}
       <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-700">

@@ -19,6 +19,7 @@ import type {
   UserResponse,
   CreateUserRequest,
   CreateUserResponse,
+  AreaSelection,
 } from "@/types/bms";
 import { toast } from "sonner";
 import { UserPlus, Search, Users as UsersIcon, Loader2 } from "lucide-react";
@@ -61,6 +62,10 @@ export function UserManagementPanel() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
 
+  // Area access selections for new user wizard
+  const [areaSelections, setAreaSelections] = useState<AreaSelection[]>([]);
+  const [areaAccessLevel, setAreaAccessLevel] = useState("full");
+
   useEffect(() => {
     const auth = authService.getAuth();
     if (!auth) {
@@ -90,11 +95,16 @@ export function UserManagementPanel() {
 
     setIsSubmitting(true);
     try {
+      // Derive unique property IDs from selected areas so the backend
+      // auto-assigns this user to those properties as a viewer in property_staff.
+      const selectedPropertyIds = [...new Set(areaSelections.map((a) => a.propertyId).filter(Boolean))];
+
       const payload: CreateUserRequest = {
         email: formData.email.trim(),
         name: formData.name.trim(),
         role: formData.role,
         faceEnrollmentRequired: formData.faceEnrollmentRequired ?? false,
+        propertyIds: selectedPropertyIds.length > 0 ? selectedPropertyIds : undefined,
       };
 
       if (formData.pictureUrl?.trim()) {
@@ -113,11 +123,27 @@ export function UserManagementPanel() {
           }
         }
 
+        // Grant area access if selections were made
+        if (areaSelections.length > 0 && newUser.id) {
+          try {
+            await bmsApi.areaAccess.bulkGrant({
+              userIds: [newUser.id],
+              areaIds: areaSelections.map((a) => a.areaId),
+              accessLevel: areaAccessLevel,
+            });
+          } catch (accessErr) {
+            console.error("Error granting area access:", accessErr);
+            toast.warning("User created, but area access grant failed. Grant it from Access Control settings.");
+          }
+        }
+
         setCreatedUser(newUser);
         setShowPasswordModal(true);
         setShowAddForm(false);
         setFormData(initialFormData);
         setAvatarFile(null);
+        setAreaSelections([]);
+        setAreaAccessLevel("full");
       }
     } finally {
       setIsSubmitting(false);
@@ -297,7 +323,7 @@ export function UserManagementPanel() {
         open={showAddForm}
         onOpenChange={(open) => {
           setShowAddForm(open);
-          if (!open) setAvatarFile(null);
+          if (!open) { setAvatarFile(null); setAreaSelections([]); setAreaAccessLevel("full"); }
         }}
         mode="add"
         formData={formData}
@@ -306,6 +332,10 @@ export function UserManagementPanel() {
         onSubmit={handleSubmit}
         avatarFile={avatarFile}
         setAvatarFile={setAvatarFile}
+        areaSelections={areaSelections}
+        onAreaSelectionsChange={setAreaSelections}
+        accessLevel={areaAccessLevel}
+        onAccessLevelChange={setAreaAccessLevel}
       />
 
       <UserFormModal
