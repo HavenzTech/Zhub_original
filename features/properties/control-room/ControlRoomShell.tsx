@@ -240,7 +240,7 @@ export function ControlRoomShell({ propertyId }: ControlRoomShellProps) {
                 <PropertyAreasPanel propertyId={propertyId} />
               </TabsContent>
               <TabsContent value="staff" className="mt-4">
-                <StaffTab propertyId={propertyId} onAdd={() => setShowAssignStaff(true)} />
+                <StaffTab propertyId={propertyId} />
               </TabsContent>
               <TabsContent value="financials" className="mt-4">
                 <FinancialsTab property={property} />
