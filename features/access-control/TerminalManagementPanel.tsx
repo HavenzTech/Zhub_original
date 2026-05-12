@@ -95,7 +95,10 @@ export function TerminalManagementPanel() {
   // Events modal
   const [eventsTerminal, setEventsTerminal] = useState<AmicoTerminal | null>(null);
   const [events, setEvents] = useState<TerminalAccessEvent[]>([]);
+  const [eventsPage, setEventsPage] = useState(1);
+  const [eventsTotal, setEventsTotal] = useState(0);
   const [loadingEvents, setLoadingEvents] = useState(false);
+  const eventsPageSize = 25;
 
   // Syncs modal
   const [syncsTerminal, setSyncsTerminal] = useState<AmicoTerminal | null>(null);
@@ -192,18 +195,28 @@ export function TerminalManagementPanel() {
     }
   };
 
-  const openEvents = async (terminal: AmicoTerminal) => {
+  const fetchEvents = async (terminal: AmicoTerminal, page: number) => {
     if (!terminal.id) return;
-    setEventsTerminal(terminal);
     setLoadingEvents(true);
     try {
-      const res = await bmsApi.terminals.getAccessEvents(terminal.id);
-      setEvents(Array.isArray(res) ? res : []);
+      const res = await bmsApi.terminals.getAccessEvents(terminal.id, page, eventsPageSize);
+      const list = Array.isArray(res) ? res : (res as any)?.data ?? [];
+      const total = (res as any)?.total ?? list.length;
+      setEvents(list);
+      setEventsTotal(total);
+      setEventsPage(page);
     } catch {
       setEvents([]);
     } finally {
       setLoadingEvents(false);
     }
+  };
+
+  const openEvents = async (terminal: AmicoTerminal) => {
+    setEventsTerminal(terminal);
+    setEventsPage(1);
+    setEventsTotal(0);
+    fetchEvents(terminal, 1);
   };
 
   const openSyncs = async (terminal: AmicoTerminal) => {
@@ -532,24 +545,52 @@ export function TerminalManagementPanel() {
             ) : events.length === 0 ? (
               <p className="text-sm text-stone-400 dark:text-stone-500 italic text-center py-8">No events recorded yet</p>
             ) : (
-              <div className="max-h-80 overflow-y-auto divide-y divide-stone-100 dark:divide-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
-                {events.map((ev, i) => (
-                  <div key={ev.id ?? i} className="flex items-center justify-between px-4 py-2.5">
-                    <div>
-                      <p className="text-sm font-medium text-stone-800 dark:text-stone-200">{ev.userName ?? ev.userId ?? "Unknown person"}</p>
-                      <p className="text-xs text-stone-400 dark:text-stone-500">{ev.timestamp ? new Date(ev.timestamp).toLocaleString() : "—"}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {ev.result === "granted"
-                        ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                        : <XCircle className="w-4 h-4 text-red-500" />}
-                      <span className={`text-xs font-medium ${ev.result === "granted" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                        {ev.result === "granted" ? "Granted" : ev.result ?? "Denied"}
-                      </span>
-                    </div>
+              <>
+                <div className="divide-y divide-stone-100 dark:divide-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
+                  {events.map((ev: any, i) => {
+                    const granted = ev.eventType === "Granted" || ev.eventType === "RemoteOpen";
+                    const label = ev.eventType === "RemoteOpen" ? "Remote Open"
+                      : ev.eventType === "NotIdentified" ? "Not Identified"
+                      : ev.eventType ?? "Unknown";
+                    const name = ev.userName ?? (ev.userId ? `User ${ev.userId.slice(0, 8)}…` : null);
+                    return (
+                      <div key={ev.id ?? i} className="flex items-center justify-between px-4 py-2.5">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
+                              {name ?? (ev.source === "Remote" ? "Remote unlock" : "Unidentified scan")}
+                            </p>
+                            <span className="text-[10px] text-stone-400 dark:text-stone-500 uppercase tracking-wide">{ev.source}</span>
+                          </div>
+                          <p className="text-xs text-stone-400 dark:text-stone-500">{ev.timestamp ? new Date(ev.timestamp).toLocaleString() : "—"}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {granted
+                            ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                            : <XCircle className="w-4 h-4 text-red-500" />}
+                          <span className={`text-xs font-medium ${granted ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+                            {label}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between pt-2 text-xs text-stone-500">
+                  <span>{eventsTotal} total events</span>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="h-7 text-xs" disabled={eventsPage <= 1 || loadingEvents}
+                      onClick={() => eventsTerminal && fetchEvents(eventsTerminal, eventsPage - 1)}>
+                      Previous
+                    </Button>
+                    <span>Page {eventsPage} of {Math.ceil(eventsTotal / eventsPageSize)}</span>
+                    <Button variant="outline" size="sm" className="h-7 text-xs" disabled={eventsPage >= Math.ceil(eventsTotal / eventsPageSize) || loadingEvents}
+                      onClick={() => eventsTerminal && fetchEvents(eventsTerminal, eventsPage + 1)}>
+                      Next
+                    </Button>
                   </div>
-                ))}
-              </div>
+                </div>
+              </>
             )}
           </DialogContent>
         </Dialog>
