@@ -95,7 +95,10 @@ export function TerminalManagementPanel() {
   // Events modal
   const [eventsTerminal, setEventsTerminal] = useState<AmicoTerminal | null>(null);
   const [events, setEvents] = useState<TerminalAccessEvent[]>([]);
+  const [eventsPage, setEventsPage] = useState(1);
+  const [eventsTotal, setEventsTotal] = useState(0);
   const [loadingEvents, setLoadingEvents] = useState(false);
+  const eventsPageSize = 25;
 
   // Syncs modal
   const [syncsTerminal, setSyncsTerminal] = useState<AmicoTerminal | null>(null);
@@ -192,18 +195,28 @@ export function TerminalManagementPanel() {
     }
   };
 
-  const openEvents = async (terminal: AmicoTerminal) => {
+  const fetchEvents = async (terminal: AmicoTerminal, page: number) => {
     if (!terminal.id) return;
-    setEventsTerminal(terminal);
     setLoadingEvents(true);
     try {
-      const res = await bmsApi.terminals.getAccessEvents(terminal.id);
-      setEvents(Array.isArray(res) ? res : []);
+      const res = await bmsApi.terminals.getAccessEvents(terminal.id, page, eventsPageSize);
+      const list = Array.isArray(res) ? res : (res as any)?.data ?? [];
+      const total = (res as any)?.total ?? list.length;
+      setEvents(list);
+      setEventsTotal(total);
+      setEventsPage(page);
     } catch {
       setEvents([]);
     } finally {
       setLoadingEvents(false);
     }
+  };
+
+  const openEvents = async (terminal: AmicoTerminal) => {
+    setEventsTerminal(terminal);
+    setEventsPage(1);
+    setEventsTotal(0);
+    fetchEvents(terminal, 1);
   };
 
   const openSyncs = async (terminal: AmicoTerminal) => {
@@ -520,36 +533,91 @@ export function TerminalManagementPanel() {
 
         {/* Access Events Modal */}
         <Dialog open={!!eventsTerminal} onOpenChange={(v) => { if (!v) { setEventsTerminal(null); setEvents([]); } }}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Access Events — {eventsTerminal?.name}</DialogTitle>
-              <DialogDescription>
-                Every face scan at this terminal. Events are kept for 90 days, then automatically deleted for privacy compliance.
-              </DialogDescription>
-            </DialogHeader>
-            {loadingEvents ? (
-              <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-stone-400" /></div>
-            ) : events.length === 0 ? (
-              <p className="text-sm text-stone-400 dark:text-stone-500 italic text-center py-8">No events recorded yet</p>
-            ) : (
-              <div className="max-h-80 overflow-y-auto divide-y divide-stone-100 dark:divide-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
-                {events.map((ev, i) => (
-                  <div key={ev.id ?? i} className="flex items-center justify-between px-4 py-2.5">
-                    <div>
-                      <p className="text-sm font-medium text-stone-800 dark:text-stone-200">{ev.userName ?? ev.userId ?? "Unknown person"}</p>
-                      <p className="text-xs text-stone-400 dark:text-stone-500">{ev.timestamp ? new Date(ev.timestamp).toLocaleString() : "—"}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {ev.result === "granted"
-                        ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                        : <XCircle className="w-4 h-4 text-red-500" />}
-                      <span className={`text-xs font-medium ${ev.result === "granted" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                        {ev.result === "granted" ? "Granted" : ev.result ?? "Denied"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+          <DialogContent className="sm:max-w-[560px] flex flex-col max-h-[80vh]">
+            <DialogHeader className="shrink-0">
+              <DialogTitle className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-stone-400" />
+                {eventsTerminal?.name}
+              </DialogTitle>
+              <div className="flex items-center gap-2">
+                <DialogDescription className="text-xs flex-1">
+                  Face scan log · {eventsTotal > 0 ? `${eventsTotal} events` : "No events yet"} · kept 90 days
+                </DialogDescription>
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" disabled={loadingEvents}
+                  onClick={() => eventsTerminal && fetchEvents(eventsTerminal, eventsPage)}>
+                  <RefreshCw className={`w-3 h-3 ${loadingEvents ? "animate-spin" : ""}`} />
+                </Button>
               </div>
+            </DialogHeader>
+
+            {loadingEvents ? (
+              <div className="flex items-center justify-center py-12 shrink-0">
+                <Loader2 className="w-5 h-5 animate-spin text-stone-400" />
+              </div>
+            ) : events.length === 0 ? (
+              <p className="text-sm text-stone-400 dark:text-stone-500 italic text-center py-10 shrink-0">No events recorded yet</p>
+            ) : (
+              <>
+                <div className="overflow-y-auto flex-1 min-h-0 rounded-lg border border-stone-200 dark:border-stone-700 divide-y divide-stone-100 dark:divide-stone-800">
+                  {events.map((ev: any, i) => {
+                    const granted = ev.eventType === "Granted" || ev.eventType === "RemoteOpen";
+                    const denied = ev.eventType === "Denied";
+                    const label = ev.eventType === "RemoteOpen" ? "Remote Open"
+                      : ev.eventType === "NotIdentified" ? "Not Identified"
+                      : ev.eventType ?? "Unknown";
+                    const name = ev.userName ?? (ev.userId ? `User ${ev.userId.slice(0, 8)}…` : null);
+                    const displayName = name ?? (ev.source === "Remote" ? "Remote unlock" : "Unidentified scan");
+                    const isAnon = !name;
+                    return (
+                      <div key={ev.id ?? i} className="flex items-center gap-3 px-3 py-2">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                          granted ? "bg-emerald-100 dark:bg-emerald-900/30" : denied ? "bg-red-100 dark:bg-red-900/30" : "bg-stone-100 dark:bg-stone-800"
+                        }`}>
+                          {granted
+                            ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                            : denied
+                            ? <XCircle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+                            : <AlertCircle className="w-3.5 h-3.5 text-stone-400" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${isAnon ? "text-stone-400 dark:text-stone-500 italic" : "text-stone-800 dark:text-stone-200"}`}>
+                            {displayName}
+                          </p>
+                          <p className="text-xs text-stone-400 dark:text-stone-500">
+                            {ev.timestamp ? new Date(ev.timestamp).toLocaleString() : "—"}
+                            {ev.source && <span className="ml-1.5 text-[10px] uppercase tracking-wide">· {ev.source}</span>}
+                          </p>
+                        </div>
+                        <span className={`text-xs font-medium shrink-0 ${
+                          granted ? "text-emerald-600 dark:text-emerald-400"
+                          : denied ? "text-red-600 dark:text-red-400"
+                          : "text-stone-500 dark:text-stone-400"
+                        }`}>
+                          {label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between pt-2 shrink-0">
+                  <span className="text-xs text-stone-400 dark:text-stone-500">
+                    Page {eventsPage} of {Math.max(1, Math.ceil(eventsTotal / eventsPageSize))}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <Button variant="outline" size="sm" className="h-7 text-xs px-3"
+                      disabled={eventsPage <= 1 || loadingEvents}
+                      onClick={() => eventsTerminal && fetchEvents(eventsTerminal, eventsPage - 1)}>
+                      ← Prev
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-7 text-xs px-3"
+                      disabled={eventsPage >= Math.ceil(eventsTotal / eventsPageSize) || loadingEvents}
+                      onClick={() => eventsTerminal && fetchEvents(eventsTerminal, eventsPage + 1)}>
+                      Next →
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </DialogContent>
         </Dialog>

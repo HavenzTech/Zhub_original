@@ -633,8 +633,8 @@ class BmsApiService {
       this.delete(`/terminals/${id}`, { prefix: AMICO_PREFIX }),
     bootstrap: (id: string) =>
       this.post(`/terminals/${id}/bootstrap`, {}, { prefix: AMICO_PREFIX }),
-    getAccessEvents: (id: string) =>
-      this.get<TerminalAccessEvent[]>(`/terminals/${id}/access-events`, { prefix: AMICO_PREFIX }),
+    getAccessEvents: (id: string, page = 1, pageSize = 25) =>
+      this.get<any>(`/terminals/${id}/access-events?page=${page}&pageSize=${pageSize}`, { prefix: AMICO_PREFIX }),
     getSyncs: (id: string) =>
       this.get<TerminalSync[]>(`/terminals/${id}/syncs`, { prefix: AMICO_PREFIX }),
   };
