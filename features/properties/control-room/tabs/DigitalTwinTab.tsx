@@ -1,40 +1,17 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import type { Property } from "@/types/bms";
-import type {
-  AIInsight,
-  Equipment,
-  MaintenanceWorkOrder,
-  PropertyAlert,
-  PropertyZone,
-  Sensor,
-} from "../../types";
+import { Box } from "lucide-react";
 
-interface Props {
-  property: Property;
-  equipment: Equipment[];
-  zones: PropertyZone[];
-  sensors: Sensor[];
-  insights: AIInsight[];
-  alerts: PropertyAlert[];
-  workOrders: MaintenanceWorkOrder[];
-  focusEquipmentId?: string;
-  onCreateWorkOrder?: (equipmentId: string) => void;
-}
-
-const DigitalTwinViewer = dynamic(
-  () => import("../digital-twin/DigitalTwinViewer").then((m) => m.DigitalTwinViewer),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[68vh] min-h-[520px] rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-950 flex items-center justify-center text-xs text-stone-400">
-        Loading 3D twin…
+export function DigitalTwinTab() {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4 rounded-xl border border-dashed border-stone-300 dark:border-stone-700 text-center">
+      <Box className="w-10 h-10 text-stone-300 dark:text-stone-600" />
+      <div>
+        <p className="text-sm font-medium text-stone-600 dark:text-stone-400">3D Digital Twin</p>
+        <p className="text-xs text-stone-400 dark:text-stone-500 mt-1 max-w-xs">
+          The interactive 3D viewer will appear here once a model has been uploaded for this property.
+        </p>
       </div>
-    ),
-  }
-);
-
-export function DigitalTwinTab(props: Props) {
-  return <DigitalTwinViewer {...props} />;
+    </div>
+  );
 }
