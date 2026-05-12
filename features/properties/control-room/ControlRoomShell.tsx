@@ -11,6 +11,8 @@ import {
   Box,
   DollarSign,
   Gauge,
+  KeyRound,
+  Layers,
   LayoutDashboard,
   ShieldCheck,
   Sparkles,
@@ -32,6 +34,8 @@ import { MaintenanceTab } from "./tabs/MaintenanceTab";
 import { NewWorkOrderModal } from "./tabs/maintenance/NewWorkOrderModal";
 import { AssignStaffModal } from "./tabs/staff/AssignStaffModal";
 import { PropertyFormModal, type PropertyFormData } from "../components/PropertyFormModal";
+import { AccessControlTab } from "@/features/access-control/AccessControlTab";
+import { PropertyAreasPanel } from "../components/PropertyAreasPanel";
 import { bmsApi, BmsApiError } from "@/lib/services/bmsApi";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -44,6 +48,8 @@ const TABS = [
   { id: "sensors", label: "Sensors", icon: Activity },
   { id: "ai", label: "AI Insights", icon: Sparkles },
   { id: "security", label: "Security", icon: ShieldCheck },
+  { id: "access-control", label: "Access Control", icon: KeyRound },
+  { id: "areas", label: "Areas", icon: Layers },
   { id: "staff", label: "Staff", icon: Users },
   { id: "financials", label: "Financials", icon: DollarSign },
   { id: "maintenance", label: "Maintenance", icon: Wrench },
@@ -226,6 +232,12 @@ export function ControlRoomShell({ propertyId }: ControlRoomShellProps) {
               </TabsContent>
               <TabsContent value="security" className="mt-4">
                 <SecurityTab propertyId={propertyId} />
+              </TabsContent>
+              <TabsContent value="access-control" className="mt-4">
+                <AccessControlTab />
+              </TabsContent>
+              <TabsContent value="areas" className="mt-4">
+                <PropertyAreasPanel propertyId={propertyId} />
               </TabsContent>
               <TabsContent value="staff" className="mt-4">
                 <StaffTab propertyId={propertyId} onAdd={() => setShowAssignStaff(true)} />
