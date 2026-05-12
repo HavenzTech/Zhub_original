@@ -5,7 +5,7 @@ export function getDataMode(): PropertiesDataMode {
     typeof process !== "undefined"
       ? process.env.NEXT_PUBLIC_PROPERTIES_DATA_MODE
       : undefined;
-  return raw === "live" ? "live" : "mock";
+  return raw === "mock" ? "mock" : "live";
 }
 
 export function isMockMode(): boolean {
