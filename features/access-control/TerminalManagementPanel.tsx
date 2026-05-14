@@ -195,7 +195,7 @@ export function TerminalManagementPanel() {
   };
 
   const openEdit = (terminal: AmicoTerminal) => {
-    setEditForm({ name: terminal.name ?? "", ipAddress: terminal.ipAddress ?? "", areaId: terminal.area?.id ?? "" });
+    setEditForm({ name: terminal.name ?? "", ipAddress: terminal.ipAddress ?? "", areaId: terminal.area?.id ?? "", username: "", password: "" });
     setEditPropertyId(terminal.property?.id ?? "");
     setEditTarget(terminal);
   };
@@ -205,7 +205,10 @@ export function TerminalManagementPanel() {
     if (!editTarget?.id) return;
     setIsSaving(true);
     try {
-      const updated = await bmsApi.terminals.update(editTarget.id, editForm);
+      const payload = { ...editForm };
+      if (!payload.username) delete payload.username;
+      if (!payload.password) delete payload.password;
+      const updated = await bmsApi.terminals.update(editTarget.id, payload);
       setTerminals((prev) => prev.map((t) => t.id === updated.id ? updated : t));
       toast.success(`"${updated.name}" updated`);
       setEditTarget(null);
@@ -832,6 +835,33 @@ export function TerminalManagementPanel() {
                       </SelectContent>
                     </Select>
                   )}
+                </div>
+              </div>
+              <div className="space-y-3 rounded-lg border border-stone-200 dark:border-stone-700 p-3">
+                <div className="flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-stone-400" />
+                  <p className="text-xs font-medium text-stone-600 dark:text-stone-400">Update credentials <span className="font-normal text-stone-400">(optional — leave blank to keep existing)</span></p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Username</Label>
+                    <Input
+                      autoComplete="off"
+                      placeholder="admin"
+                      value={editForm.username ?? ""}
+                      onChange={(e) => setEditForm((f) => ({ ...f, username: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Password</Label>
+                    <Input
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="••••••••"
+                      value={editForm.password ?? ""}
+                      onChange={(e) => setEditForm((f) => ({ ...f, password: e.target.value }))}
+                    />
+                  </div>
                 </div>
               </div>
               <DialogFooter>
