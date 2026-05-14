@@ -2382,6 +2382,8 @@ export interface UpdateTerminalRequest {
   name?: string;
   ipAddress?: string;
   areaId?: string;
+  username?: string;
+  password?: string;
 }
 
 export interface TerminalAccessEvent {
