@@ -633,13 +633,18 @@ export function TerminalManagementPanel() {
               <>
                 <div className="overflow-y-auto flex-1 min-h-0 rounded-lg border border-stone-200 dark:border-stone-700 divide-y divide-stone-100 dark:divide-stone-800">
                   {events.map((ev: any, i) => {
-                    const granted = ev.eventType === "Granted" || ev.eventType === "RemoteOpen";
-                    const denied = ev.eventType === "Denied";
-                    const label = ev.eventType === "RemoteOpen" ? "Remote Open"
-                      : ev.eventType === "NotIdentified" ? "Not Identified"
-                      : ev.eventType ?? "Unknown";
-                    const name = ev.userName ?? (ev.userId ? `User ${ev.userId.slice(0, 8)}…` : null);
-                    const displayName = name ?? (ev.source === "Remote" ? "Remote unlock" : "Unidentified scan");
+                    // Backend may use either `result` or `eventType` depending on version
+                    const eventType: string = ev.eventType ?? ev.result ?? ev.type ?? "";
+                    const granted = eventType === "Granted" || eventType === "RemoteOpen";
+                    const denied = eventType === "Denied";
+                    const label = eventType === "RemoteOpen" ? "Remote Open"
+                      : eventType === "NotIdentified" ? "Not Identified"
+                      : eventType || "Unknown";
+                    // Try every reasonable field the backend might send for the user's name
+                    const name = ev.userName ?? ev.user?.name ?? ev.user?.fullName ?? ev.fullName ?? ev.name
+                      ?? (ev.userId ? `User ${String(ev.userId).slice(0, 8)}…` : null);
+                    const source: string = ev.source ?? ev.eventSource ?? "";
+                    const displayName = name ?? (source === "Remote" ? "Remote unlock" : "Unidentified scan");
                     const isAnon = !name;
                     return (
                       <div key={ev.id ?? i} className="flex items-center gap-3 px-3 py-2">
@@ -658,7 +663,7 @@ export function TerminalManagementPanel() {
                           </p>
                           <p className="text-xs text-stone-400 dark:text-stone-500">
                             {ev.timestamp ? new Date(ev.timestamp).toLocaleString() : "—"}
-                            {ev.source && <span className="ml-1.5 text-[10px] uppercase tracking-wide">· {ev.source}</span>}
+                            {source && <span className="ml-1.5 text-[10px] uppercase tracking-wide">· {source}</span>}
                           </p>
                         </div>
                         <span className={`text-xs font-medium shrink-0 ${
