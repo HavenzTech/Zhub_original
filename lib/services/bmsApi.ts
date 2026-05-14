@@ -631,8 +631,8 @@ class BmsApiService {
       this.put<AmicoTerminal>(`/terminals/${id}`, data, { prefix: AMICO_PREFIX }),
     deactivate: (id: string) =>
       this.delete(`/terminals/${id}`, { prefix: AMICO_PREFIX }),
-    bootstrap: (id: string) =>
-      this.post(`/terminals/${id}/bootstrap`, {}, { prefix: AMICO_PREFIX }),
+    bootstrap: (id: string, credentials?: { username: string; password: string }) =>
+      this.post(`/terminals/${id}/bootstrap`, credentials ?? {}, { prefix: AMICO_PREFIX }),
     getAccessEvents: (id: string, page = 1, pageSize = 25) =>
       this.get<any>(`/terminals/${id}/access-events?page=${page}&pageSize=${pageSize}`, { prefix: AMICO_PREFIX }),
     getSyncs: (id: string) =>

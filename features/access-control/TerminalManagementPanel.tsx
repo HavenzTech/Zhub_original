@@ -55,8 +55,11 @@ import {
   Info,
   ArrowRight,
   Building2,
+  Pencil,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
-import type { AmicoTerminal, RegisterTerminalRequest, TerminalAccessEvent, TerminalSync } from "@/types/bms";
+import type { AmicoTerminal, RegisterTerminalRequest, UpdateTerminalRequest, TerminalAccessEvent, TerminalSync } from "@/types/bms";
 import { bmsApi } from "@/lib/services/bmsApi";
 import { toast } from "sonner";
 
@@ -91,6 +94,7 @@ export function TerminalManagementPanel() {
   const [showRegister, setShowRegister] = useState(false);
   const [registerForm, setRegisterForm] = useState<RegisterTerminalRequest>(emptyRegisterForm);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [nameAutoFilled, setNameAutoFilled] = useState(false);
 
   // Events modal
   const [eventsTerminal, setEventsTerminal] = useState<AmicoTerminal | null>(null);
@@ -105,8 +109,20 @@ export function TerminalManagementPanel() {
   const [syncs, setSyncs] = useState<TerminalSync[]>([]);
   const [loadingSyncs, setLoadingSyncs] = useState(false);
 
-  // Bootstrap/deactivate
+  // Edit modal
+  const [editTarget, setEditTarget] = useState<AmicoTerminal | null>(null);
+  const [editForm, setEditForm] = useState<UpdateTerminalRequest>({});
+  const [editPropertyId, setEditPropertyId] = useState("");
+  const [editAreas, setEditAreas] = useState<any[]>([]);
+  const [loadingEditAreas, setLoadingEditAreas] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Bootstrap credential gate
+  const [bootstrapTarget, setBootstrapTarget] = useState<AmicoTerminal | null>(null);
+  const [bootstrapCreds, setBootstrapCreds] = useState({ username: "", password: "" });
   const [bootstrappingId, setBootstrappingId] = useState<string | null>(null);
+
+  // Deactivate
   const [deactivateTarget, setDeactivateTarget] = useState<AmicoTerminal | null>(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
 
@@ -136,14 +152,26 @@ export function TerminalManagementPanel() {
     loadProperties();
   }, []);
 
+  const unwrapAreas = (res: any): any[] =>
+    Array.isArray(res) ? res : res?.data ?? res?.items ?? res?.areas ?? [];
+
   useEffect(() => {
     if (!selectedPropertyId) { setAreas([]); setRegisterForm((f) => ({ ...f, areaId: "" })); return; }
     setLoadingAreas(true);
     bmsApi.properties.getAreas(selectedPropertyId)
-      .then((res) => setAreas(Array.isArray(res) ? res : []))
+      .then((res) => setAreas(unwrapAreas(res)))
       .catch(() => setAreas([]))
       .finally(() => setLoadingAreas(false));
   }, [selectedPropertyId]);
+
+  useEffect(() => {
+    if (!editPropertyId) { setEditAreas([]); setEditForm((f) => ({ ...f, areaId: "" })); return; }
+    setLoadingEditAreas(true);
+    bmsApi.properties.getAreas(editPropertyId)
+      .then((res) => setEditAreas(unwrapAreas(res)))
+      .catch(() => setEditAreas([]))
+      .finally(() => setLoadingEditAreas(false));
+  }, [editPropertyId]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,11 +194,38 @@ export function TerminalManagementPanel() {
     }
   };
 
-  const handleBootstrap = async (terminal: AmicoTerminal) => {
-    if (!terminal.id) return;
-    setBootstrappingId(terminal.id);
+  const openEdit = (terminal: AmicoTerminal) => {
+    setEditForm({ name: terminal.name ?? "", ipAddress: terminal.ipAddress ?? "", areaId: terminal.area?.id ?? "" });
+    setEditPropertyId(terminal.property?.id ?? "");
+    setEditTarget(terminal);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget?.id) return;
+    setIsSaving(true);
     try {
-      await bmsApi.terminals.bootstrap(terminal.id);
+      const updated = await bmsApi.terminals.update(editTarget.id, editForm);
+      setTerminals((prev) => prev.map((t) => t.id === updated.id ? updated : t));
+      toast.success(`"${updated.name}" updated`);
+      setEditTarget(null);
+    } catch {
+      toast.error("Failed to update terminal");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleBootstrap = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bootstrapTarget?.id) return;
+    const terminal = bootstrapTarget;
+    const creds = { ...bootstrapCreds };
+    setBootstrapTarget(null);
+    setBootstrapCreds({ username: "", password: "" });
+    setBootstrappingId(terminal.id!);
+    try {
+      await bmsApi.terminals.bootstrap(terminal.id!, creds);
       toast.success(`"${terminal.name}" is now live — users in this area have been synced to it`);
       loadTerminals();
     } catch {
@@ -392,10 +447,10 @@ export function TerminalManagementPanel() {
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-1.5 pt-1 border-t border-stone-100 dark:border-stone-800">
-                  <ActionTooltip content="Connects to this terminal, registers the webhook so it can send access events, then pushes all users who have access to this area. Safe to run again if something went wrong.">
+                  <ActionTooltip content="Connects to this terminal, registers the webhook so it can send access events, then pushes all users who have access to this area. You'll be asked to confirm credentials before connecting.">
                     <Button variant="outline" size="sm" className="text-xs h-7 gap-1"
                       disabled={bootstrappingId === terminal.id}
-                      onClick={() => handleBootstrap(terminal)}>
+                      onClick={() => { setBootstrapTarget(terminal); setBootstrapCreds({ username: "", password: "" }); }}>
                       {bootstrappingId === terminal.id
                         ? <Loader2 className="w-3 h-3 animate-spin" />
                         : <Zap className="w-3 h-3" />}
@@ -412,6 +467,13 @@ export function TerminalManagementPanel() {
                   <ActionTooltip content="Check user sync status. If someone should have access but can't get in, look here for failed syncs.">
                     <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={() => openSyncs(terminal)}>
                       <Eye className="w-3 h-3" />Syncs
+                    </Button>
+                  </ActionTooltip>
+
+                  <ActionTooltip content="Edit this terminal's name, IP address, or area assignment.">
+                    <Button variant="outline" size="sm" className="text-xs h-7 gap-1"
+                      onClick={() => openEdit(terminal)}>
+                      <Pencil className="w-3 h-3" />Edit
                     </Button>
                   </ActionTooltip>
 
@@ -432,7 +494,7 @@ export function TerminalManagementPanel() {
         })()}
 
         {/* Register Terminal Modal */}
-        <Dialog open={showRegister} onOpenChange={(v) => { if (!isRegistering) { setShowRegister(v); if (!v) { setRegisterForm(emptyRegisterForm); setSelectedPropertyId(""); } } }}>
+        <Dialog open={showRegister} onOpenChange={(v) => { if (!isRegistering) { setShowRegister(v); if (!v) { setRegisterForm(emptyRegisterForm); setSelectedPropertyId(""); setNameAutoFilled(false); } } }}>
           <DialogContent className="sm:max-w-[480px]">
             <DialogHeader>
               <DialogTitle>Register Terminal</DialogTitle>
@@ -444,7 +506,7 @@ export function TerminalManagementPanel() {
               <div className="space-y-2">
                 <Label>Terminal Name *</Label>
                 <Input placeholder="e.g. Main Entrance, Server Room Door" value={registerForm.name}
-                  onChange={(e) => setRegisterForm((f) => ({ ...f, name: e.target.value }))} required />
+                  onChange={(e) => { setNameAutoFilled(false); setRegisterForm((f) => ({ ...f, name: e.target.value })); }} required />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
@@ -484,7 +546,15 @@ export function TerminalManagementPanel() {
                   {loadingAreas ? (
                     <div className="flex items-center gap-2 h-10 text-sm text-stone-500"><Loader2 className="w-4 h-4 animate-spin" />Loading...</div>
                   ) : (
-                    <Select value={registerForm.areaId} onValueChange={(v) => setRegisterForm((f) => ({ ...f, areaId: v }))}>
+                    <Select
+                      value={registerForm.areaId}
+                      disabled={!selectedPropertyId}
+                      onValueChange={(v) => {
+                        const area = areas.find((a: any) => a.id === v);
+                        setRegisterForm((f) => ({ ...f, areaId: v, name: nameAutoFilled || !f.name ? (area?.name ?? f.name) : f.name }));
+                        if (area && (nameAutoFilled || !registerForm.name)) setNameAutoFilled(true);
+                      }}
+                    >
                       <SelectTrigger><SelectValue placeholder={selectedPropertyId ? "Select area" : "Select property first"} /></SelectTrigger>
                       <SelectContent>
                         {areas.map((a: any) => (
@@ -663,6 +733,114 @@ export function TerminalManagementPanel() {
                 </p>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Bootstrap Credential Gate */}
+        <Dialog open={!!bootstrapTarget} onOpenChange={(v) => { if (!v) { setBootstrapTarget(null); setBootstrapCreds({ username: "", password: "" }); } }}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-accent-cyan" />
+                Confirm Terminal Credentials
+              </DialogTitle>
+              <DialogDescription>
+                Re-enter the admin credentials for <strong>{bootstrapTarget?.name}</strong> to authorise this connection. Credentials are not stored after use.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleBootstrap} className="space-y-4">
+              <div className="flex gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
+                <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  This is a security step. Your credentials are sent directly to the terminal and are not retained by Zhub after the connection is established.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Username *</Label>
+                <Input
+                  autoComplete="off"
+                  placeholder="admin"
+                  value={bootstrapCreds.username}
+                  onChange={(e) => setBootstrapCreds((c) => ({ ...c, username: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Password *</Label>
+                <Input
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="••••••••"
+                  value={bootstrapCreds.password}
+                  onChange={(e) => setBootstrapCreds((c) => ({ ...c, password: e.target.value }))}
+                  required
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => { setBootstrapTarget(null); setBootstrapCreds({ username: "", password: "" }); }}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-accent-cyan hover:bg-accent-cyan/90 text-white">
+                  <Zap className="w-4 h-4 mr-2" />Connect & Sync
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Terminal Modal */}
+        <Dialog open={!!editTarget} onOpenChange={(v) => { if (!isSaving) { if (!v) setEditTarget(null); } }}>
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <DialogTitle>Edit Terminal</DialogTitle>
+              <DialogDescription>Update the terminal&apos;s name, IP address, or area assignment.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUpdate} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Terminal Name *</Label>
+                <Input placeholder="e.g. Main Entrance" value={editForm.name ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} required />
+              </div>
+              <div className="space-y-2">
+                <Label>IP Address *</Label>
+                <Input placeholder="192.168.1.100" value={editForm.ipAddress ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, ipAddress: e.target.value }))} required />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Property</Label>
+                  <Select value={editPropertyId} onValueChange={(v) => { setEditPropertyId(v); setEditForm((f) => ({ ...f, areaId: "" })); }}>
+                    <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
+                    <SelectContent>
+                      {properties.map((p: any) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Area *</Label>
+                  {loadingEditAreas ? (
+                    <div className="flex items-center gap-2 h-10 text-sm text-stone-500"><Loader2 className="w-4 h-4 animate-spin" />Loading...</div>
+                  ) : (
+                    <Select value={editForm.areaId ?? ""} disabled={!editPropertyId} onValueChange={(v) => setEditForm((f) => ({ ...f, areaId: v }))}>
+                      <SelectTrigger><SelectValue placeholder={editPropertyId ? "Select area" : "Select property first"} /></SelectTrigger>
+                      <SelectContent>
+                        {editAreas.map((a: any) => (
+                          <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditTarget(null)} disabled={isSaving}>Cancel</Button>
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
 
